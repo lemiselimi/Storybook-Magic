@@ -76,7 +76,7 @@ export default function StorybookCreator() {
         fetch("/api/cartoonify", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ imageBase64: photoBase64 }),
+          body: JSON.stringify({ imageBase64: photoBase64, illustration: "a child on a magical adventure, full body, Pixar style" }),
         }).then(r => r.json()),
         fetch("/api/story", {
           method: "POST",

@@ -6,28 +6,26 @@ fal.config({ credentials: process.env.FAL_API_KEY });
 
 export async function POST(request) {
   try {
-    const { imageBase64 } = await request.json();
-    console.log("Cartoonify called, image size:", imageBase64?.length);
-    console.log("FAL key exists:", !!process.env.FAL_API_KEY);
-    console.log("FAL key value:", process.env.FAL_API_KEY?.substring(0, 10));
+    const { imageBase64, illustration } = await request.json();
+    console.log("Cartoonify called, illustration:", illustration?.substring(0, 50));
 
-    const result = await fal.subscribe("fal-ai/flux/dev/image-to-image", {
+    const result = await fal.subscribe("fal-ai/flux-pulid", {
       input: {
-        image_url: "data:image/jpeg;base64," + imageBase64,
-        prompt: "Pixar Disney 3D animated movie character portrait of a child, highly detailed, cinematic lighting, vibrant colors, big expressive eyes, soft rounded features, professional 3D render, cheerful and friendly expression, clean background",
-        negative_prompt: "realistic, photograph, dark, scary, adult, blurry, low quality",
-        strength: 0.75,
-        num_inference_steps: 28,
-        guidance_scale: 7.5,
+        reference_images: [{ image_url: "data:image/jpeg;base64," + imageBase64 }],
+        prompt: `Pixar Disney 3D animated children's book illustration, ${illustration}, vibrant colors, cinematic lighting, magical atmosphere, highly detailed, professional render, cheerful and whimsical`,
+        negative_prompt: "realistic, dark, scary, blurry, low quality, adult, text, watermark",
+        num_inference_steps: 20,
+        guidance_scale: 4,
+        true_cfg: 1,
+        id_weight: 1.0,
         num_images: 1,
       },
     });
 
-    console.log("Cartoon result:", JSON.stringify(result.data).substring(0, 200));
+    console.log("Result:", JSON.stringify(result.data).substring(0, 200));
     return Response.json({ url: result.data.images[0].url });
   } catch (err) {
     console.error("Cartoonify error:", err.message);
-    console.error("Full error:", JSON.stringify(err));
     return Response.json({ error: err.message }, { status: 500 });
   }
 }

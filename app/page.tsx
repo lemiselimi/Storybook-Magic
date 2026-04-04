@@ -88,7 +88,7 @@ export default function StorybookCreator() {
       setLoadingMsg("Almost done... 📚");
  
       if (cartoonRes.status === "fulfilled" && cartoonRes.value?.url) {
-        setCartoonUrl(cartoonRes.value.url);
+        setCartoonUrl(`/api/proxy?url=${encodeURIComponent(cartoonRes.value.url)}`);
       } else {
         setFalError("Cartoon transformation failed — showing original photo.");
       }

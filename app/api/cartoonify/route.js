@@ -20,7 +20,7 @@ export async function POST(request) {
     // Generate a clean Pixar-style character avatar portrait
     const result = await fal.subscribe("fal-ai/flux-pulid", {
       input: {
-        reference_images: [{ image_url: photoUrl }],
+        reference_image_url: photoUrl,
         prompt: "Pixar Disney 3D animated character, adorable child hero, full body portrait, expressive large eyes, warm friendly smile, colorful storybook outfit, soft pastel gradient background, studio lighting, highly detailed CGI render, professional Pixar animation style, vibrant colors, cute and charming, facing camera",
         negative_prompt: "realistic, photorealistic, dark, scary, blurry, low quality, adult, text, watermark, logo, deformed, ugly, multiple people, busy background, cluttered",
         num_inference_steps: 30,

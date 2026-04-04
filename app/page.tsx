@@ -126,11 +126,10 @@ export default function StorybookCreator() {
       let falUrl: string | null = null;
       if (cartoonRes.status === "fulfilled" && cartoonRes.value?.url) {
         setCartoonUrl(`/api/proxy?url=${encodeURIComponent(cartoonRes.value.url)}`);
-        // Store the original uploaded photo URL for scene generation (better identity preservation)
-        if (cartoonRes.value.photoUrl) {
-          falUrl = cartoonRes.value.photoUrl;
-          setPhotoFalUrl(falUrl);
-        }
+        // Use the avatar URL as the scene reference so the child's Pixar character
+        // appears consistently in every scene (not a generic character)
+        falUrl = cartoonRes.value.url;
+        setPhotoFalUrl(falUrl);
       } else {
         setFalError("Cartoon transformation failed — using original photo.");
       }

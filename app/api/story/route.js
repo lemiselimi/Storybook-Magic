@@ -8,17 +8,18 @@ export async function POST(request) {
     const { childName, childAge, theme } = body;
 
     console.log("Story API called with:", { childName, childAge, theme });
-    console.log("API Key exists:", !!process.env.ANTHROPIC_API_KEY);
 
     const response = await client.messages.create({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 1000,
+      max_tokens: 1500,
       messages: [{
         role: "user",
-        content: `Create a children's book for ${childName || "a child"}, age ${childAge || 5}, theme: ${theme}. 
-        
-Respond ONLY with this exact JSON structure, no markdown:
-{"title":"Book Title","dedication":"Sweet dedication","pages":[{"pageNum":1,"text":"Page text here","illustration":"Scene description"},{"pageNum":2,"text":"Page text here","illustration":"Scene description"},{"pageNum":3,"text":"Page text here","illustration":"Scene description"},{"pageNum":4,"text":"Page text here","illustration":"Scene description"},{"pageNum":5,"text":"Page text here","illustration":"Scene description"},{"pageNum":6,"text":"Page text here","illustration":"Scene description"}]}`
+        content: `Create a 6-page children's book for ${childName || "a child"}, age ${childAge || 5}, with the theme: ${theme}.
+
+The "illustration" field for each page must be a vivid, detailed scene description for AI image generation (1-2 sentences). Describe: the environment/setting, what the main character is doing, mood/lighting, and any magical or theme-specific elements. Be specific and visual. Example: "A cozy bedroom at dawn with floating glowing stars, the child sitting up in bed holding a treasure map that pulses with golden light, moonbeams streaming through the window."
+
+Respond ONLY with this exact JSON, no markdown, no extra text:
+{"title":"Book Title","dedication":"Sweet dedication to the child","pages":[{"pageNum":1,"text":"Page story text here (2-3 sentences).","illustration":"Detailed scene description for image generation."},{"pageNum":2,"text":"Page story text here.","illustration":"Detailed scene description."},{"pageNum":3,"text":"Page story text here.","illustration":"Detailed scene description."},{"pageNum":4,"text":"Page story text here.","illustration":"Detailed scene description."},{"pageNum":5,"text":"Page story text here.","illustration":"Detailed scene description."},{"pageNum":6,"text":"Page story text here.","illustration":"Detailed scene description."}]}`
       }]
     });
 

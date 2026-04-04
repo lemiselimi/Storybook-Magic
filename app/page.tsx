@@ -14,7 +14,7 @@ export default function StorybookCreator() {
   const [step, setStep] = useState("upload");
   const [photo, setPhoto] = useState<string | null>(null);
   const [photoBase64, setPhotoBase64] = useState<string | null>(null);
-  const [cartoonUrl, setCartoonUrl] = useState<string | null>(null);
+  const [cartoonUrls, setCartoonUrls] = useState<string[]>([]);
   const [childName, setChildName] = useState("");
   const [childAge, setChildAge] = useState("");
   const [theme, setTheme] = useState("adventure");
@@ -29,7 +29,7 @@ export default function StorybookCreator() {
     if (!file || !file.type.startsWith("image/")) return;
     const url = URL.createObjectURL(file);
     setPhoto(url);
-    setCartoonUrl(null);
+    setCartoonUrls([]);
     setFalError(null);
     const reader = new FileReader();
     reader.onload = (e) => setPhotoBase64((e.target?.result as string).split(",")[1]);
@@ -46,66 +46,86 @@ export default function StorybookCreator() {
     title: `${childName || "A Child"}'s Big Adventure`,
     dedication: `For ${childName || "every child"} who dares to dream`,
     pages: [
-      { pageNum: 1, text: `Once upon a time, ${childName || "our hero"} woke up to find a magical map under their pillow.`, illustration: `${childName} sitting in bed holding a glowing map` },
-      { pageNum: 2, text: `${childName || "Our hero"} packed a backpack and set off. "I'm ready!" they cheered.`, illustration: `${childName} in explorer gear giving thumbs up` },
-      { pageNum: 3, text: `The path led through an enchanted forest full of friendly butterflies.`, illustration: `${childName} walking through a magical glowing forest` },
-      { pageNum: 4, text: `Deep in the forest they found a tiny dragon who had lost his fire.`, illustration: `${childName} next to a small sad dragon` },
-      { pageNum: 5, text: `${childName || "Our hero"} told a joke and WHOOOOSH flames burst out! "You fixed me!"`, illustration: `${childName} laughing with a happy fire-breathing dragon` },
-      { pageNum: 6, text: `The dragon flew them home under the stars. "Best day ever," they whispered.`, illustration: `${childName} riding a dragon through a starry sky` },
+      { pageNum: 1, text: `Once upon a time, ${childName || "our hero"} woke up to find a magical map under their pillow.`, illustration: `${childName} sitting in bed holding a glowing treasure map, bedroom with stars outside the window` },
+      { pageNum: 2, text: `${childName || "Our hero"} packed a backpack and set off. "I'm ready!" they cheered.`, illustration: `${childName} standing at front door in explorer gear with backpack, sunny day outside` },
+      { pageNum: 3, text: `The path led through an enchanted forest full of friendly butterflies.`, illustration: `${childName} walking through a magical glowing forest with giant colorful butterflies` },
+      { pageNum: 4, text: `Deep in the forest they found a tiny dragon who had lost his fire.`, illustration: `${childName} kneeling next to a small cute sad dragon in a sunny forest clearing` },
+      { pageNum: 5, text: `${childName || "Our hero"} told a joke and WHOOOOSH flames burst out! "You fixed me!"`, illustration: `${childName} laughing with a happy dragon shooting colorful fire into the sky` },
+      { pageNum: 6, text: `The dragon flew them home under the stars. "Best day ever," they whispered.`, illustration: `${childName} riding a friendly dragon through a beautiful starry night sky toward home` },
     ],
   });
 
   const generateBook = async () => {
     setStep("generating");
     setFalError(null);
-    const msgs = ["Sprinkling magic dust... ✨", "Transforming into a Pixar hero... 🎨", "Writing your adventure... 📖", "Illustrating each page... 🖌️", "Binding your masterpiece... 📚"];
-    let i = 0;
-    setLoadingMsg(msgs[0]);
-    const interval = setInterval(() => { i = (i + 1) % msgs.length; setLoadingMsg(msgs[i]); }, 2800);
+
     try {
       const selectedTheme = THEMES.find((t) => t.id === theme);
-      const [cartoonResult, storyResult] = await Promise.allSettled([
-        fetch("/api/cartoonify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ imageBase64: photoBase64 }) }).then(r => r.json()).then((d: any) => d.url),
-        fetch("/api/story", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ childName, childAge, theme: `${selectedTheme?.label} - ${selectedTheme?.desc}` }) }).then(r => r.json()),
-      ]);
-      if (cartoonResult.status === "fulfilled" && cartoonResult.value) {
-        setCartoonUrl(cartoonResult.value);
-      } else {
-        setFalError("Cartoon failed — showing original photo instead.");
+
+      // Step 1: Generate story
+      setLoadingMsg("Writing your personalized story... 📖");
+      const storyRes = await fetch("/api/story", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ childName, childAge, theme: `${selectedTheme?.label} - ${selectedTheme?.desc}` }),
+      });
+      const storyData = storyRes.ok ? await storyRes.json() : getFallbackStory();
+
+      // Step 2: Generate one image per page
+      const images: string[] = [];
+      for (let p = 0; p < storyData.pages.length; p++) {
+        const page = storyData.pages[p];
+        setLoadingMsg(`Illustrating page ${p + 1} of ${storyData.pages.length}... 🎨`);
+        try {
+          const imgRes = await fetch("/api/cartoonify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ imageBase64: photoBase64, illustration: page.illustration }),
+          });
+          const imgData = await imgRes.json();
+          images.push(imgData.url || photo as string);
+        } catch {
+          images.push(photo as string);
+        }
       }
-      setStory(storyResult.status === "fulfilled" ? storyResult.value : getFallbackStory());
+
+      setCartoonUrls(images);
+      setStory(storyData);
       setCurrentPage(-1);
       setStep("book");
-    } finally {
-      clearInterval(interval);
+    } catch (err) {
+      console.error(err);
+      setStory(getFallbackStory());
+      setCurrentPage(-1);
+      setStep("book");
     }
   };
 
-  const displayPhoto = cartoonUrl || photo;
-
-  const BookPage = ({ page, isLeft }: { page: any; isLeft: boolean }) => (
-    <div style={{ flex: 1, padding: "40px 36px", display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: 0, background: isLeft ? "#fffef7" : "#fff8f0", borderRight: isLeft ? "2px solid #e8dcc8" : "none" }}>
-      {isLeft ? (
-        <>
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-            <div style={{ width: "100%", aspectRatio: "4/3", borderRadius: 16, overflow: "hidden", background: "linear-gradient(135deg, #ffecd2, #fcb69f, #ffeaa7)", border: "3px solid #f0d5b0", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", position: "relative" }}>
-              {displayPhoto && <img src={displayPhoto} alt="hero" style={{ width: cartoonUrl ? "82%" : "55%", height: cartoonUrl ? "88%" : "70%", objectFit: "cover", borderRadius: cartoonUrl ? 10 : "50%", border: "4px solid white", boxShadow: "0 8px 24px rgba(0,0,0,0.15)" }} />}
-              {cartoonUrl && <div style={{ position: "absolute", top: 8, right: 8, borderRadius: 8, background: "rgba(255,215,0,0.9)", padding: "3px 8px", fontSize: 10, fontWeight: 700, color: "#1a0a2e" }}>✨ Pixar Style</div>}
-              <div style={{ position: "absolute", bottom: 8, left: 0, right: 0, textAlign: "center", fontSize: 10, color: "#8B6F47", fontFamily: "Georgia, serif", fontStyle: "italic", padding: "0 10px" }}>🎨 {page.illustration}</div>
+  const BookPage = ({ page, isLeft }: { page: any; isLeft: boolean }) => {
+    const pageImage = cartoonUrls[page.pageNum - 1] || photo;
+    return (
+      <div style={{ flex: 1, padding: "40px 36px", display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: 0, background: isLeft ? "#fffef7" : "#fff8f0", borderRight: isLeft ? "2px solid #e8dcc8" : "none" }}>
+        {isLeft ? (
+          <>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ width: "100%", aspectRatio: "4/3", borderRadius: 16, overflow: "hidden", background: "linear-gradient(135deg, #ffecd2, #fcb69f, #ffeaa7)", border: "3px solid #f0d5b0", position: "relative" }}>
+                {pageImage && <img src={pageImage} alt="illustration" style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
+                {cartoonUrls.length > 0 && <div style={{ position: "absolute", top: 8, right: 8, borderRadius: 8, background: "rgba(255,215,0,0.9)", padding: "3px 8px", fontSize: 10, fontWeight: 700, color: "#1a0a2e" }}>✨ Pixar Style</div>}
+              </div>
             </div>
-          </div>
-          <div style={{ textAlign: "center", color: "#c4a882", fontFamily: "Georgia, serif", fontSize: 13, marginTop: 12 }}>— {page.pageNum} —</div>
-        </>
-      ) : (
-        <>
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
-            <p style={{ fontFamily: "Georgia, serif", fontSize: 18, lineHeight: 1.85, color: "#3d2b1f", margin: 0 }}>{page.text}</p>
-          </div>
-          <div style={{ textAlign: "center", color: "#c4a882", fontFamily: "Georgia, serif", fontSize: 13, marginTop: 12 }}>— {page.pageNum + 1} —</div>
-        </>
-      )}
-    </div>
-  );
+            <div style={{ textAlign: "center", color: "#c4a882", fontFamily: "Georgia, serif", fontSize: 13, marginTop: 12 }}>— {page.pageNum} —</div>
+          </>
+        ) : (
+          <>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
+              <p style={{ fontFamily: "Georgia, serif", fontSize: 18, lineHeight: 1.85, color: "#3d2b1f", margin: 0 }}>{page.text}</p>
+            </div>
+            <div style={{ textAlign: "center", color: "#c4a882", fontFamily: "Georgia, serif", fontSize: 13, marginTop: 12 }}>— {page.pageNum + 1} —</div>
+          </>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div style={{ minHeight: "100vh", background: "linear-gradient(160deg, #1a0a2e 0%, #2d1b4e 40%, #1a3a2e 100%)", fontFamily: "'Segoe UI', sans-serif", display: "flex", flexDirection: "column", alignItems: "center", padding: "32px 16px" }}>
@@ -175,10 +195,11 @@ export default function StorybookCreator() {
       )}
 
       {step === "generating" && (
-        <div style={{ textAlign: "center", animation: "fadeUp 0.5s ease both" }}>
+        <div style={{ textAlign: "center", animation: "fadeUp 0.5s ease both", maxWidth: 400 }}>
           <div style={{ fontSize: 76, marginBottom: 22, animation: "float 2s ease-in-out infinite" }}>🪄</div>
           <h2 style={{ color: "white", fontSize: 22, fontWeight: 700, margin: "0 0 10px" }}>Creating your magical book...</h2>
-          <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 15, margin: "0 0 28px" }}>{loadingMsg}</p>
+          <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 15, margin: "0 0 8px" }}>{loadingMsg}</p>
+          <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 13, margin: "0 0 28px" }}>This takes 2-3 minutes — we're creating 6 unique illustrations!</p>
           <div style={{ display: "flex", justifyContent: "center", gap: 8 }}>
             {[0, 1, 2].map(i => <div key={i} style={{ width: 9, height: 9, borderRadius: "50%", background: "#ffd700", animation: "float 1s ease-in-out infinite", animationDelay: `${i * 0.2}s` }} />)}
           </div>
@@ -188,10 +209,11 @@ export default function StorybookCreator() {
       {step === "book" && story && (
         <div style={{ width: "100%", maxWidth: 880, animation: "fadeUp 0.5s ease both" }}>
           {falError && <div style={{ background: "rgba(255,100,100,0.09)", border: "1px solid rgba(255,100,100,0.25)", borderRadius: 10, padding: "9px 14px", marginBottom: 14, color: "#ffaaaa", fontSize: 13, textAlign: "center" }}>⚠️ {falError}</div>}
+
           {currentPage === -1 ? (
             <div style={{ background: "linear-gradient(135deg, #2d1b4e, #4a2060)", borderRadius: 20, padding: "56px 40px", textAlign: "center", border: "2px solid rgba(255,215,0,0.28)", boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }}>
-              {displayPhoto && <img src={displayPhoto} alt="hero" style={{ width: 148, height: 148, objectFit: "cover", borderRadius: cartoonUrl ? 16 : "50%", border: "5px solid #ffd700", marginBottom: 20 }} />}
-              {cartoonUrl && <div style={{ marginBottom: 14 }}><span style={{ background: "rgba(255,215,0,0.18)", border: "1px solid rgba(255,215,0,0.35)", borderRadius: 20, padding: "4px 14px", fontSize: 12, color: "#ffd700", fontWeight: 600 }}>✨ Pixar-style cartoon</span></div>}
+              {(cartoonUrls[0] || photo) && <img src={cartoonUrls[0] || photo as string} alt="hero" style={{ width: 148, height: 148, objectFit: "cover", borderRadius: 16, border: "5px solid #ffd700", marginBottom: 20 }} />}
+              {cartoonUrls.length > 0 && <div style={{ marginBottom: 14 }}><span style={{ background: "rgba(255,215,0,0.18)", border: "1px solid rgba(255,215,0,0.35)", borderRadius: 20, padding: "4px 14px", fontSize: 12, color: "#ffd700", fontWeight: 600 }}>✨ 6 unique Pixar illustrations</span></div>}
               <h1 style={{ color: "#ffd700", fontSize: 30, fontWeight: 800, margin: "0 0 10px" }}>{story.title}</h1>
               <p style={{ color: "rgba(255,255,255,0.55)", fontStyle: "italic", fontSize: 15, margin: "0 0 24px" }}>{story.dedication}</p>
               <button onClick={() => setCurrentPage(0)} style={{ padding: "11px 30px", borderRadius: 12, border: "none", background: "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>Open Book →</button>
@@ -199,16 +221,21 @@ export default function StorybookCreator() {
           ) : (
             <div style={{ display: "flex", background: "white", borderRadius: 16, overflow: "hidden", boxShadow: "0 30px 80px rgba(0,0,0,0.5)", minHeight: 400 }}>
               {story.pages[currentPage * 2] && <BookPage page={story.pages[currentPage * 2]} isLeft={true} />}
-              {story.pages[currentPage * 2 + 1] ? <BookPage page={story.pages[currentPage * 2 + 1]} isLeft={false} /> : <div style={{ flex: 1, background: "#fff8f0", display: "flex", alignItems: "center", justifyContent: "center" }}><p style={{ color: "#c4a882", fontFamily: "Georgia, serif", fontSize: 20, fontStyle: "italic" }}>The End 🌟</p></div>}
+              {story.pages[currentPage * 2 + 1]
+                ? <BookPage page={story.pages[currentPage * 2 + 1]} isLeft={false} />
+                : <div style={{ flex: 1, background: "#fff8f0", display: "flex", alignItems: "center", justifyContent: "center" }}><p style={{ color: "#c4a882", fontFamily: "Georgia, serif", fontSize: 20, fontStyle: "italic" }}>The End 🌟</p></div>
+              }
             </div>
           )}
+
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 20, marginTop: 22 }}>
             <button onClick={() => setCurrentPage(p => Math.max(-1, p - 1))} disabled={currentPage === -1} style={{ padding: "11px 22px", borderRadius: 11, border: "1px solid rgba(255,255,255,0.18)", background: "rgba(255,255,255,0.07)", color: "white", fontSize: 14, cursor: currentPage === -1 ? "not-allowed" : "pointer", opacity: currentPage === -1 ? 0.3 : 1 }}>← Prev</button>
             <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 13 }}>{currentPage === -1 ? "Cover" : `Pages ${currentPage * 2 + 1}–${Math.min(currentPage * 2 + 2, story.pages.length)}`} of {story.pages.length}</div>
             <button onClick={() => setCurrentPage(p => Math.min(Math.ceil(story.pages.length / 2) - 1, p + 1))} disabled={currentPage >= Math.ceil(story.pages.length / 2) - 1} style={{ padding: "11px 22px", borderRadius: 11, border: "none", background: "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 14, fontWeight: 600, cursor: currentPage >= Math.ceil(story.pages.length / 2) - 1 ? "not-allowed" : "pointer", opacity: currentPage >= Math.ceil(story.pages.length / 2) - 1 ? 0.4 : 1 }}>Next →</button>
           </div>
+
           <div style={{ textAlign: "center", marginTop: 18 }}>
-            <button onClick={() => { setStep("upload"); setPhoto(null); setCartoonUrl(null); setStory(null); }} style={{ padding: "9px 22px", borderRadius: 9, border: "1px solid rgba(255,255,255,0.12)", background: "transparent", color: "rgba(255,255,255,0.42)", fontSize: 13, cursor: "pointer" }}>+ Create Another Book</button>
+            <button onClick={() => { setStep("upload"); setPhoto(null); setCartoonUrls([]); setStory(null); }} style={{ padding: "9px 22px", borderRadius: 9, border: "1px solid rgba(255,255,255,0.12)", background: "transparent", color: "rgba(255,255,255,0.42)", fontSize: 13, cursor: "pointer" }}>+ Create Another Book</button>
           </div>
         </div>
       )}

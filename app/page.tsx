@@ -41,6 +41,7 @@ export default function StorybookCreator() {
   const [falError, setFalError] = useState<string | null>(null);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [pdfLoading, setPdfLoading] = useState(false);
+  const [scenesCompleted, setScenesCompleted] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // Handle Stripe return: ?success=1&session_id=xxx&ref=uuid or ?cancelled=1
@@ -136,6 +137,7 @@ export default function StorybookCreator() {
 
   const generateScenes = async (falUrl: string, pages: any[], gender: string, name: string) => {
     setScenesGenerating(true);
+    setScenesCompleted(0);
     const scenePromises = pages.map(async (page, idx) => {
       try {
         const res = await fetch("/api/generate-scene", {
@@ -149,9 +151,11 @@ export default function StorybookCreator() {
             next[idx] = `/api/proxy?url=${encodeURIComponent(res.url)}`;
             return next;
           });
+          setScenesCompleted(prev => prev + 1);
         }
       } catch (err) {
         console.error(`Scene generation failed for page ${idx + 1}:`, err);
+        setScenesCompleted(prev => prev + 1); // count failures too so bar completes
       }
     });
     await Promise.allSettled(scenePromises);
@@ -260,7 +264,7 @@ export default function StorybookCreator() {
       }
 
       // Spreads
-      const numSpreads = Math.ceil(story.pages.length / 2);
+      const numSpreads = story.pages.length;
       for (let i = 0; i < numSpreads; i++) {
         const canvas = await capture(`pdf-spread-${i}`);
         if (canvas) {
@@ -280,20 +284,20 @@ export default function StorybookCreator() {
   const displayPhoto = cartoonUrl || photo;
 
   const BookSpread = ({ spreadIndex }: { spreadIndex: number }) => {
-    const leftPage = story.pages[spreadIndex * 2];
-    const rightPage = story.pages[spreadIndex * 2 + 1];
+    const page = story.pages[spreadIndex];
+    const isLast = spreadIndex === story.pages.length - 1;
+    if (!page) return null;
     return (
       <div style={{ display: "flex", width: "100%", minHeight: 380 }}>
-        {leftPage && <BookPage page={leftPage} isLeft={true} />}
-        {rightPage
-          ? <BookPage page={rightPage} isLeft={false} />
-          : <div style={{ flex: 1, background: "#fff8f0", display: "flex", alignItems: "center", justifyContent: "center" }}><p style={{ color: "#c4a882", fontFamily: "Georgia, serif", fontSize: 20, fontStyle: "italic" }}>The End 🌟</p></div>
-        }
+        <BookPage page={page} isLeft={true} />
+        {/* Book spine */}
+        <div style={{ width: 6, flexShrink: 0, background: "linear-gradient(to right, #d4c4a8, #e8dcc8, #d4c4a8)", boxShadow: "inset -2px 0 4px rgba(0,0,0,0.06), inset 2px 0 4px rgba(0,0,0,0.06)" }} />
+        <BookPage page={page} isLeft={false} isLast={isLast} />
       </div>
     );
   };
 
-  const BookPage = ({ page, isLeft }: { page: any; isLeft: boolean }) => {
+  const BookPage = ({ page, isLeft, isLast }: { page: any; isLeft: boolean; isLast?: boolean }) => {
     const bg = PAGE_BACKGROUNDS[(page.pageNum - 1) % PAGE_BACKGROUNDS.length];
     const sceneImage = pageImages[page.pageNum - 1];
 
@@ -320,8 +324,9 @@ export default function StorybookCreator() {
           <>
             <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
               <p style={{ fontFamily: "Georgia, serif", fontSize: 17, lineHeight: 1.85, color: "#3d2b1f", margin: 0 }}>{page.text}</p>
+              {isLast && <p style={{ fontFamily: "Georgia, serif", fontSize: 18, color: "#c4a882", fontStyle: "italic", marginTop: 28, textAlign: "center" }}>The End 🌟</p>}
             </div>
-            <div style={{ textAlign: "center", color: "#c4a882", fontFamily: "Georgia, serif", fontSize: 13, marginTop: 10 }}>— {page.pageNum + 1} —</div>
+            <div style={{ textAlign: "center", color: "#c4a882", fontFamily: "Georgia, serif", fontSize: 13, marginTop: 10 }}>— {page.pageNum} —</div>
           </>
         )}
       </div>
@@ -416,7 +421,15 @@ export default function StorybookCreator() {
           <div style={{ fontSize: 76, marginBottom: 22, animation: "float 2s ease-in-out infinite" }}>🪄</div>
           <h2 style={{ color: "white", fontSize: 22, fontWeight: 700, margin: "0 0 10px" }}>Creating your magical book...</h2>
           <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 15, margin: "0 0 8px" }}>{loadingMsg}</p>
-          <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 13, margin: "0 0 28px" }}>Transforming photo, writing story & painting all scenes — about 1–2 minutes!</p>
+          <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 13, margin: "0 0 20px" }}>Transforming photo, writing story & painting all scenes — about 1–2 minutes!</p>
+          {scenesCompleted > 0 && (
+            <div style={{ width: "100%", maxWidth: 260, margin: "0 auto 20px" }}>
+              <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: 99, height: 8, overflow: "hidden" }}>
+                <div style={{ height: "100%", borderRadius: 99, background: "linear-gradient(90deg, #ffd700, #ff9a9e)", width: `${(scenesCompleted / 6) * 100}%`, transition: "width 0.4s ease" }} />
+              </div>
+              <p style={{ color: "rgba(255,215,0,0.7)", fontSize: 12, marginTop: 8 }}>{scenesCompleted} of 6 scenes painted</p>
+            </div>
+          )}
           <div style={{ display: "flex", justifyContent: "center", gap: 8 }}>
             {[0, 1, 2].map(i => <div key={i} style={{ width: 9, height: 9, borderRadius: "50%", background: "#ffd700", animation: "float 1s ease-in-out infinite", animationDelay: `${i * 0.2}s` }} />)}
           </div>
@@ -447,11 +460,11 @@ export default function StorybookCreator() {
             <button onClick={() => setCurrentPage(p => Math.max(-1, p - 1))} disabled={currentPage === -1} style={{ padding: "11px 22px", borderRadius: 11, border: "1px solid rgba(255,255,255,0.18)", background: "rgba(255,255,255,0.07)", color: "white", fontSize: 14, cursor: currentPage === -1 ? "not-allowed" : "pointer", opacity: currentPage === -1 ? 0.3 : 1 }}>← Prev</button>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <div onClick={() => setCurrentPage(-1)} title="Cover" style={{ width: currentPage === -1 ? 10 : 8, height: currentPage === -1 ? 10 : 8, borderRadius: "50%", background: currentPage === -1 ? "#ffd700" : "rgba(255,255,255,0.25)", cursor: "pointer", transition: "all 0.2s" }} />
-              {Array.from({ length: Math.ceil(story.pages.length / 2) }, (_, i) => (
+              {Array.from({ length: story.pages.length }, (_, i) => (
                 <div key={i} onClick={() => setCurrentPage(i)} title={`Pages ${i * 2 + 1}–${Math.min(i * 2 + 2, story.pages.length)}`} style={{ width: currentPage === i ? 10 : 8, height: currentPage === i ? 10 : 8, borderRadius: "50%", background: currentPage === i ? "#ffd700" : "rgba(255,255,255,0.25)", cursor: "pointer", transition: "all 0.2s" }} />
               ))}
             </div>
-            <button onClick={() => setCurrentPage(p => Math.min(Math.ceil(story.pages.length / 2) - 1, p + 1))} disabled={currentPage >= Math.ceil(story.pages.length / 2) - 1} style={{ padding: "11px 22px", borderRadius: 11, border: "none", background: "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 14, fontWeight: 600, cursor: currentPage >= Math.ceil(story.pages.length / 2) - 1 ? "not-allowed" : "pointer", opacity: currentPage >= Math.ceil(story.pages.length / 2) - 1 ? 0.4 : 1 }}>Next →</button>
+            <button onClick={() => setCurrentPage(p => Math.min(story.pages.length - 1, p + 1))} disabled={currentPage >= story.pages.length - 1} style={{ padding: "11px 22px", borderRadius: 11, border: "none", background: "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 14, fontWeight: 600, cursor: currentPage >= story.pages.length - 1 ? "not-allowed" : "pointer", opacity: currentPage >= story.pages.length - 1 ? 0.4 : 1 }}>Next →</button>
           </div>
 
           {/* Action buttons */}
@@ -474,7 +487,7 @@ export default function StorybookCreator() {
             <div style={{ color: "rgba(255,255,255,0.6)", fontStyle: "italic", fontSize: 16, textAlign: "center" }}>{story.dedication}</div>
           </div>
           {/* Spreads */}
-          {Array.from({ length: Math.ceil(story.pages.length / 2) }, (_, i) => (
+          {story.pages.map((_: any, i: number) => (
             <div key={i} id={`pdf-spread-${i}`} style={{ width: 880, background: "white", display: "flex" }}>
               <BookSpread spreadIndex={i} />
             </div>

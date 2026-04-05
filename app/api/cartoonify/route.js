@@ -6,8 +6,8 @@ fal.config({ credentials: process.env.FAL_API_KEY });
 
 export async function POST(request) {
   try {
-    const { imageBase64 } = await request.json();
-    console.log("Cartoonify called");
+    const { imageBase64, gender } = await request.json();
+    console.log("Cartoonify called, gender:", gender);
 
     // Convert base64 to blob and upload to fal storage
     const byteChars = atob(imageBase64);
@@ -21,7 +21,7 @@ export async function POST(request) {
     const result = await fal.subscribe("fal-ai/flux-pulid", {
       input: {
         reference_image_url: photoUrl,
-        prompt: "Pixar Disney 3D animated character, adorable child hero, full body portrait, expressive large eyes, warm friendly smile, colorful storybook outfit, soft pastel gradient background, studio lighting, highly detailed CGI render, professional Pixar animation style, vibrant colors, cute and charming, facing camera",
+        prompt: `Pixar Disney 3D animated character, adorable ${gender === "girl" ? "girl" : gender === "boy" ? "boy" : "child"} hero, full body portrait, expressive large eyes, warm friendly smile, colorful storybook outfit, soft pastel gradient background, studio lighting, highly detailed CGI render, professional Pixar animation style, vibrant colors, cute and charming, facing camera`,
         negative_prompt: "realistic, photorealistic, dark, scary, blurry, low quality, adult, text, watermark, logo, deformed, ugly, multiple people, busy background, cluttered",
         num_inference_steps: 30,
         guidance_scale: 3.5,

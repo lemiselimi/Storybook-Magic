@@ -29,6 +29,7 @@ export default function StorybookCreator() {
   const [scenesGenerating, setScenesGenerating] = useState(false);
   const [childName, setChildName] = useState("");
   const [childAge, setChildAge] = useState("");
+  const [childGender, setChildGender] = useState("boy");
   const [theme, setTheme] = useState("adventure");
   const [story, setStory] = useState<any>(null);
   const [loadingMsg, setLoadingMsg] = useState("");
@@ -37,15 +38,40 @@ export default function StorybookCreator() {
   const [falError, setFalError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const compressImage = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const img = new Image();
+      const objectUrl = URL.createObjectURL(file);
+      img.onload = () => {
+        const MAX = 1024;
+        let { width, height } = img;
+        if (width > MAX || height > MAX) {
+          if (width > height) { height = Math.round((height * MAX) / width); width = MAX; }
+          else { width = Math.round((width * MAX) / height); height = MAX; }
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext("2d")!.drawImage(img, 0, 0, width, height);
+        URL.revokeObjectURL(objectUrl);
+        // Strip the data:image/jpeg;base64, prefix
+        resolve(canvas.toDataURL("image/jpeg", 0.8).split(",")[1]);
+      };
+      img.onerror = reject;
+      img.src = objectUrl;
+    });
+
   const handleFile = useCallback((file: File) => {
     if (!file || !file.type.startsWith("image/")) return;
-    const url = URL.createObjectURL(file);
-    setPhoto(url);
+    setPhoto(URL.createObjectURL(file));
     setCartoonUrl(null);
     setFalError(null);
-    const reader = new FileReader();
-    reader.onload = (e) => setPhotoBase64((e.target?.result as string).split(",")[1]);
-    reader.readAsDataURL(file);
+    compressImage(file).then(setPhotoBase64).catch(() => {
+      // Fallback to plain FileReader if canvas fails
+      const reader = new FileReader();
+      reader.onload = (e) => setPhotoBase64((e.target?.result as string).split(",")[1]);
+      reader.readAsDataURL(file);
+    });
   }, []);
 
   const handleDrop = (e: React.DragEvent) => {
@@ -67,7 +93,7 @@ export default function StorybookCreator() {
     ],
   });
 
-  const generateScenes = async (falUrl: string, pages: any[]) => {
+  const generateScenes = async (falUrl: string, pages: any[], gender: string) => {
     setScenesGenerating(true);
     // Generate all page scenes in parallel — each resolves independently and updates state
     const scenePromises = pages.map(async (page, idx) => {
@@ -79,6 +105,7 @@ export default function StorybookCreator() {
             photoUrl: falUrl,
             illustration: page.illustration,
             childName,
+            gender,
           }),
         }).then(r => r.json());
 
@@ -112,12 +139,12 @@ export default function StorybookCreator() {
         fetch("/api/cartoonify", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ imageBase64: photoBase64 }),
+          body: JSON.stringify({ imageBase64: photoBase64, gender: childGender }),
         }).then(r => r.json()),
         fetch("/api/story", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ childName, childAge, theme: `${selectedTheme?.label} - ${selectedTheme?.desc}` }),
+          body: JSON.stringify({ childName, childAge, gender: childGender, theme: `${selectedTheme?.label} - ${selectedTheme?.desc}` }),
         }).then(r => r.json()),
       ]);
 
@@ -141,7 +168,7 @@ export default function StorybookCreator() {
 
       // Start generating per-page scenes in the background (non-blocking)
       if (falUrl && storyData?.pages) {
-        generateScenes(falUrl, storyData.pages);
+        generateScenes(falUrl, storyData.pages, childGender);
       }
     } catch (err) {
       console.error(err);
@@ -262,10 +289,16 @@ export default function StorybookCreator() {
                 <label style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, fontWeight: 600, display: "block", marginBottom: 7 }}>CHILD'S NAME</label>
                 <input value={childName} onChange={(e) => setChildName(e.target.value)} placeholder="Emma, Liam..." style={{ width: "100%", padding: "11px 14px", borderRadius: 11, border: "1px solid rgba(255,255,255,0.13)", background: "rgba(255,255,255,0.07)", color: "white", fontSize: 15, boxSizing: "border-box" }} />
               </div>
-              <div style={{ width: 100 }}>
+              <div style={{ width: 80 }}>
                 <label style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, fontWeight: 600, display: "block", marginBottom: 7 }}>AGE</label>
                 <input value={childAge} onChange={(e) => setChildAge(e.target.value)} placeholder="5" type="number" style={{ width: "100%", padding: "11px 14px", borderRadius: 11, border: "1px solid rgba(255,255,255,0.13)", background: "rgba(255,255,255,0.07)", color: "white", fontSize: 15, boxSizing: "border-box" }} />
               </div>
+            </div>
+            <label style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, fontWeight: 600, display: "block", marginBottom: 10 }}>GENDER</label>
+            <div style={{ display: "flex", gap: 9, marginBottom: 24 }}>
+              {[{ id: "boy", label: "👦 Boy" }, { id: "girl", label: "👧 Girl" }, { id: "neutral", label: "🧒 Neutral" }].map(g => (
+                <div key={g.id} onClick={() => setChildGender(g.id)} style={{ flex: 1, padding: "11px 14px", borderRadius: 11, cursor: "pointer", textAlign: "center", border: `1px solid ${childGender === g.id ? "#ffd700" : "rgba(255,255,255,0.09)"}`, background: childGender === g.id ? "rgba(255,215,0,0.11)" : "rgba(255,255,255,0.03)", fontWeight: 600, color: childGender === g.id ? "#ffd700" : "white", fontSize: 13 }}>{g.label}</div>
+              ))}
             </div>
             <label style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, fontWeight: 600, display: "block", marginBottom: 10 }}>STORY THEME</label>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 9 }}>
@@ -335,7 +368,7 @@ export default function StorybookCreator() {
           </div>
 
           <div style={{ textAlign: "center", marginTop: 18 }}>
-            <button onClick={() => { setStep("upload"); setPhoto(null); setCartoonUrl(null); setStory(null); setPageImages(Array(6).fill(null)); setPhotoFalUrl(null); setScenesGenerating(false); }} style={{ padding: "9px 22px", borderRadius: 9, border: "1px solid rgba(255,255,255,0.12)", background: "transparent", color: "rgba(255,255,255,0.42)", fontSize: 13, cursor: "pointer" }}>+ Create Another Book</button>
+            <button onClick={() => { setStep("upload"); setPhoto(null); setCartoonUrl(null); setStory(null); setPageImages(Array(6).fill(null)); setPhotoFalUrl(null); setScenesGenerating(false); setChildGender("boy"); }} style={{ padding: "9px 22px", borderRadius: 9, border: "1px solid rgba(255,255,255,0.12)", background: "transparent", color: "rgba(255,255,255,0.42)", fontSize: 13, cursor: "pointer" }}>+ Create Another Book</button>
           </div>
         </div>
       )}

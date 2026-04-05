@@ -6,10 +6,11 @@ fal.config({ credentials: process.env.FAL_API_KEY });
 
 export async function POST(request) {
   try {
-    const { photoUrl, illustration, childName } = await request.json();
+    const { photoUrl, illustration, childName, gender } = await request.json();
     console.log("Generate scene called:", illustration?.substring(0, 80));
 
-    const characterDesc = childName ? `${childName}, a young child,` : "a young child,";
+    const genderWord = gender === "girl" ? "girl" : gender === "boy" ? "boy" : "child";
+    const characterDesc = childName ? `${childName}, a young ${genderWord},` : `a young ${genderWord},`;
 
     const result = await fal.subscribe("fal-ai/flux-pulid", {
       input: {

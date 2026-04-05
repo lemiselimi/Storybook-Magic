@@ -5,16 +5,16 @@ const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { childName, childAge, theme } = body;
+    const { childName, childAge, gender, theme } = body;
 
-    console.log("Story API called with:", { childName, childAge, theme });
+    console.log("Story API called with:", { childName, childAge, gender, theme });
 
     const response = await client.messages.create({
       model: "claude-haiku-4-5-20251001",
       max_tokens: 1500,
       messages: [{
         role: "user",
-        content: `Create a 6-page children's book for ${childName || "a child"}, age ${childAge || 5}, with the theme: ${theme}.
+        content: `Create a 6-page children's book for ${childName || "a child"}, age ${childAge || 5}, gender: ${gender === "girl" ? "girl (use she/her)" : gender === "boy" ? "boy (use he/him)" : "neutral (use they/them)"}, with the theme: ${theme}.
 
 The "illustration" field for each page must be a vivid, detailed scene description for AI image generation (1-2 sentences). Describe: the environment/setting, what the main character is doing, mood/lighting, and any magical or theme-specific elements. Be specific and visual. Example: "A cozy bedroom at dawn with floating glowing stars, the child sitting up in bed holding a treasure map that pulses with golden light, moonbeams streaming through the window."
 

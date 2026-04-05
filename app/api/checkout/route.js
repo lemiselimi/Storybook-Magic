@@ -8,8 +8,12 @@ export async function POST(request) {
   }
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
   try {
-    const { ref } = await request.json();
+    const { ref, plan } = await request.json();
     const origin = request.headers.get("origin") || "https://storybookapp-vercel.app";
+
+    const isPrint   = plan === "print";
+    const unitPrice = isPrint ? Number(process.env.PRINT_PRICE_CENTS || 4499) : PRICE;
+    const planLabel = isPrint ? "Print + Digital" : "Digital";
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -17,11 +21,11 @@ export async function POST(request) {
         price_data: {
           currency: "usd",
           product_data: {
-            name: "StoryBook Magic — Personalised Storybook",
+            name: `StoryBook Magic — Personalised Storybook (${planLabel})`,
             description: "A unique Pixar-style illustrated book starring your child",
             images: ["https://storybookapp-vercel.app/og-image.png"],
           },
-          unit_amount: PRICE,
+          unit_amount: unitPrice,
         },
         quantity: 1,
       }],

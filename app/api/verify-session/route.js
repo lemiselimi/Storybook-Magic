@@ -1,8 +1,10 @@
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
 export async function GET(request) {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    return Response.json({ error: "Payments not configured" }, { status: 503 });
+  }
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
   try {
     const { searchParams } = new URL(request.url);
     const sessionId = searchParams.get("session_id");

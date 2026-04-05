@@ -1,9 +1,12 @@
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const PRICE = Number(process.env.BOOK_PRICE_CENTS || 499); // $4.99 default
 
 export async function POST(request) {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    return Response.json({ error: "Payments not configured" }, { status: 503 });
+  }
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
   try {
     const { ref } = await request.json();
     const origin = request.headers.get("origin") || "https://storybookapp-vercel.app";

@@ -148,13 +148,9 @@ export default function StorybookCreator() {
         }).then(r => r.json()),
       ]);
 
-      setLoadingMsg("Almost done... opening your book! 📚");
-
       let falUrl: string | null = null;
       if (cartoonRes.status === "fulfilled" && cartoonRes.value?.url) {
         setCartoonUrl(`/api/proxy?url=${encodeURIComponent(cartoonRes.value.url)}`);
-        // Use the avatar URL as the scene reference so the child's Pixar character
-        // appears consistently in every scene (not a generic character)
         falUrl = cartoonRes.value.url;
         setPhotoFalUrl(falUrl);
       } else {
@@ -163,13 +159,15 @@ export default function StorybookCreator() {
 
       const storyData = storyRes.status === "fulfilled" ? storyRes.value : getFallbackStory();
       setStory(storyData);
+
+      // Generate all scenes before showing the book
+      if (falUrl && storyData?.pages) {
+        setLoadingMsg("Painting your scenes... 🎨 (this takes ~1 min)");
+        await generateScenes(falUrl, storyData.pages, childGender);
+      }
+
       setCurrentPage(-1);
       setStep("book");
-
-      // Start generating per-page scenes in the background (non-blocking)
-      if (falUrl && storyData?.pages) {
-        generateScenes(falUrl, storyData.pages, childGender);
-      }
     } catch (err) {
       console.error(err);
       setStory(getFallbackStory());
@@ -322,7 +320,7 @@ export default function StorybookCreator() {
           <div style={{ fontSize: 76, marginBottom: 22, animation: "float 2s ease-in-out infinite" }}>🪄</div>
           <h2 style={{ color: "white", fontSize: 22, fontWeight: 700, margin: "0 0 10px" }}>Creating your magical book...</h2>
           <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 15, margin: "0 0 8px" }}>{loadingMsg}</p>
-          <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 13, margin: "0 0 28px" }}>Transforming photo + writing story — about 30–45 seconds!</p>
+          <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 13, margin: "0 0 28px" }}>Transforming photo, writing story & painting all scenes — about 1–2 minutes!</p>
           <div style={{ display: "flex", justifyContent: "center", gap: 8 }}>
             {[0, 1, 2].map(i => <div key={i} style={{ width: 9, height: 9, borderRadius: "50%", background: "#ffd700", animation: "float 1s ease-in-out infinite", animationDelay: `${i * 0.2}s` }} />)}
           </div>
@@ -332,16 +330,6 @@ export default function StorybookCreator() {
       {step === "book" && story && (
         <div style={{ width: "100%", maxWidth: 880, animation: "fadeUp 0.5s ease both" }}>
           {falError && <div style={{ background: "rgba(255,100,100,0.09)", border: "1px solid rgba(255,100,100,0.25)", borderRadius: 10, padding: "9px 14px", marginBottom: 14, color: "#ffaaaa", fontSize: 13, textAlign: "center" }}>⚠️ {falError}</div>}
-
-          {/* Scene generation progress banner */}
-          {scenesGenerating && (
-            <div style={{ background: "rgba(255,215,0,0.07)", border: "1px solid rgba(255,215,0,0.2)", borderRadius: 10, padding: "9px 14px", marginBottom: 14, color: "rgba(255,215,0,0.85)", fontSize: 13, textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-              <span style={{ display: "inline-flex", gap: 4 }}>
-                {[0,1,2].map(i => <span key={i} style={{ width: 5, height: 5, borderRadius: "50%", background: "#ffd700", display: "inline-block", animation: "float 0.8s ease-in-out infinite", animationDelay: `${i * 0.2}s` }} />)}
-              </span>
-              Painting unique scenes for each page — they'll appear as they finish!
-            </div>
-          )}
 
           {currentPage === -1 ? (
             <div style={{ background: "linear-gradient(135deg, #2d1b4e, #4a2060)", borderRadius: 20, padding: "56px 40px", textAlign: "center", border: "2px solid rgba(255,215,0,0.28)", boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }}>

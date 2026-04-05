@@ -20,7 +20,7 @@ export async function POST(request) {
         num_inference_steps: 28,
         guidance_scale: 3.5,
         true_cfg: 1,
-        id_weight: 1.0,
+        id_weight: 0.75,
         num_images: 1,
         image_size: "landscape_4_3",
       },

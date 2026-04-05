@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 
 const THEMES = [
   { id: "adventure", label: "🗺️ Adventure", desc: "Epic quests & exploration" },
@@ -19,6 +19,9 @@ const PAGE_BACKGROUNDS = [
   "linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)",
 ];
 
+const PAYMENTS_ENABLED = !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+const BOOK_PRICE = process.env.NEXT_PUBLIC_BOOK_PRICE || "$4.99";
+
 export default function StorybookCreator() {
   const [step, setStep] = useState("upload");
   const [photo, setPhoto] = useState<string | null>(null);
@@ -36,7 +39,47 @@ export default function StorybookCreator() {
   const [dragOver, setDragOver] = useState(false);
   const [currentPage, setCurrentPage] = useState(-1);
   const [falError, setFalError] = useState<string | null>(null);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [pdfLoading, setPdfLoading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // Handle Stripe return: ?success=1&session_id=xxx&ref=uuid or ?cancelled=1
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const success = params.get("success");
+    const sessionId = params.get("session_id");
+    const ref = params.get("ref");
+    const cancelled = params.get("cancelled");
+    window.history.replaceState({}, "", "/");
+
+    if (cancelled) return; // user cancelled — stay on upload step
+
+    if (success && sessionId && ref) {
+      const saved = sessionStorage.getItem(ref);
+      if (!saved) return;
+      sessionStorage.removeItem(ref);
+      const data = JSON.parse(saved);
+
+      fetch(`/api/verify-session?session_id=${sessionId}`)
+        .then(r => r.json())
+        .then(result => {
+          if (result.ok) {
+            // Restore photo preview
+            if (data.photoBase64) {
+              setPhoto(`data:image/jpeg;base64,${data.photoBase64}`);
+              setPhotoBase64(data.photoBase64);
+            }
+            setChildName(data.childName || "");
+            setChildAge(data.childAge || "");
+            setChildGender(data.childGender || "boy");
+            setTheme(data.theme || "adventure");
+            // generateBook reads from state, so call it after a tick
+            setTimeout(() => generateBookWith(data), 50);
+          }
+        })
+        .catch(console.error);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const compressImage = (file: File): Promise<string> =>
     new Promise((resolve, reject) => {
@@ -54,7 +97,6 @@ export default function StorybookCreator() {
         canvas.height = height;
         canvas.getContext("2d")!.drawImage(img, 0, 0, width, height);
         URL.revokeObjectURL(objectUrl);
-        // Strip the data:image/jpeg;base64, prefix
         resolve(canvas.toDataURL("image/jpeg", 0.8).split(",")[1]);
       };
       img.onerror = reject;
@@ -67,7 +109,6 @@ export default function StorybookCreator() {
     setCartoonUrl(null);
     setFalError(null);
     compressImage(file).then(setPhotoBase64).catch(() => {
-      // Fallback to plain FileReader if canvas fails
       const reader = new FileReader();
       reader.onload = (e) => setPhotoBase64((e.target?.result as string).split(",")[1]);
       reader.readAsDataURL(file);
@@ -80,35 +121,28 @@ export default function StorybookCreator() {
     if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
   };
 
-  const getFallbackStory = () => ({
-    title: `${childName || "A Child"}'s Big Adventure`,
-    dedication: `For ${childName || "every child"} who dares to dream`,
+  const getFallbackStory = (name = childName) => ({
+    title: `${name || "A Child"}'s Big Adventure`,
+    dedication: `For ${name || "every child"} who dares to dream`,
     pages: [
-      { pageNum: 1, text: `Once upon a time, ${childName || "our hero"} woke up to find a magical map under their pillow.`, illustration: `A cozy bedroom at dawn, the child sitting up in bed holding a glowing treasure map that pulses with golden light, moonbeams streaming through the curtains, floating sparkles in the air` },
-      { pageNum: 2, text: `${childName || "Our hero"} packed a backpack and set off into the forest. "I'm ready!" they cheered.`, illustration: `A child in explorer gear with a colorful backpack standing at the edge of a glowing enchanted forest at golden hour, tall magical trees arching overhead, fireflies dancing in the warm light` },
+      { pageNum: 1, text: `Once upon a time, ${name || "our hero"} woke up to find a magical map under their pillow.`, illustration: `A cozy bedroom at dawn, the child sitting up in bed holding a glowing treasure map that pulses with golden light, moonbeams streaming through the curtains, floating sparkles in the air` },
+      { pageNum: 2, text: `${name || "Our hero"} packed a backpack and set off into the forest. "I'm ready!" they cheered.`, illustration: `A child in explorer gear with a colorful backpack standing at the edge of a glowing enchanted forest at golden hour, tall magical trees arching overhead, fireflies dancing in the warm light` },
       { pageNum: 3, text: `The path led through an enchanted forest full of friendly butterflies and glowing flowers.`, illustration: `Inside a magical glowing forest, the child walking along a winding path, giant luminous mushrooms and rainbow butterflies surrounding them, shafts of golden light filtering through the canopy` },
       { pageNum: 4, text: `Deep in the forest they found a tiny dragon who had lost his fire.`, illustration: `A clearing in the enchanted forest, the child kneeling beside a small blue dragon with droopy wings and sad eyes, surrounded by unlit candles and cold embers, soft misty light` },
-      { pageNum: 5, text: `${childName || "Our hero"} told a joke and WHOOOOSH bright flames burst out! "You fixed me!" the dragon cried.`, illustration: `The child and a small dragon in a magical forest clearing, the dragon joyfully breathing a spectacular rainbow flame into the sky while the child laughs and claps, sparks and colorful lights everywhere` },
+      { pageNum: 5, text: `${name || "Our hero"} told a joke and WHOOOOSH bright flames burst out! "You fixed me!" the dragon cried.`, illustration: `The child and a small dragon in a magical forest clearing, the dragon joyfully breathing a spectacular rainbow flame into the sky while the child laughs and claps, sparks and colorful lights everywhere` },
       { pageNum: 6, text: `The dragon flew them home under the stars. "Best day ever," they whispered.`, illustration: `A child riding on the back of a friendly glowing dragon soaring through a spectacular star-filled night sky, a cozy village visible far below, northern lights swirling around them in purples and greens` },
     ],
   });
 
-  const generateScenes = async (falUrl: string, pages: any[], gender: string) => {
+  const generateScenes = async (falUrl: string, pages: any[], gender: string, name: string) => {
     setScenesGenerating(true);
-    // Generate all page scenes in parallel — each resolves independently and updates state
     const scenePromises = pages.map(async (page, idx) => {
       try {
         const res = await fetch("/api/generate-scene", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            photoUrl: falUrl,
-            illustration: page.illustration,
-            childName,
-            gender,
-          }),
+          body: JSON.stringify({ photoUrl: falUrl, illustration: page.illustration, childName: name, gender }),
         }).then(r => r.json());
-
         if (res.url) {
           setPageImages(prev => {
             const next = [...prev];
@@ -120,12 +154,18 @@ export default function StorybookCreator() {
         console.error(`Scene generation failed for page ${idx + 1}:`, err);
       }
     });
-
     await Promise.allSettled(scenePromises);
     setScenesGenerating(false);
   };
 
-  const generateBook = async () => {
+  // Core generation — accepts explicit params (for post-Stripe flow) or reads from state
+  const generateBookWith = async (params?: { photoBase64: string; childName: string; childAge: string; childGender: string; theme: string }) => {
+    const _base64 = params?.photoBase64 ?? photoBase64;
+    const _name = params?.childName ?? childName;
+    const _age = params?.childAge ?? childAge;
+    const _gender = params?.childGender ?? childGender;
+    const _theme = params?.theme ?? theme;
+
     setStep("generating");
     setFalError(null);
     setPageImages(Array(6).fill(null));
@@ -133,18 +173,18 @@ export default function StorybookCreator() {
 
     try {
       setLoadingMsg("Transforming photo & writing your story... 🎨📖");
-      const selectedTheme = THEMES.find((t) => t.id === theme);
+      const selectedTheme = THEMES.find(t => t.id === _theme);
 
       const [cartoonRes, storyRes] = await Promise.allSettled([
         fetch("/api/cartoonify", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ imageBase64: photoBase64, gender: childGender }),
+          body: JSON.stringify({ imageBase64: _base64, gender: _gender }),
         }).then(r => r.json()),
         fetch("/api/story", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ childName, childAge, gender: childGender, theme: `${selectedTheme?.label} - ${selectedTheme?.desc}` }),
+          body: JSON.stringify({ childName: _name, childAge: _age, gender: _gender, theme: `${selectedTheme?.label} - ${selectedTheme?.desc}` }),
         }).then(r => r.json()),
       ]);
 
@@ -157,75 +197,121 @@ export default function StorybookCreator() {
         setFalError("Cartoon transformation failed — using original photo.");
       }
 
-      const storyData = storyRes.status === "fulfilled" ? storyRes.value : getFallbackStory();
+      const storyData = storyRes.status === "fulfilled" ? storyRes.value : getFallbackStory(_name);
       setStory(storyData);
 
-      // Generate all scenes before showing the book
       if (falUrl && storyData?.pages) {
         setLoadingMsg("Painting your scenes... 🎨 (this takes ~1 min)");
-        await generateScenes(falUrl, storyData.pages, childGender);
+        await generateScenes(falUrl, storyData.pages, _gender, _name);
       }
 
       setCurrentPage(-1);
       setStep("book");
     } catch (err) {
       console.error(err);
-      setStory(getFallbackStory());
+      setStory(getFallbackStory(_name));
       setCurrentPage(-1);
       setStep("book");
     }
   };
 
+  const handleCreateClick = async () => {
+    if (!PAYMENTS_ENABLED) {
+      generateBookWith();
+      return;
+    }
+    setCheckoutLoading(true);
+    try {
+      const ref = crypto.randomUUID();
+      sessionStorage.setItem(ref, JSON.stringify({ photoBase64, childName, childAge, childGender, theme }));
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ref }),
+      }).then(r => r.json());
+      if (res.url) window.location.href = res.url;
+      else throw new Error(res.error || "Checkout failed");
+    } catch (err: any) {
+      alert("Payment setup failed: " + err.message);
+      setCheckoutLoading(false);
+    }
+  };
+
+  const downloadPDF = async () => {
+    setPdfLoading(true);
+    try {
+      const { jsPDF } = await import("jspdf");
+      const html2canvas = (await import("html2canvas")).default;
+
+      // A4 landscape in mm
+      const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+      const pdfW = 297, pdfH = 210;
+
+      const capture = async (id: string) => {
+        const el = document.getElementById(id);
+        if (!el) return null;
+        return html2canvas(el, { useCORS: true, scale: 2, backgroundColor: null });
+      };
+
+      // Cover
+      const coverCanvas = await capture("pdf-cover-capture");
+      if (coverCanvas) {
+        pdf.addImage(coverCanvas.toDataURL("image/jpeg", 0.92), "JPEG", 0, 0, pdfW, pdfH);
+      }
+
+      // Spreads
+      const numSpreads = Math.ceil(story.pages.length / 2);
+      for (let i = 0; i < numSpreads; i++) {
+        const canvas = await capture(`pdf-spread-${i}`);
+        if (canvas) {
+          pdf.addPage("a4", "landscape");
+          pdf.addImage(canvas.toDataURL("image/jpeg", 0.92), "JPEG", 0, 0, pdfW, pdfH);
+        }
+      }
+
+      pdf.save(`${(story.title || "StoryBook").replace(/[^a-z0-9]/gi, "_")}.pdf`);
+    } catch (err) {
+      console.error("PDF error:", err);
+      alert("PDF generation failed. Please try again.");
+    }
+    setPdfLoading(false);
+  };
+
   const displayPhoto = cartoonUrl || photo;
+
+  const BookSpread = ({ spreadIndex }: { spreadIndex: number }) => {
+    const leftPage = story.pages[spreadIndex * 2];
+    const rightPage = story.pages[spreadIndex * 2 + 1];
+    return (
+      <div style={{ display: "flex", width: "100%", minHeight: 380 }}>
+        {leftPage && <BookPage page={leftPage} isLeft={true} />}
+        {rightPage
+          ? <BookPage page={rightPage} isLeft={false} />
+          : <div style={{ flex: 1, background: "#fff8f0", display: "flex", alignItems: "center", justifyContent: "center" }}><p style={{ color: "#c4a882", fontFamily: "Georgia, serif", fontSize: 20, fontStyle: "italic" }}>The End 🌟</p></div>
+        }
+      </div>
+    );
+  };
 
   const BookPage = ({ page, isLeft }: { page: any; isLeft: boolean }) => {
     const bg = PAGE_BACKGROUNDS[(page.pageNum - 1) % PAGE_BACKGROUNDS.length];
     const sceneImage = pageImages[page.pageNum - 1];
-    const isSceneLoading = scenesGenerating && !sceneImage;
 
     return (
-      <div style={{ flex: 1, padding: "32px 28px", display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: 0, background: isLeft ? "#fffef7" : "#fff8f0", borderRight: isLeft ? "2px solid #e8dcc8" : "none" }}>
+      <div style={{ flex: 1, padding: "28px 24px", display: "flex", flexDirection: "column", justifyContent: "space-between", background: isLeft ? "#fffef7" : "#fff8f0", borderRight: isLeft ? "2px solid #e8dcc8" : "none" }}>
         {isLeft ? (
           <>
             <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-              <div style={{ width: "100%", aspectRatio: "4/3", borderRadius: 16, overflow: "hidden", background: sceneImage ? "#1a1a2e" : bg, border: "3px solid rgba(255,255,255,0.5)", position: "relative", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}>
+              <div style={{ width: "100%", aspectRatio: "4/3", borderRadius: 14, overflow: "hidden", background: sceneImage ? "#1a1a2e" : bg, border: "3px solid rgba(255,255,255,0.5)", position: "relative", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}>
                 {sceneImage ? (
-                  // Full-bleed AI-generated scene image
-                  <img
-                    src={sceneImage}
-                    alt={`Page ${page.pageNum} scene`}
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                  />
+                  <img crossOrigin="anonymous" src={sceneImage} alt={`Page ${page.pageNum}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 ) : displayPhoto ? (
-                  // Fallback: avatar portrait centered on gradient background
-                  <img
-                    src={displayPhoto}
-                    alt="hero"
-                    style={{
-                      height: "85%", width: "auto", maxWidth: "70%",
-                      objectFit: "contain",
-                      borderRadius: 12,
-                      filter: "drop-shadow(0 8px 16px rgba(0,0,0,0.2))",
-                    }}
-                  />
+                  <img crossOrigin="anonymous" src={displayPhoto} alt="hero" style={{ height: "85%", width: "auto", maxWidth: "70%", objectFit: "contain", borderRadius: 12, filter: "drop-shadow(0 8px 16px rgba(0,0,0,0.2))" }} />
                 ) : null}
-
-                {/* Loading indicator while scene is generating */}
-                {isSceneLoading && (
-                  <div style={{ position: "absolute", bottom: 10, left: "50%", transform: "translateX(-50%)", background: "rgba(0,0,0,0.55)", borderRadius: 20, padding: "4px 12px", display: "flex", alignItems: "center", gap: 6 }}>
-                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#ffd700", animation: "float 0.8s ease-in-out infinite" }} />
-                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#ffd700", animation: "float 0.8s ease-in-out infinite", animationDelay: "0.2s" }} />
-                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#ffd700", animation: "float 0.8s ease-in-out infinite", animationDelay: "0.4s" }} />
-                    <span style={{ color: "rgba(255,255,255,0.8)", fontSize: 10, marginLeft: 4 }}>Painting scene...</span>
-                  </div>
-                )}
-
-                {/* Badge */}
-                {sceneImage ? (
-                  <div style={{ position: "absolute", top: 8, right: 8, borderRadius: 8, background: "rgba(255,215,0,0.95)", padding: "3px 8px", fontSize: 10, fontWeight: 700, color: "#1a0a2e" }}>✨ AI Scene</div>
-                ) : cartoonUrl ? (
-                  <div style={{ position: "absolute", top: 8, right: 8, borderRadius: 8, background: "rgba(255,215,0,0.95)", padding: "3px 8px", fontSize: 10, fontWeight: 700, color: "#1a0a2e" }}>✨ Pixar Style</div>
-                ) : null}
+                {sceneImage
+                  ? <div style={{ position: "absolute", top: 8, right: 8, borderRadius: 8, background: "rgba(255,215,0,0.95)", padding: "3px 8px", fontSize: 10, fontWeight: 700, color: "#1a0a2e" }}>✨ AI Scene</div>
+                  : cartoonUrl ? <div style={{ position: "absolute", top: 8, right: 8, borderRadius: 8, background: "rgba(255,215,0,0.95)", padding: "3px 8px", fontSize: 10, fontWeight: 700, color: "#1a0a2e" }}>✨ Pixar Style</div>
+                  : null}
               </div>
             </div>
             <div style={{ textAlign: "center", color: "#c4a882", fontFamily: "Georgia, serif", fontSize: 13, marginTop: 10 }}>— {page.pageNum} —</div>
@@ -308,9 +394,19 @@ export default function StorybookCreator() {
               ))}
             </div>
           </div>
-          <div style={{ display: "flex", gap: 12, marginTop: 18 }}>
+
+          {/* Value props */}
+          <div style={{ display: "flex", gap: 8, marginTop: 16, justifyContent: "center" }}>
+            {["🎨 AI Pixar art", "📖 6 unique scenes", "📥 PDF download"].map(v => (
+              <span key={v} style={{ background: "rgba(255,215,0,0.08)", border: "1px solid rgba(255,215,0,0.18)", borderRadius: 20, padding: "4px 10px", fontSize: 11, color: "rgba(255,215,0,0.8)" }}>{v}</span>
+            ))}
+          </div>
+
+          <div style={{ display: "flex", gap: 12, marginTop: 14 }}>
             <button onClick={() => setStep("upload")} style={{ padding: "13px 22px", borderRadius: 13, border: "1px solid rgba(255,255,255,0.13)", background: "transparent", color: "rgba(255,255,255,0.55)", fontSize: 14, cursor: "pointer" }}>← Back</button>
-            <button onClick={generateBook} style={{ flex: 1, padding: "15px", borderRadius: 13, border: "none", background: "linear-gradient(135deg, #a18cd1, #fbc2eb)", color: "white", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>✨ Create My Storybook!</button>
+            <button onClick={handleCreateClick} disabled={checkoutLoading} style={{ flex: 1, padding: "15px", borderRadius: 13, border: "none", background: "linear-gradient(135deg, #a18cd1, #fbc2eb)", color: "white", fontSize: 16, fontWeight: 700, cursor: checkoutLoading ? "not-allowed" : "pointer", opacity: checkoutLoading ? 0.7 : 1 }}>
+              {checkoutLoading ? "Redirecting to checkout..." : PAYMENTS_ENABLED ? `✨ Create My Storybook — ${BOOK_PRICE}` : "✨ Create My Storybook!"}
+            </button>
           </div>
         </div>
       )}
@@ -331,30 +427,26 @@ export default function StorybookCreator() {
         <div style={{ width: "100%", maxWidth: 880, animation: "fadeUp 0.5s ease both" }}>
           {falError && <div style={{ background: "rgba(255,100,100,0.09)", border: "1px solid rgba(255,100,100,0.25)", borderRadius: 10, padding: "9px 14px", marginBottom: 14, color: "#ffaaaa", fontSize: 13, textAlign: "center" }}>⚠️ {falError}</div>}
 
+          {/* Visible book */}
           {currentPage === -1 ? (
-            <div style={{ background: "linear-gradient(135deg, #2d1b4e, #4a2060)", borderRadius: 20, padding: "56px 40px", textAlign: "center", border: "2px solid rgba(255,215,0,0.28)", boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }}>
-              {displayPhoto && <img src={displayPhoto} alt="hero" style={{ width: 148, height: 148, objectFit: "cover", borderRadius: 16, border: "5px solid #ffd700", marginBottom: 20 }} />}
+            <div id="pdf-cover" style={{ background: "linear-gradient(135deg, #2d1b4e, #4a2060)", borderRadius: 20, padding: "56px 40px", textAlign: "center", border: "2px solid rgba(255,215,0,0.28)", boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }}>
+              {displayPhoto && <img crossOrigin="anonymous" src={displayPhoto} alt="hero" style={{ width: 148, height: 148, objectFit: "cover", borderRadius: 16, border: "5px solid #ffd700", marginBottom: 20 }} />}
               {cartoonUrl && <div style={{ marginBottom: 14 }}><span style={{ background: "rgba(255,215,0,0.18)", border: "1px solid rgba(255,215,0,0.35)", borderRadius: 20, padding: "4px 14px", fontSize: 12, color: "#ffd700", fontWeight: 600 }}>✨ Pixar-style cartoon</span></div>}
               <h1 style={{ color: "#ffd700", fontSize: 30, fontWeight: 800, margin: "0 0 10px" }}>{story.title}</h1>
               <p style={{ color: "rgba(255,255,255,0.55)", fontStyle: "italic", fontSize: 15, margin: "0 0 24px" }}>{story.dedication}</p>
               <button onClick={() => setCurrentPage(0)} style={{ padding: "11px 30px", borderRadius: 12, border: "none", background: "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>Open Book →</button>
             </div>
           ) : (
-            <div style={{ display: "flex", background: "white", borderRadius: 16, overflow: "hidden", boxShadow: "0 30px 80px rgba(0,0,0,0.5)", minHeight: 400 }}>
-              {story.pages[currentPage * 2] && <BookPage page={story.pages[currentPage * 2]} isLeft={true} />}
-              {story.pages[currentPage * 2 + 1]
-                ? <BookPage page={story.pages[currentPage * 2 + 1]} isLeft={false} />
-                : <div style={{ flex: 1, background: "#fff8f0", display: "flex", alignItems: "center", justifyContent: "center" }}><p style={{ color: "#c4a882", fontFamily: "Georgia, serif", fontSize: 20, fontStyle: "italic" }}>The End 🌟</p></div>
-              }
+            <div style={{ background: "white", borderRadius: 16, overflow: "hidden", boxShadow: "0 30px 80px rgba(0,0,0,0.5)" }}>
+              <BookSpread spreadIndex={currentPage} />
             </div>
           )}
 
+          {/* Navigation dots */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16, marginTop: 22 }}>
             <button onClick={() => setCurrentPage(p => Math.max(-1, p - 1))} disabled={currentPage === -1} style={{ padding: "11px 22px", borderRadius: 11, border: "1px solid rgba(255,255,255,0.18)", background: "rgba(255,255,255,0.07)", color: "white", fontSize: 14, cursor: currentPage === -1 ? "not-allowed" : "pointer", opacity: currentPage === -1 ? 0.3 : 1 }}>← Prev</button>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              {/* Cover dot */}
               <div onClick={() => setCurrentPage(-1)} title="Cover" style={{ width: currentPage === -1 ? 10 : 8, height: currentPage === -1 ? 10 : 8, borderRadius: "50%", background: currentPage === -1 ? "#ffd700" : "rgba(255,255,255,0.25)", cursor: "pointer", transition: "all 0.2s" }} />
-              {/* One dot per spread */}
               {Array.from({ length: Math.ceil(story.pages.length / 2) }, (_, i) => (
                 <div key={i} onClick={() => setCurrentPage(i)} title={`Pages ${i * 2 + 1}–${Math.min(i * 2 + 2, story.pages.length)}`} style={{ width: currentPage === i ? 10 : 8, height: currentPage === i ? 10 : 8, borderRadius: "50%", background: currentPage === i ? "#ffd700" : "rgba(255,255,255,0.25)", cursor: "pointer", transition: "all 0.2s" }} />
               ))}
@@ -362,9 +454,31 @@ export default function StorybookCreator() {
             <button onClick={() => setCurrentPage(p => Math.min(Math.ceil(story.pages.length / 2) - 1, p + 1))} disabled={currentPage >= Math.ceil(story.pages.length / 2) - 1} style={{ padding: "11px 22px", borderRadius: 11, border: "none", background: "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 14, fontWeight: 600, cursor: currentPage >= Math.ceil(story.pages.length / 2) - 1 ? "not-allowed" : "pointer", opacity: currentPage >= Math.ceil(story.pages.length / 2) - 1 ? 0.4 : 1 }}>Next →</button>
           </div>
 
-          <div style={{ textAlign: "center", marginTop: 18 }}>
-            <button onClick={() => { setStep("upload"); setPhoto(null); setCartoonUrl(null); setStory(null); setPageImages(Array(6).fill(null)); setPhotoFalUrl(null); setScenesGenerating(false); setChildGender("boy"); }} style={{ padding: "9px 22px", borderRadius: 9, border: "1px solid rgba(255,255,255,0.12)", background: "transparent", color: "rgba(255,255,255,0.42)", fontSize: 13, cursor: "pointer" }}>+ Create Another Book</button>
+          {/* Action buttons */}
+          <div style={{ display: "flex", gap: 10, justifyContent: "center", marginTop: 18, flexWrap: "wrap" }}>
+            <button onClick={downloadPDF} disabled={pdfLoading} style={{ padding: "11px 24px", borderRadius: 11, border: "none", background: pdfLoading ? "rgba(255,255,255,0.1)" : "linear-gradient(135deg, #43e97b, #38f9d7)", color: pdfLoading ? "rgba(255,255,255,0.5)" : "#1a2e1a", fontSize: 14, fontWeight: 700, cursor: pdfLoading ? "not-allowed" : "pointer" }}>
+              {pdfLoading ? "⏳ Generating PDF..." : "📥 Download PDF"}
+            </button>
+            <button onClick={() => { setStep("upload"); setPhoto(null); setCartoonUrl(null); setStory(null); setPageImages(Array(6).fill(null)); setPhotoFalUrl(null); setScenesGenerating(false); setChildGender("boy"); }} style={{ padding: "11px 22px", borderRadius: 11, border: "1px solid rgba(255,255,255,0.18)", background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.7)", fontSize: 14, cursor: "pointer" }}>+ New Book</button>
           </div>
+        </div>
+      )}
+
+      {/* Off-screen PDF capture targets — always rendered when book is ready */}
+      {step === "book" && story && (
+        <div style={{ position: "fixed", left: "-9999px", top: 0, width: 880, pointerEvents: "none" }} aria-hidden="true">
+          {/* Cover */}
+          <div id="pdf-cover-capture" style={{ width: 880, height: 520, background: "linear-gradient(135deg, #2d1b4e, #4a2060)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, padding: 40 }}>
+            {displayPhoto && <img crossOrigin="anonymous" src={displayPhoto} alt="hero" style={{ width: 160, height: 160, objectFit: "cover", borderRadius: 20, border: "5px solid #ffd700" }} />}
+            <div style={{ color: "#ffd700", fontSize: 32, fontWeight: 800, textAlign: "center" }}>{story.title}</div>
+            <div style={{ color: "rgba(255,255,255,0.6)", fontStyle: "italic", fontSize: 16, textAlign: "center" }}>{story.dedication}</div>
+          </div>
+          {/* Spreads */}
+          {Array.from({ length: Math.ceil(story.pages.length / 2) }, (_, i) => (
+            <div key={i} id={`pdf-spread-${i}`} style={{ width: 880, background: "white", display: "flex" }}>
+              <BookSpread spreadIndex={i} />
+            </div>
+          ))}
         </div>
       )}
     </div>

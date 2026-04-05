@@ -349,9 +349,16 @@ export default function StorybookCreator() {
             </div>
           )}
 
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 20, marginTop: 22 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16, marginTop: 22 }}>
             <button onClick={() => setCurrentPage(p => Math.max(-1, p - 1))} disabled={currentPage === -1} style={{ padding: "11px 22px", borderRadius: 11, border: "1px solid rgba(255,255,255,0.18)", background: "rgba(255,255,255,0.07)", color: "white", fontSize: 14, cursor: currentPage === -1 ? "not-allowed" : "pointer", opacity: currentPage === -1 ? 0.3 : 1 }}>← Prev</button>
-            <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 13 }}>{currentPage === -1 ? "Cover" : `Pages ${currentPage * 2 + 1}–${Math.min(currentPage * 2 + 2, story.pages.length)}`} of {story.pages.length}</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {/* Cover dot */}
+              <div onClick={() => setCurrentPage(-1)} title="Cover" style={{ width: currentPage === -1 ? 10 : 8, height: currentPage === -1 ? 10 : 8, borderRadius: "50%", background: currentPage === -1 ? "#ffd700" : "rgba(255,255,255,0.25)", cursor: "pointer", transition: "all 0.2s" }} />
+              {/* One dot per spread */}
+              {Array.from({ length: Math.ceil(story.pages.length / 2) }, (_, i) => (
+                <div key={i} onClick={() => setCurrentPage(i)} title={`Pages ${i * 2 + 1}–${Math.min(i * 2 + 2, story.pages.length)}`} style={{ width: currentPage === i ? 10 : 8, height: currentPage === i ? 10 : 8, borderRadius: "50%", background: currentPage === i ? "#ffd700" : "rgba(255,255,255,0.25)", cursor: "pointer", transition: "all 0.2s" }} />
+              ))}
+            </div>
             <button onClick={() => setCurrentPage(p => Math.min(Math.ceil(story.pages.length / 2) - 1, p + 1))} disabled={currentPage >= Math.ceil(story.pages.length / 2) - 1} style={{ padding: "11px 22px", borderRadius: 11, border: "none", background: "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 14, fontWeight: 600, cursor: currentPage >= Math.ceil(story.pages.length / 2) - 1 ? "not-allowed" : "pointer", opacity: currentPage >= Math.ceil(story.pages.length / 2) - 1 ? 0.4 : 1 }}>Next →</button>
           </div>
 

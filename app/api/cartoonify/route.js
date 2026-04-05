@@ -26,7 +26,7 @@ export async function POST(request) {
         num_inference_steps: 30,
         guidance_scale: 3.5,
         true_cfg: 1,
-        id_weight: 0.75,
+        id_weight: 0.6,
         num_images: 1,
         image_size: "portrait_4_3",
       },

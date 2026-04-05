@@ -26,8 +26,8 @@ export async function POST(request) {
         quantity: 1,
       }],
       mode: "payment",
-      success_url: `${origin}/?success=1&session_id={CHECKOUT_SESSION_ID}&ref=${ref}`,
-      cancel_url: `${origin}/?cancelled=1`,
+      success_url: `${origin}/create?success=1&session_id={CHECKOUT_SESSION_ID}&ref=${ref}`,
+      cancel_url: `${origin}/create?cancelled=1`,
     });
 
     return Response.json({ url: session.url });

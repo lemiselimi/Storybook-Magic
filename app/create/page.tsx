@@ -81,13 +81,15 @@ export default function StorybookCreator() {
   // ── Preview (step 5) ─────────────────────────────────────────────────────────
   const [previewStory,   setPreviewStory]   = useState<any>(null);
   const [previewImages,  setPreviewImages]  = useState<(string | null)[]>(Array(6).fill(null));
+  const [previewCoverUrl, setPreviewCoverUrl] = useState<string | null>(null);
   const [previewStatus,  setPreviewStatus]  = useState<"idle" | "loading" | "done">("idle");
   const [previewMsg,     setPreviewMsg]     = useState("Writing your story...");
-  const [previewDone,    setPreviewDone]    = useState(0); // scenes completed count
+  const [previewDone,    setPreviewDone]    = useState(0); // scenes completed count (out of 7)
   const previewStarted = useRef(false);
 
   // ── Full book ─────────────────────────────────────────────────────────────────
   const [story,           setStory]           = useState<any>(null);
+  const [coverImageUrl,   setCoverImageUrl]   = useState<string | null>(null);
   const [pageImages,      setPageImages]      = useState<(string | null)[]>(Array(6).fill(null));
   const [scenesCompleted, setScenesCompleted] = useState(0);
   const [currentPage,     setCurrentPage]     = useState(-1);
@@ -121,6 +123,7 @@ export default function StorybookCreator() {
         const data = decodeShare(share);
         setStory(data.story);
         if (data.cartoonFalUrl) setCartoonUrl(`/api/proxy?url=${encodeURIComponent(data.cartoonFalUrl)}`);
+        if (data.coverFalUrl) setCoverImageUrl(`/api/proxy?url=${encodeURIComponent(data.coverFalUrl)}`);
         setPageImages((data.pageFalUrls || []).map((u: string | null) =>
           u ? `/api/proxy?url=${encodeURIComponent(u)}` : null
         ));
@@ -150,6 +153,7 @@ export default function StorybookCreator() {
             setCartoonUrl(`/api/proxy?url=${encodeURIComponent(data.cartoonFalUrl)}`);
             setAvatarStatus("done");
           }
+          if (data.coverFalUrl) setCoverImageUrl(`/api/proxy?url=${encodeURIComponent(data.coverFalUrl)}`);
           setTimeout(() => generateFullBook(data), 50);
         }).catch(console.error);
     }
@@ -193,14 +197,14 @@ export default function StorybookCreator() {
     if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
   };
 
-  // ── Avatar generation (called at step 2 → 3) ─────────────────────────────────
-  const startAvatarGen = useCallback((base64: string, hair: string, eye: string, age: number) => {
+  // ── Avatar generation (called at step 3 → 4, after gender/age collected) ─────
+  const startAvatarGen = useCallback((base64: string, hair: string, eye: string, age: number, gender: string) => {
     setAvatarStatus("loading");
     const promise = (async () => {
       try {
         const res = await fetch("/api/cartoonify", {
           method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ imageBase64: base64, gender: "neutral", hairColor: hair, eyeColor: eye, childAge: age }),
+          body: JSON.stringify({ imageBase64: base64, gender, hairColor: hair, eyeColor: eye, childAge: age }),
         }).then(r => r.json());
         if (res.url) {
           setCartoonUrl(`/api/proxy?url=${encodeURIComponent(res.url)}`);
@@ -225,14 +229,17 @@ export default function StorybookCreator() {
     ],
   });
 
-  // ── Preview: generate ALL 6 scenes, show loading until done ─────────────────
+  // ── Preview: generate cover + ALL 6 scenes (7 total), show loading until done ─
   const generatePreview = useCallback(async () => {
     setPreviewStatus("loading");
     setPreviewMsg("Writing your story... ✍️");
     setPreviewDone(0);
     setPreviewImages(Array(6).fill(null));
+    setPreviewCoverUrl(null);
 
     const selectedTheme = THEMES.find(t => t.id === theme);
+    const coverIllustration = `epic storybook cover, ${childName || "the child"} as the hero in a dramatic iconic pose, ${selectedTheme?.title} adventure theme, magical and vibrant atmosphere, bold storybook cover art composition`;
+
     try {
       const [storyRes] = await Promise.all([
         fetch("/api/story", {
@@ -252,24 +259,41 @@ export default function StorybookCreator() {
       const falUrl = photoFalUrlRef.current;
       if (falUrl && storyData.pages) {
         let done = 0;
-        await Promise.allSettled(storyData.pages.map(async (page: any, idx: number) => {
-          try {
-            const res = await fetch("/api/generate-scene", {
-              method: "POST", headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ photoUrl: falUrl, illustration: page.illustration, childName, gender: childGender, childAge, hairColor, eyeColor }),
-            }).then(r => r.json());
-            if (res.url) {
-              setPreviewImages(prev => { const n = [...prev]; n[idx] = `/api/proxy?url=${encodeURIComponent(res.url)}`; return n; });
-              done++;
-              setPreviewDone(done);
-              setPreviewMsg(
-                done < 6
-                  ? `Painted ${done} of 6 pages... ✨`
-                  : "All pages ready! 🎉"
-              );
-            }
-          } catch {}
-        }));
+        const total = 7; // 1 cover + 6 pages
+
+        // Generate cover + all 6 page scenes in parallel
+        await Promise.allSettled([
+          // Cover image
+          (async () => {
+            try {
+              const res = await fetch("/api/generate-scene", {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ photoUrl: falUrl, illustration: coverIllustration, childName, gender: childGender, childAge, hairColor, eyeColor }),
+              }).then(r => r.json());
+              if (res.url) {
+                setPreviewCoverUrl(`/api/proxy?url=${encodeURIComponent(res.url)}`);
+                done++;
+                setPreviewDone(done);
+                setPreviewMsg(done < total ? `Illustrated ${done} of ${total}... ✨` : "All illustrations ready! 🎉");
+              }
+            } catch {}
+          })(),
+          // Page scenes
+          ...storyData.pages.map(async (page: any, idx: number) => {
+            try {
+              const res = await fetch("/api/generate-scene", {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ photoUrl: falUrl, illustration: page.illustration, childName, gender: childGender, childAge, hairColor, eyeColor }),
+              }).then(r => r.json());
+              if (res.url) {
+                setPreviewImages(prev => { const n = [...prev]; n[idx] = `/api/proxy?url=${encodeURIComponent(res.url)}`; return n; });
+                done++;
+                setPreviewDone(done);
+                setPreviewMsg(done < total ? `Illustrated ${done} of ${total}... ✨` : "All illustrations ready! 🎉");
+              }
+            } catch {}
+          }),
+        ]);
       }
     } catch { setPreviewStory(getFallbackStory(childName)); }
 
@@ -295,6 +319,7 @@ export default function StorybookCreator() {
     const _base64        = savedData?.photoBase64   ?? photoBase64;
     const _savedStory    = savedData?.story         ?? previewStory;
     const _savedFalUrls  = savedData?.previewFalUrls as (string | null)[] | undefined;
+    const _savedCoverUrl = savedData?.coverFalUrl   as string | undefined;
     const _cartoonFalUrl = savedData?.cartoonFalUrl ?? photoFalUrlRef.current;
 
     // Restore avatar
@@ -303,23 +328,27 @@ export default function StorybookCreator() {
       setPhotoFalUrl(_cartoonFalUrl); photoFalUrlRef.current = _cartoonFalUrl; setAvatarStatus("done");
     }
 
-    // Fast path: all scenes already generated in preview
+    // Restore cover if it came back from Stripe session
+    if (_savedCoverUrl) setCoverImageUrl(`/api/proxy?url=${encodeURIComponent(_savedCoverUrl)}`);
+
+    // Fast path: all scenes + cover already generated in preview
     if (_savedStory && _savedFalUrls && _savedFalUrls.filter(Boolean).length === 6) {
       setStory(_savedStory);
       setPageImages(_savedFalUrls.map(u => u ? `/api/proxy?url=${encodeURIComponent(u)}` : null));
       setCurrentPage(-1); setMainStep("book"); return;
     }
 
-    // If preview images exist in state, reuse them
+    // If preview images exist in state, reuse them (including cover)
     const existingImages = previewImages.filter(Boolean).length === 6 ? previewImages : null;
     if (_savedStory && existingImages) {
       setStory(_savedStory); setPageImages(existingImages);
+      if (previewCoverUrl) setCoverImageUrl(previewCoverUrl);
       setCurrentPage(-1); setMainStep("book"); return;
     }
 
     // Full generation from scratch
     setMainStep("generating"); setFalError(null);
-    setPageImages(Array(6).fill(null)); setScenesCompleted(0); setIsSharedView(false);
+    setPageImages(Array(6).fill(null)); setCoverImageUrl(null); setScenesCompleted(0); setIsSharedView(false);
 
     try {
       let storyData = _savedStory;
@@ -349,16 +378,31 @@ export default function StorybookCreator() {
       setStory(storyData);
 
       if (falUrl && storyData?.pages) {
-        setLoadingMsg("Painting all your scenes... 🎨 (~1 min)");
-        await Promise.allSettled(storyData.pages.map(async (page: any, idx: number) => {
-          try {
-            const res = await fetch("/api/generate-scene", {
-              method: "POST", headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ photoUrl: falUrl, illustration: page.illustration, childName: _name, gender: _gender, childAge: _age, hairColor: _hair, eyeColor: _eye }),
-            }).then(r => r.json());
-            if (res.url) { setPageImages(prev => { const n = [...prev]; n[idx] = `/api/proxy?url=${encodeURIComponent(res.url)}`; return n; }); setScenesCompleted(p => p + 1); }
-          } catch { setScenesCompleted(p => p + 1); }
-        }));
+        const sel = THEMES.find(t => t.id === _theme);
+        const coverIllustration = `epic storybook cover, ${_name} as the hero in a dramatic iconic pose, ${sel?.title} adventure theme, magical and vibrant atmosphere, bold storybook cover art composition`;
+        setLoadingMsg("Painting cover & all scenes... 🎨 (~1 min)");
+        await Promise.allSettled([
+          // Cover
+          (async () => {
+            try {
+              const res = await fetch("/api/generate-scene", {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ photoUrl: falUrl, illustration: coverIllustration, childName: _name, gender: _gender, childAge: _age, hairColor: _hair, eyeColor: _eye }),
+              }).then(r => r.json());
+              if (res.url) { setCoverImageUrl(`/api/proxy?url=${encodeURIComponent(res.url)}`); setScenesCompleted(p => p + 1); }
+            } catch { setScenesCompleted(p => p + 1); }
+          })(),
+          // Pages
+          ...storyData.pages.map(async (page: any, idx: number) => {
+            try {
+              const res = await fetch("/api/generate-scene", {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ photoUrl: falUrl, illustration: page.illustration, childName: _name, gender: _gender, childAge: _age, hairColor: _hair, eyeColor: _eye }),
+              }).then(r => r.json());
+              if (res.url) { setPageImages(prev => { const n = [...prev]; n[idx] = `/api/proxy?url=${encodeURIComponent(res.url)}`; return n; }); setScenesCompleted(p => p + 1); }
+            } catch { setScenesCompleted(p => p + 1); }
+          }),
+        ]);
       }
 
       setCurrentPage(-1); setMainStep("book");
@@ -378,6 +422,7 @@ export default function StorybookCreator() {
         photoBase64, childName, childAge, childGender, theme, hairColor, eyeColor,
         story: previewStory,
         cartoonFalUrl: photoFalUrlRef.current,
+        coverFalUrl: previewCoverUrl ? rawFalUrl(previewCoverUrl) : null,
         previewFalUrls: previewImages.map(u => u ? rawFalUrl(u) : null),
         plan,
       }));
@@ -418,7 +463,7 @@ export default function StorybookCreator() {
 
   const copyShareLink = async () => {
     if (!story) return;
-    const data = { story, cartoonFalUrl: cartoonUrl ? rawFalUrl(cartoonUrl) : null, pageFalUrls: pageImages.map(u => u ? rawFalUrl(u) : null) };
+    const data = { story, cartoonFalUrl: cartoonUrl ? rawFalUrl(cartoonUrl) : null, coverFalUrl: coverImageUrl ? rawFalUrl(coverImageUrl) : null, pageFalUrls: pageImages.map(u => u ? rawFalUrl(u) : null) };
     const url = `${window.location.origin}/create?share=${encodeShare(data)}`;
     try { await navigator.clipboard.writeText(url); setShareCopied(true); setTimeout(() => setShareCopied(false), 2500); } catch {}
   };
@@ -449,6 +494,7 @@ export default function StorybookCreator() {
     photoFalUrlRef.current = null; avatarGenRef.current = null;
     setHairColor("brown"); setEyeColor("brown");
     setStory(null); setPreviewStory(null); setPreviewImages(Array(6).fill(null));
+    setPreviewCoverUrl(null); setCoverImageUrl(null);
     setPreviewStatus("idle"); setPreviewDone(0); previewStarted.current = false;
     setPageImages(Array(6).fill(null)); setScenesCompleted(0);
     setChildGender("boy"); setChildName(""); setChildAge(5); setTheme("adventure");
@@ -644,7 +690,7 @@ export default function StorybookCreator() {
                 <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
                   <button onClick={() => goToStep(1)} style={{ padding: "14px 20px", borderRadius: 14, border: "1px solid rgba(255,255,255,0.12)", background: "transparent", color: "rgba(255,255,255,0.5)", fontSize: 14, cursor: "pointer" }}>← Back</button>
                   <button
-                    onClick={() => { if (photoBase64) startAvatarGen(photoBase64, hairColor, eyeColor, childAge); goToStep(3); }}
+                    onClick={() => goToStep(3)}
                     style={{ flex: 1, padding: "16px", borderRadius: 14, border: "none", background: "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 16, fontWeight: 700, cursor: "pointer" }}
                   >
                     Looks perfect! →
@@ -657,27 +703,6 @@ export default function StorybookCreator() {
             {onboardingStep === 3 && (
               <div>
                 <Mascot msg="Amazing! Every hero needs a name. What should we call them? 🌟" />
-
-                {/* Avatar loading card */}
-                <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,215,0,0.15)", borderRadius: 18, padding: "14px 18px", marginBottom: 20, display: "flex", alignItems: "center", gap: 14 }}>
-                  <div style={{ position: "relative", flexShrink: 0 }}>
-                    <img src={photo!} alt="original" style={{ width: 56, height: 56, objectFit: "cover", borderRadius: "50%", border: "2px solid rgba(255,215,0,0.3)" }} />
-                    {avatarStatus === "loading" && <div style={{ position: "absolute", inset: -3, borderRadius: "50%", border: "2.5px solid transparent", borderTop: "2.5px solid #ffd700", animation: "spin 1s linear infinite" }} />}
-                    {avatarStatus === "done"    && <div style={{ position: "absolute", bottom: -2, right: -2, width: 20, height: 20, background: "#4caf50", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, border: "1.5px solid #1a0a2e" }}>✓</div>}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ color: "white", fontWeight: 600, fontSize: 13, margin: "0 0 7px" }}>
-                      {avatarStatus === "done" ? "✨ 3D portrait complete!" : avatarStatus === "error" ? "⚠️ Using original photo" : "🎨 Creating your hero..."}
-                    </p>
-                    <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: 4, height: 5, overflow: "hidden" }}>
-                      <div style={{ height: "100%", borderRadius: 4, background: "linear-gradient(90deg, #ffd700, #ff9a9e)", width: avatarStatus === "done" || avatarStatus === "error" ? "100%" : "0%", animation: avatarStatus === "loading" ? "fwdBar 30s linear forwards" : "none", transition: "width 0.5s" }} />
-                    </div>
-                    <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 11, margin: "4px 0 0" }}>
-                      {avatarStatus === "done" ? "Hero is ready to star in your story" : avatarStatus === "error" ? "We'll use your photo directly" : "Creating your 3D animated portrait..."}
-                    </p>
-                  </div>
-                  {avatarStatus === "done" && cartoonUrl && <img src={cartoonUrl} alt="hero" style={{ width: 56, height: 56, objectFit: "cover", borderRadius: "50%", border: "2px solid #ffd700", flexShrink: 0 }} />}
-                </div>
 
                 {/* Form */}
                 <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: 22, padding: isMobile ? 18 : 26, border: "1px solid rgba(255,255,255,0.08)", display: "flex", flexDirection: "column", gap: 22 }}>
@@ -709,7 +734,7 @@ export default function StorybookCreator() {
                 </div>
                 <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
                   <button onClick={() => goToStep(2)} style={{ padding: "14px 20px", borderRadius: 14, border: "1px solid rgba(255,255,255,0.12)", background: "transparent", color: "rgba(255,255,255,0.5)", fontSize: 14, cursor: "pointer" }}>← Back</button>
-                  <button onClick={() => goToStep(4)} disabled={!childName.trim()} style={{ flex: 1, padding: "15px", borderRadius: 14, border: "none", background: childName.trim() ? "linear-gradient(135deg, #ffd700, #ff9a9e)" : "rgba(255,255,255,0.08)", color: childName.trim() ? "#1a0a2e" : "rgba(255,255,255,0.3)", fontSize: 16, fontWeight: 700, cursor: childName.trim() ? "pointer" : "not-allowed", transition: "all 0.2s" }}>
+                  <button onClick={() => { if (photoBase64) startAvatarGen(photoBase64, hairColor, eyeColor, childAge, childGender); goToStep(4); }} disabled={!childName.trim()} style={{ flex: 1, padding: "15px", borderRadius: 14, border: "none", background: childName.trim() ? "linear-gradient(135deg, #ffd700, #ff9a9e)" : "rgba(255,255,255,0.08)", color: childName.trim() ? "#1a0a2e" : "rgba(255,255,255,0.3)", fontSize: 16, fontWeight: 700, cursor: childName.trim() ? "pointer" : "not-allowed", transition: "all 0.2s" }}>
                     {childName.trim() ? `Pick ${childName}'s adventure →` : "Enter a name to continue →"}
                   </button>
                 </div>
@@ -720,6 +745,27 @@ export default function StorybookCreator() {
             {onboardingStep === 4 && (
               <div>
                 <Mascot msg={`Great! Now pick the perfect adventure for ${childName || "your little hero"}...`} />
+
+                {/* Avatar loading indicator */}
+                {avatarStatus !== "idle" && (
+                  <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,215,0,0.15)", borderRadius: 18, padding: "14px 18px", marginBottom: 18, display: "flex", alignItems: "center", gap: 14 }}>
+                    <div style={{ position: "relative", flexShrink: 0 }}>
+                      <img src={photo!} alt="original" style={{ width: 48, height: 48, objectFit: "cover", borderRadius: "50%", border: "2px solid rgba(255,215,0,0.3)" }} />
+                      {avatarStatus === "loading" && <div style={{ position: "absolute", inset: -3, borderRadius: "50%", border: "2.5px solid transparent", borderTop: "2.5px solid #ffd700", animation: "spin 1s linear infinite" }} />}
+                      {avatarStatus === "done"    && <div style={{ position: "absolute", bottom: -2, right: -2, width: 18, height: 18, background: "#4caf50", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, border: "1.5px solid #1a0a2e" }}>✓</div>}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ color: "white", fontWeight: 600, fontSize: 13, margin: "0 0 5px" }}>
+                        {avatarStatus === "done" ? "✨ 3D portrait complete!" : avatarStatus === "error" ? "⚠️ Using original photo" : "🎨 Creating your hero..."}
+                      </p>
+                      <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: 4, height: 4, overflow: "hidden" }}>
+                        <div style={{ height: "100%", borderRadius: 4, background: "linear-gradient(90deg, #ffd700, #ff9a9e)", width: avatarStatus === "done" || avatarStatus === "error" ? "100%" : "0%", animation: avatarStatus === "loading" ? "fwdBar 30s linear forwards" : "none", transition: "width 0.5s" }} />
+                      </div>
+                    </div>
+                    {avatarStatus === "done" && cartoonUrl && <img src={cartoonUrl} alt="hero" style={{ width: 48, height: 48, objectFit: "cover", borderRadius: "50%", border: "2px solid #ffd700", flexShrink: 0 }} />}
+                  </div>
+                )}
+
                 <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: 14 }}>
                   {THEMES.map((t) => (
                     <div key={t.id} className="theme-card" onClick={() => setTheme(t.id)} style={{ position: "relative", padding: "22px 18px 18px", borderRadius: 20, cursor: "pointer", border: `2px solid ${theme === t.id ? "#ffd700" : "rgba(255,255,255,0.1)"}`, background: theme === t.id ? "rgba(255,215,0,0.08)" : "rgba(255,255,255,0.04)", boxShadow: theme === t.id ? "0 0 24px rgba(255,215,0,0.18)" : "0 2px 8px rgba(0,0,0,0.2)" }}>
@@ -749,13 +795,13 @@ export default function StorybookCreator() {
                     <div style={{ fontSize: 64, marginBottom: 18, animation: "float 2s ease-in-out infinite" }}>🪄</div>
                     <h2 style={{ color: "white", fontSize: isMobile ? 20 : 24, fontWeight: 700, margin: "0 0 10px" }}>Creating your story...</h2>
                     <p style={{ color: "rgba(255,215,0,0.85)", fontSize: 15, fontWeight: 600, margin: "0 0 6px", minHeight: 24 }}>{previewMsg}</p>
-                    <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 13, margin: "0 0 24px" }}>Painting all 6 pages with cinematic 3D-style art</p>
+                    <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 13, margin: "0 0 24px" }}>Painting cover + 6 pages with cinematic 3D-style art</p>
 
                     {/* Progress bar */}
                     <div style={{ maxWidth: 280, margin: "0 auto 10px", background: "rgba(255,255,255,0.1)", borderRadius: 99, height: 10, overflow: "hidden" }}>
-                      <div style={{ height: "100%", borderRadius: 99, background: "linear-gradient(90deg, #ffd700, #ff9a9e)", width: previewDone === 0 ? "5%" : `${(previewDone / 6) * 100}%`, transition: "width 0.6s ease", animation: previewDone === 0 && previewStatus === "loading" ? "fwdBar 60s linear forwards" : "none" }} />
+                      <div style={{ height: "100%", borderRadius: 99, background: "linear-gradient(90deg, #ffd700, #ff9a9e)", width: previewDone === 0 ? "5%" : `${(previewDone / 7) * 100}%`, transition: "width 0.6s ease", animation: previewDone === 0 && previewStatus === "loading" ? "fwdBar 60s linear forwards" : "none" }} />
                     </div>
-                    <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, margin: "0 0 24px" }}>{previewDone} of 6 pages complete</p>
+                    <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, margin: "0 0 24px" }}>{previewDone} of 7 illustrations complete</p>
 
                     <div style={{ display: "flex", justifyContent: "center", gap: 8 }}>
                       {[0, 1, 2].map(i => <div key={i} style={{ width: 9, height: 9, borderRadius: "50%", background: "#ffd700", animation: "pulseDot 1s ease-in-out infinite", animationDelay: `${i * 0.2}s` }} />)}
@@ -763,10 +809,23 @@ export default function StorybookCreator() {
                   </div>
                 )}
 
-                {/* Revealed preview — fades in once ALL 6 done */}
+                {/* Revealed preview — fades in once ALL 7 done */}
                 {previewStatus === "done" && previewStory && (
                   <div style={{ animation: "fadeIn 0.7s ease both" }}>
                     <Mascot msg={`Here's a sneak peek of ${childName || "your child"}'s story! 🎉`} />
+
+                    {/* Cover thumbnail */}
+                    {previewCoverUrl && (
+                      <div style={{ position: "relative", borderRadius: 18, overflow: "hidden", marginBottom: 14, boxShadow: "0 12px 40px rgba(0,0,0,0.4)" }}>
+                        <img src={previewCoverUrl} alt="Book cover" style={{ width: "100%", height: isMobile ? 180 : 220, objectFit: "cover", display: "block" }} />
+                        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.82) 40%, rgba(0,0,0,0.15) 100%)" }} />
+                        <div style={{ position: "absolute", bottom: 16, left: 18, right: 18 }}>
+                          <div style={{ color: "#ffd700", fontWeight: 800, fontSize: isMobile ? 16 : 19, textShadow: "0 2px 8px rgba(0,0,0,0.6)", marginBottom: 3 }}>{previewStory.title}</div>
+                          <div style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, fontStyle: "italic" }}>{previewStory.dedication}</div>
+                        </div>
+                        <div style={{ position: "absolute", top: 10, right: 10, background: "rgba(255,215,0,0.95)", borderRadius: 8, padding: "3px 9px", fontSize: 10, fontWeight: 700, color: "#1a0a2e" }}>✨ Cover</div>
+                      </div>
+                    )}
 
                     {/* Pages 1 & 2 */}
                     <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 18 }}>
@@ -847,13 +906,13 @@ export default function StorybookCreator() {
           <div style={{ fontSize: 72, marginBottom: 20, animation: "float 2s ease-in-out infinite" }}>🪄</div>
           <h2 style={{ color: "white", fontSize: 22, fontWeight: 700, margin: "0 0 10px" }}>Creating your magical book...</h2>
           <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 15, margin: "0 0 8px" }}>{loadingMsg}</p>
-          <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 13, margin: "0 0 24px" }}>Painting all 6 scenes — about 1–2 minutes</p>
+          <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 13, margin: "0 0 24px" }}>Painting cover + 6 scenes — about 1–2 minutes</p>
           {scenesCompleted > 0 && (
             <div style={{ maxWidth: 260, margin: "0 auto 24px" }}>
               <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: 99, height: 8, overflow: "hidden" }}>
-                <div style={{ height: "100%", borderRadius: 99, background: "linear-gradient(90deg, #ffd700, #ff9a9e)", width: `${(scenesCompleted / totalPages) * 100}%`, transition: "width 0.4s ease" }} />
+                <div style={{ height: "100%", borderRadius: 99, background: "linear-gradient(90deg, #ffd700, #ff9a9e)", width: `${(scenesCompleted / 7) * 100}%`, transition: "width 0.4s ease" }} />
               </div>
-              <p style={{ color: "rgba(255,215,0,0.7)", fontSize: 12, marginTop: 7 }}>{scenesCompleted} of {totalPages} scenes painted</p>
+              <p style={{ color: "rgba(255,215,0,0.7)", fontSize: 12, marginTop: 7 }}>{scenesCompleted} of 7 illustrations painted</p>
             </div>
           )}
           <div style={{ display: "flex", justifyContent: "center", gap: 8 }}>
@@ -869,12 +928,26 @@ export default function StorybookCreator() {
           {isSharedView && <div style={{ background: "rgba(255,215,0,0.07)", border: "1px solid rgba(255,215,0,0.2)", borderRadius: 10, padding: "8px 14px", marginBottom: 12, color: "rgba(255,215,0,0.8)", fontSize: 13, textAlign: "center" }}>📖 Viewing a shared storybook</div>}
 
           {currentPage === -1 ? (
-            <div style={{ background: "linear-gradient(135deg, #2d1b4e, #4a2060)", borderRadius: 20, padding: isMobile ? "40px 24px" : "56px 40px", textAlign: "center", border: "2px solid rgba(255,215,0,0.28)", boxShadow: "0 20px 60px rgba(0,0,0,0.5)", animation: "fadeUp 0.4s ease both" }}>
-              {displayPhoto && <img crossOrigin="anonymous" src={displayPhoto} alt="hero" style={{ width: isMobile ? 120 : 148, height: isMobile ? 120 : 148, objectFit: "cover", borderRadius: 16, border: "5px solid #ffd700", marginBottom: 18 }} />}
-              {cartoonUrl && <div style={{ marginBottom: 12 }}><span style={{ background: "rgba(255,215,0,0.18)", border: "1px solid rgba(255,215,0,0.35)", borderRadius: 20, padding: "4px 14px", fontSize: 12, color: "#ffd700", fontWeight: 600 }}>✨ 3D animated portrait</span></div>}
-              <h1 style={{ color: "#ffd700", fontSize: isMobile ? 22 : 30, fontWeight: 800, margin: "0 0 10px" }}>{story.title}</h1>
-              <p style={{ color: "rgba(255,255,255,0.55)", fontStyle: "italic", fontSize: 14, margin: "0 0 22px" }}>{story.dedication}</p>
-              <button onClick={() => navigate(0)} style={{ padding: "11px 28px", borderRadius: 12, border: "none", background: "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>Open Book →</button>
+            <div style={{ position: "relative", borderRadius: 20, overflow: "hidden", border: "2px solid rgba(255,215,0,0.28)", boxShadow: "0 20px 60px rgba(0,0,0,0.5)", animation: "fadeUp 0.4s ease both", minHeight: isMobile ? 340 : 420 }}>
+              {/* Cover image background */}
+              {coverImageUrl
+                ? <img crossOrigin="anonymous" src={coverImageUrl} alt="Book cover" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+                : <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, #2d1b4e, #4a2060)" }} />}
+              {/* Gradient overlay */}
+              <div style={{ position: "absolute", inset: 0, background: coverImageUrl ? "linear-gradient(to top, rgba(10,5,25,0.92) 35%, rgba(10,5,25,0.35) 70%, rgba(10,5,25,0.15))" : "none" }} />
+              {/* Content */}
+              <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", minHeight: isMobile ? 340 : 420, padding: isMobile ? "28px 24px 32px" : "40px 40px 48px", textAlign: "center" }}>
+                {/* Avatar badge — top right */}
+                {displayPhoto && (
+                  <div style={{ position: "absolute", top: isMobile ? 14 : 20, right: isMobile ? 14 : 20, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                    <img crossOrigin="anonymous" src={displayPhoto} alt="hero" style={{ width: isMobile ? 52 : 64, height: isMobile ? 52 : 64, objectFit: "cover", borderRadius: "50%", border: "3px solid #ffd700", boxShadow: "0 4px 16px rgba(0,0,0,0.5)" }} />
+                    {cartoonUrl && <span style={{ background: "rgba(255,215,0,0.9)", borderRadius: 10, padding: "2px 7px", fontSize: 9, fontWeight: 700, color: "#1a0a2e" }}>3D Hero</span>}
+                  </div>
+                )}
+                <h1 style={{ color: "#ffd700", fontSize: isMobile ? 22 : 32, fontWeight: 800, margin: "0 0 8px", textShadow: "0 2px 12px rgba(0,0,0,0.8)", lineHeight: 1.2 }}>{story.title}</h1>
+                <p style={{ color: "rgba(255,255,255,0.7)", fontStyle: "italic", fontSize: isMobile ? 13 : 15, margin: "0 0 24px", textShadow: "0 1px 6px rgba(0,0,0,0.8)" }}>{story.dedication}</p>
+                <button onClick={() => navigate(0)} style={{ padding: "12px 32px", borderRadius: 12, border: "none", background: "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 20px rgba(255,215,0,0.3)" }}>Open Book →</button>
+              </div>
             </div>
           ) : (
             <div key={`spread-${currentPage}`} style={{ background: "white", borderRadius: 16, overflow: "hidden", boxShadow: "0 30px 80px rgba(0,0,0,0.5)", animation: `${navDir === "fwd" ? "slideInFwd" : "slideInBack"} 0.25s ease both` }}>
@@ -908,10 +981,16 @@ export default function StorybookCreator() {
       {/* Off-screen PDF targets */}
       {mainStep === "book" && story && (
         <div style={{ position: "fixed", left: "-9999px", top: 0, width: 880, pointerEvents: "none" }} aria-hidden="true">
-          <div id="pdf-cover-capture" style={{ width: 880, height: 520, background: "linear-gradient(135deg, #2d1b4e, #4a2060)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, padding: 40 }}>
-            {displayPhoto && <img crossOrigin="anonymous" src={displayPhoto} alt="hero" style={{ width: 160, height: 160, objectFit: "cover", borderRadius: 20, border: "5px solid #ffd700" }} />}
-            <div style={{ color: "#ffd700", fontSize: 32, fontWeight: 800, textAlign: "center" }}>{story.title}</div>
-            <div style={{ color: "rgba(255,255,255,0.6)", fontStyle: "italic", fontSize: 16, textAlign: "center" }}>{story.dedication}</div>
+          <div id="pdf-cover-capture" style={{ width: 880, height: 520, position: "relative", overflow: "hidden" }}>
+            {coverImageUrl
+              ? <img crossOrigin="anonymous" src={coverImageUrl} alt="cover" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+              : <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, #2d1b4e, #4a2060)" }} />}
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(10,5,25,0.92) 35%, rgba(10,5,25,0.3) 100%)" }} />
+            <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", padding: "40px 60px", textAlign: "center", gap: 12 }}>
+              {displayPhoto && <img crossOrigin="anonymous" src={displayPhoto} alt="hero" style={{ position: "absolute", top: 28, right: 36, width: 80, height: 80, objectFit: "cover", borderRadius: "50%", border: "4px solid #ffd700" }} />}
+              <div style={{ color: "#ffd700", fontSize: 36, fontWeight: 800, textShadow: "0 2px 12px rgba(0,0,0,0.8)" }}>{story.title}</div>
+              <div style={{ color: "rgba(255,255,255,0.75)", fontStyle: "italic", fontSize: 18, textShadow: "0 1px 8px rgba(0,0,0,0.8)", marginBottom: 8 }}>{story.dedication}</div>
+            </div>
           </div>
           {story.pages.map((_: any, i: number) => (
             <div key={i} id={`pdf-spread-${i}`} style={{ width: 880, background: "white", display: "flex" }}>

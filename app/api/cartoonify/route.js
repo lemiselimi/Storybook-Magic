@@ -6,13 +6,22 @@ fal.config({ credentials: process.env.FAL_API_KEY });
 
 export async function POST(request) {
   try {
-    const { imageBase64, gender, hairColor, eyeColor } = await request.json();
-    console.log("Cartoonify called, gender:", gender, "hair:", hairColor, "eyes:", eyeColor);
+    const { imageBase64, gender, hairColor, eyeColor, childAge } = await request.json();
+    console.log("Cartoonify called, gender:", gender, "hair:", hairColor, "eyes:", eyeColor, "age:", childAge);
 
-    const genderWord  = gender === "girl" ? "girl" : gender === "boy" ? "boy" : "child";
-    const hairDesc    = hairColor ? `${hairColor.replace(/-/g, " ")} hair` : "";
-    const eyeDesc     = eyeColor  ? `${eyeColor.replace(/-/g, " ")} eyes`  : "";
-    const appearance  = [hairDesc, eyeDesc].filter(Boolean).join(", ");
+    const genderWord = gender === "girl" ? "girl" : gender === "boy" ? "boy" : "child";
+
+    const ageNum = Number(childAge) || 5;
+    let ageDesc;
+    if      (ageNum <= 2)  ageDesc = "toddler aged 1-2, chubby baby face, tiny body, pudgy cheeks";
+    else if (ageNum <= 4)  ageDesc = "preschooler aged 3-4, small round face, small body";
+    else if (ageNum <= 7)  ageDesc = "young child aged 5-7, cute small face";
+    else if (ageNum <= 10) ageDesc = "child aged 8-10";
+    else                   ageDesc = "preteen aged 11-12, taller child";
+
+    const hairDesc   = hairColor ? `${hairColor.replace(/-/g, " ")} hair` : "";
+    const eyeDesc    = eyeColor  ? `${eyeColor.replace(/-/g, " ")} eyes`  : "";
+    const appearance = [hairDesc, eyeDesc].filter(Boolean).join(", ");
 
     // Convert base64 to blob and upload to fal storage
     const byteChars = atob(imageBase64);
@@ -26,8 +35,8 @@ export async function POST(request) {
     const result = await fal.subscribe("fal-ai/flux-pulid", {
       input: {
         reference_image_url: photoUrl,
-        prompt: `Pixar Disney 3D animated character, adorable ${genderWord} hero${appearance ? ` with ${appearance}` : ""}, full body portrait, expressive large eyes, warm friendly smile, colorful storybook outfit, soft pastel gradient background, studio lighting, highly detailed CGI render, professional Pixar animation style, vibrant colors, cute and charming, facing camera`,
-        negative_prompt: "realistic, photorealistic, dark, scary, blurry, low quality, adult, text, watermark, logo, deformed, ugly, multiple people, busy background, cluttered",
+        prompt: `Pixar Disney 3D animated character, adorable ${ageDesc} ${genderWord}${appearance ? ` with ${appearance}` : ""}, hero portrait, expressive large eyes, warm friendly smile, colorful storybook outfit, soft pastel gradient background, studio lighting, highly detailed CGI render, professional Pixar animation style, vibrant colors, cute and charming, facing camera`,
+        negative_prompt: "realistic, photorealistic, dark, scary, blurry, low quality, adult, teenager, wrong age, text, watermark, logo, deformed, ugly, multiple people, busy background, cluttered",
         num_inference_steps: 30,
         guidance_scale: 3.5,
         true_cfg: 1,

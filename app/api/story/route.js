@@ -16,6 +16,14 @@ export async function POST(request) {
       ? `The child has ${appearanceParts.join(" and ")}. Mention this naturally once early in the story.`
       : "";
 
+    const ageNum = Number(childAge) || 5;
+    let ageGuidance;
+    if      (ageNum <= 2)  ageGuidance = "TODDLER (1-2 yrs): extremely simple 1-sentence text per page, very basic vocabulary, rhyming if possible. Illustrations should show a tiny toddler.";
+    else if (ageNum <= 4)  ageGuidance = "PRESCHOOLER (3-4 yrs): simple short sentences, basic words, playful tone. Illustrations show a small preschooler.";
+    else if (ageNum <= 7)  ageGuidance = "EARLY READER (5-7 yrs): short sentences, simple vocabulary, exciting action. Illustrations show a young child.";
+    else if (ageNum <= 10) ageGuidance = "MIDDLE GRADE (8-10 yrs): richer vocabulary, more complex sentences, emotional depth.";
+    else                   ageGuidance = "PRETEEN (11-12 yrs): sophisticated vocabulary, nuanced emotions, more complex plot.";
+
     const response = await client.messages.create({
       model: "claude-haiku-4-5-20251001",
       max_tokens: 1500,
@@ -23,7 +31,9 @@ export async function POST(request) {
         role: "user",
         content: `Create a 6-page children's book for ${childName || "a child"}, age ${childAge || 5}, gender: ${gender === "girl" ? "girl (use she/her)" : gender === "boy" ? "boy (use he/him)" : "neutral (use they/them)"}, with the theme: ${theme}. ${appearanceNote}
 
-The "illustration" field for each page must be a vivid, detailed scene description for AI image generation (1-2 sentences). Describe: the environment/setting, what the main character is doing, mood/lighting, and any magical or theme-specific elements. Be specific and visual. Example: "A cozy bedroom at dawn with floating glowing stars, the child sitting up in bed holding a treasure map that pulses with golden light, moonbeams streaming through the window."
+Age writing level — ${ageGuidance}
+
+The "illustration" field for each page must be a vivid, detailed scene description for AI image generation (1-2 sentences). IMPORTANT: always describe the main character's age accurately — e.g. "a tiny toddler" for age 1-2, "a small young child" for age 3-5, etc. Describe: the environment/setting, what the main character is doing, mood/lighting, and any magical or theme-specific elements. Be specific and visual. Example: "A cozy bedroom at dawn with floating glowing stars, the child sitting up in bed holding a treasure map that pulses with golden light, moonbeams streaming through the window."
 
 Respond ONLY with this exact JSON, no markdown, no extra text:
 {"title":"Book Title","dedication":"Sweet dedication to the child","pages":[{"pageNum":1,"text":"Page story text here (2-3 sentences).","illustration":"Detailed scene description for image generation."},{"pageNum":2,"text":"Page story text here.","illustration":"Detailed scene description."},{"pageNum":3,"text":"Page story text here.","illustration":"Detailed scene description."},{"pageNum":4,"text":"Page story text here.","illustration":"Detailed scene description."},{"pageNum":5,"text":"Page story text here.","illustration":"Detailed scene description."},{"pageNum":6,"text":"Page story text here.","illustration":"Detailed scene description."}]}`

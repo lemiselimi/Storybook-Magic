@@ -194,13 +194,13 @@ export default function StorybookCreator() {
   };
 
   // ── Avatar generation (called at step 2 → 3) ─────────────────────────────────
-  const startAvatarGen = useCallback((base64: string, hair: string, eye: string) => {
+  const startAvatarGen = useCallback((base64: string, hair: string, eye: string, age: number) => {
     setAvatarStatus("loading");
     const promise = (async () => {
       try {
         const res = await fetch("/api/cartoonify", {
           method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ imageBase64: base64, gender: "neutral", hairColor: hair, eyeColor: eye }),
+          body: JSON.stringify({ imageBase64: base64, gender: "neutral", hairColor: hair, eyeColor: eye, childAge: age }),
         }).then(r => r.json());
         if (res.url) {
           setCartoonUrl(`/api/proxy?url=${encodeURIComponent(res.url)}`);
@@ -256,7 +256,7 @@ export default function StorybookCreator() {
           try {
             const res = await fetch("/api/generate-scene", {
               method: "POST", headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ photoUrl: falUrl, illustration: page.illustration, childName, gender: childGender }),
+              body: JSON.stringify({ photoUrl: falUrl, illustration: page.illustration, childName, gender: childGender, childAge, hairColor, eyeColor }),
             }).then(r => r.json());
             if (res.url) {
               setPreviewImages(prev => { const n = [...prev]; n[idx] = `/api/proxy?url=${encodeURIComponent(res.url)}`; return n; });
@@ -354,7 +354,7 @@ export default function StorybookCreator() {
           try {
             const res = await fetch("/api/generate-scene", {
               method: "POST", headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ photoUrl: falUrl, illustration: page.illustration, childName: _name, gender: _gender }),
+              body: JSON.stringify({ photoUrl: falUrl, illustration: page.illustration, childName: _name, gender: _gender, childAge: _age, hairColor: _hair, eyeColor: _eye }),
             }).then(r => r.json());
             if (res.url) { setPageImages(prev => { const n = [...prev]; n[idx] = `/api/proxy?url=${encodeURIComponent(res.url)}`; return n; }); setScenesCompleted(p => p + 1); }
           } catch { setScenesCompleted(p => p + 1); }
@@ -409,7 +409,7 @@ export default function StorybookCreator() {
       const page = story.pages[pageIdx];
       const res = await fetch("/api/generate-scene", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ photoUrl: photoFalUrl, illustration: page.illustration, childName, gender: childGender }),
+        body: JSON.stringify({ photoUrl: photoFalUrl, illustration: page.illustration, childName, gender: childGender, childAge, hairColor, eyeColor }),
       }).then(r => r.json());
       if (res.url) setPageImages(prev => { const n = [...prev]; n[pageIdx] = `/api/proxy?url=${encodeURIComponent(res.url)}`; return n; });
     } catch (err) { console.error("Regenerate failed:", err); }
@@ -637,7 +637,7 @@ export default function StorybookCreator() {
                 <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
                   <button onClick={() => goToStep(1)} style={{ padding: "14px 20px", borderRadius: 14, border: "1px solid rgba(255,255,255,0.12)", background: "transparent", color: "rgba(255,255,255,0.5)", fontSize: 14, cursor: "pointer" }}>← Back</button>
                   <button
-                    onClick={() => { if (photoBase64) startAvatarGen(photoBase64, hairColor, eyeColor); goToStep(3); }}
+                    onClick={() => { if (photoBase64) startAvatarGen(photoBase64, hairColor, eyeColor, childAge); goToStep(3); }}
                     style={{ flex: 1, padding: "16px", borderRadius: 14, border: "none", background: "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 16, fontWeight: 700, cursor: "pointer" }}
                   >
                     Looks perfect! →

@@ -35,12 +35,12 @@ export async function POST(request) {
     const result = await fal.subscribe("fal-ai/flux-pulid", {
       input: {
         reference_image_url: photoUrl,
-        prompt: `cinematic 3D animated film character, high-quality CGI, adorable ${ageDesc} ${genderWord}${appearance ? ` with ${appearance}` : ""}, hero portrait, expressive large eyes, warm friendly smile, colorful storybook outfit, soft pastel gradient background, studio lighting, highly detailed 3D render, Disney-quality animation style, vibrant colors, cute and charming, facing camera`,
-        negative_prompt: "realistic, photorealistic, dark, scary, blurry, low quality, adult, teenager, wrong age, text, watermark, logo, deformed, ugly, multiple people, busy background, cluttered",
-        num_inference_steps: 30,
-        guidance_scale: 3.5,
-        true_cfg: 1,
-        id_weight: 0.55,
+        prompt: `${childName || "the child"}, ${ageDesc} ${genderWord}${appearance ? ` with ${appearance}` : ""}, facing camera, warm friendly smile, cinematic 3D animated storybook portrait, colorful storybook outfit, soft studio lighting, clean pastel gradient background, high-quality CGI render`,
+        negative_prompt: "different person, wrong face, altered face, realistic photo, dark, scary, blurry, low quality, adult, teenager, wrong age, text, watermark, deformed, ugly, multiple people, sunglasses",
+        num_inference_steps: 32,
+        guidance_scale: 3.0,
+        true_cfg: 1.5,
+        id_weight: 0.85,
         num_images: 1,
         image_size: "portrait_4_3",
       },

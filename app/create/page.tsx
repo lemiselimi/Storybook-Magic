@@ -473,7 +473,7 @@ export default function StorybookCreator() {
               : null}
             {!isSharedView && photoFalUrl && !isRegen && <button className="regen-btn" onClick={() => regenerateScene(page.pageNum - 1)} style={{ position: "absolute", bottom: 8, left: 8, background: "rgba(0,0,0,0.6)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 8, padding: "4px 8px", color: "white", fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>🔄 Redo</button>}
             {sceneImg && !isRegen ? <div style={{ position: "absolute", top: 8, right: 8, borderRadius: 8, background: "rgba(255,215,0,0.95)", padding: "3px 8px", fontSize: 10, fontWeight: 700, color: "#1a0a2e" }}>✨ AI Scene</div>
-              : cartoonUrl && !isRegen ? <div style={{ position: "absolute", top: 8, right: 8, borderRadius: 8, background: "rgba(255,215,0,0.95)", padding: "3px 8px", fontSize: 10, fontWeight: 700, color: "#1a0a2e" }}>✨ Pixar Style</div> : null}
+              : cartoonUrl && !isRegen ? <div style={{ position: "absolute", top: 8, right: 8, borderRadius: 8, background: "rgba(255,215,0,0.95)", padding: "3px 8px", fontSize: 10, fontWeight: 700, color: "#1a0a2e" }}>✨ 3D Animated</div> : null}
           </div>
         </div>
         {!isMobile && <div style={{ textAlign: "center", color: "#c4a882", fontFamily: "Georgia, serif", fontSize: 13, marginTop: 10 }}>— {page.pageNum} —</div>}
@@ -610,7 +610,14 @@ export default function StorybookCreator() {
                   )}
                 </div>
                 <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} />
-                <div style={{ display: "flex", gap: 8, marginTop: 14, flexWrap: "wrap", justifyContent: "center" }}>
+
+                {/* Privacy reassurance */}
+                <div style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(76,175,80,0.08)", border: "1px solid rgba(76,175,80,0.2)", borderRadius: 12, padding: "10px 14px", marginTop: 12 }}>
+                  <span style={{ fontSize: 16, flexShrink: 0 }}>🔒</span>
+                  <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, margin: 0, lineHeight: 1.5 }}>Your photo is <strong style={{ color: "#4caf50" }}>private & secure</strong> — never stored, never shared, deleted after your book is created.</p>
+                </div>
+
+                <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap", justifyContent: "center" }}>
                   {[{ icon: "😊", text: "Face clearly visible" }, { icon: "☀️", text: "Good lighting" }, { icon: "🚫", text: "No sunglasses" }].map(tip => (
                     <div key={tip.icon} style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 12, padding: "7px 13px" }}>
                       <span style={{ fontSize: 16 }}>{tip.icon}</span>
@@ -660,13 +667,13 @@ export default function StorybookCreator() {
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ color: "white", fontWeight: 600, fontSize: 13, margin: "0 0 7px" }}>
-                      {avatarStatus === "done" ? "✨ Pixar transformation complete!" : avatarStatus === "error" ? "⚠️ Using original photo" : "🎨 Creating your hero..."}
+                      {avatarStatus === "done" ? "✨ 3D portrait complete!" : avatarStatus === "error" ? "⚠️ Using original photo" : "🎨 Creating your hero..."}
                     </p>
                     <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: 4, height: 5, overflow: "hidden" }}>
                       <div style={{ height: "100%", borderRadius: 4, background: "linear-gradient(90deg, #ffd700, #ff9a9e)", width: avatarStatus === "done" || avatarStatus === "error" ? "100%" : "0%", animation: avatarStatus === "loading" ? "fwdBar 30s linear forwards" : "none", transition: "width 0.5s" }} />
                     </div>
                     <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 11, margin: "4px 0 0" }}>
-                      {avatarStatus === "done" ? "Hero is ready to star in your story" : avatarStatus === "error" ? "We'll use your photo directly" : "Transforming into Pixar style..."}
+                      {avatarStatus === "done" ? "Hero is ready to star in your story" : avatarStatus === "error" ? "We'll use your photo directly" : "Creating your 3D animated portrait..."}
                     </p>
                   </div>
                   {avatarStatus === "done" && cartoonUrl && <img src={cartoonUrl} alt="hero" style={{ width: 56, height: 56, objectFit: "cover", borderRadius: "50%", border: "2px solid #ffd700", flexShrink: 0 }} />}
@@ -742,7 +749,7 @@ export default function StorybookCreator() {
                     <div style={{ fontSize: 64, marginBottom: 18, animation: "float 2s ease-in-out infinite" }}>🪄</div>
                     <h2 style={{ color: "white", fontSize: isMobile ? 20 : 24, fontWeight: 700, margin: "0 0 10px" }}>Creating your story...</h2>
                     <p style={{ color: "rgba(255,215,0,0.85)", fontSize: 15, fontWeight: 600, margin: "0 0 6px", minHeight: 24 }}>{previewMsg}</p>
-                    <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 13, margin: "0 0 24px" }}>Painting all 6 pages with Pixar-style AI art</p>
+                    <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 13, margin: "0 0 24px" }}>Painting all 6 pages with cinematic 3D-style art</p>
 
                     {/* Progress bar */}
                     <div style={{ maxWidth: 280, margin: "0 auto 10px", background: "rgba(255,255,255,0.1)", borderRadius: 99, height: 10, overflow: "hidden" }}>
@@ -808,7 +815,7 @@ export default function StorybookCreator() {
                     {/* CTAs */}
                     <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,215,0,0.2)", borderRadius: 22, padding: isMobile ? 18 : 24 }}>
                       <p style={{ color: "rgba(255,215,0,0.9)", fontSize: 13, fontWeight: 700, textAlign: "center", margin: "0 0 4px", letterSpacing: "0.04em" }}>⚡ Ready in under 2 minutes</p>
-                      <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, textAlign: "center", margin: "0 0 18px" }}>6 personalised Pixar-style pages starring {childName || "your child"}</p>
+                      <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, textAlign: "center", margin: "0 0 18px" }}>6 personalised cinematic 3D-illustrated pages starring {childName || "your child"}</p>
                       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                         <button onClick={() => handlePurchase("digital")} disabled={!!checkoutLoading} style={{ width: "100%", padding: "17px", borderRadius: 16, border: "none", background: checkoutLoading === "digital" ? "rgba(255,215,0,0.5)" : "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 17, fontWeight: 800, cursor: checkoutLoading ? "not-allowed" : "pointer" }}>
                           {checkoutLoading === "digital" ? "Redirecting..." : PAYMENTS_ENABLED ? "Get Digital Book — $24.99 →" : "✨ Create My Storybook!"}
@@ -864,7 +871,7 @@ export default function StorybookCreator() {
           {currentPage === -1 ? (
             <div style={{ background: "linear-gradient(135deg, #2d1b4e, #4a2060)", borderRadius: 20, padding: isMobile ? "40px 24px" : "56px 40px", textAlign: "center", border: "2px solid rgba(255,215,0,0.28)", boxShadow: "0 20px 60px rgba(0,0,0,0.5)", animation: "fadeUp 0.4s ease both" }}>
               {displayPhoto && <img crossOrigin="anonymous" src={displayPhoto} alt="hero" style={{ width: isMobile ? 120 : 148, height: isMobile ? 120 : 148, objectFit: "cover", borderRadius: 16, border: "5px solid #ffd700", marginBottom: 18 }} />}
-              {cartoonUrl && <div style={{ marginBottom: 12 }}><span style={{ background: "rgba(255,215,0,0.18)", border: "1px solid rgba(255,215,0,0.35)", borderRadius: 20, padding: "4px 14px", fontSize: 12, color: "#ffd700", fontWeight: 600 }}>✨ Pixar-style cartoon</span></div>}
+              {cartoonUrl && <div style={{ marginBottom: 12 }}><span style={{ background: "rgba(255,215,0,0.18)", border: "1px solid rgba(255,215,0,0.35)", borderRadius: 20, padding: "4px 14px", fontSize: 12, color: "#ffd700", fontWeight: 600 }}>✨ 3D animated portrait</span></div>}
               <h1 style={{ color: "#ffd700", fontSize: isMobile ? 22 : 30, fontWeight: 800, margin: "0 0 10px" }}>{story.title}</h1>
               <p style={{ color: "rgba(255,255,255,0.55)", fontStyle: "italic", fontSize: 14, margin: "0 0 22px" }}>{story.dedication}</p>
               <button onClick={() => navigate(0)} style={{ padding: "11px 28px", borderRadius: 12, border: "none", background: "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>Open Book →</button>

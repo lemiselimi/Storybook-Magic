@@ -16,7 +16,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "StoryBook Magic — Your Child, The Hero of Their Own Story",
-  description: "Create a unique AI-generated children's book starring your child. Pixar-style illustrations, personalised story, ready in minutes.",
+  description: "Create a unique AI-generated children's book starring your child. Cinematic 3D-style illustrations, personalised story, ready in minutes.",
   openGraph: {
     title: "StoryBook Magic",
     description: "A unique AI-generated book starring your child — written just for them, delivered in minutes.",

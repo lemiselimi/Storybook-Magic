@@ -31,16 +31,16 @@ export async function POST(request) {
     const photoUrl = await fal.storage.upload(blob);
     console.log("Uploaded to fal storage:", photoUrl);
 
-    // Generate a clean Pixar-style character avatar portrait
+    // Generate a cinematic 3D animated character portrait
     const result = await fal.subscribe("fal-ai/flux-pulid", {
       input: {
         reference_image_url: photoUrl,
-        prompt: `Pixar Disney 3D animated character, adorable ${ageDesc} ${genderWord}${appearance ? ` with ${appearance}` : ""}, hero portrait, expressive large eyes, warm friendly smile, colorful storybook outfit, soft pastel gradient background, studio lighting, highly detailed CGI render, professional Pixar animation style, vibrant colors, cute and charming, facing camera`,
+        prompt: `cinematic 3D animated film character, high-quality CGI, adorable ${ageDesc} ${genderWord}${appearance ? ` with ${appearance}` : ""}, hero portrait, expressive large eyes, warm friendly smile, colorful storybook outfit, soft pastel gradient background, studio lighting, highly detailed 3D render, Disney-quality animation style, vibrant colors, cute and charming, facing camera`,
         negative_prompt: "realistic, photorealistic, dark, scary, blurry, low quality, adult, teenager, wrong age, text, watermark, logo, deformed, ugly, multiple people, busy background, cluttered",
         num_inference_steps: 30,
         guidance_scale: 3.5,
         true_cfg: 1,
-        id_weight: 0.4,
+        id_weight: 0.55,
         num_images: 1,
         image_size: "portrait_4_3",
       },
@@ -48,7 +48,7 @@ export async function POST(request) {
 
     console.log("Avatar result:", JSON.stringify(result.data).substring(0, 200));
     return Response.json({
-      url: result.data.images[0].url, // Pixar avatar URL
+      url: result.data.images[0].url, // 3D animated avatar URL
       photoUrl,                        // original uploaded photo URL (fal storage) for scene generation
     });
   } catch (err) {

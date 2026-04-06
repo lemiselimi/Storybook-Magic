@@ -29,7 +29,7 @@ export async function POST(request) {
     const result = await fal.subscribe("fal-ai/flux-pulid", {
       input: {
         reference_image_url: photoUrl,
-        prompt: `Pixar Disney 3D animated children's book illustration, ${illustration}, ${characterDesc} as the main character in this scene, vibrant colors, cinematic soft lighting, magical storybook atmosphere, highly detailed CGI render, professional Pixar animation style, wide establishing shot, whimsical and joyful`,
+        prompt: `cinematic 3D animated children's book illustration, high-quality CGI, Disney-quality render, ${illustration}, ${characterDesc} as the main character in this scene, vibrant colors, cinematic soft lighting, magical storybook atmosphere, highly detailed 3D render, wide establishing shot, whimsical and joyful`,
         negative_prompt: "realistic, photorealistic, dark, scary, blurry, low quality, adult, teenager, text, watermark, logo, deformed, ugly, multiple people, violence, wrong age",
         num_inference_steps: 28,
         guidance_scale: 3.5,

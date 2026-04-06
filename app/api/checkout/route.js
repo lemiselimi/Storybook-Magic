@@ -22,7 +22,7 @@ export async function POST(request) {
           currency: "usd",
           product_data: {
             name: `StoryBook Magic — Personalised Storybook (${planLabel})`,
-            description: "A unique Pixar-style illustrated book starring your child",
+            description: "A unique cinematic 3D-style illustrated book starring your child",
             images: ["https://storybookapp-vercel.app/og-image.png"],
           },
           unit_amount: unitPrice,

@@ -2,12 +2,31 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 
 const THEMES = [
-  { id: "adventure", emoji: "🌋", title: "The Big Adventure", subtitle: "Quest & Exploration", desc: "Your child discovers a hidden world and must be brave to save the day", popular: true },
-  { id: "dragon",    emoji: "🐉", title: "Dragon Tamer",      subtitle: "Fantasy & Magic",      desc: "A magical creature needs help and only your child has what it takes" },
-  { id: "space",     emoji: "🚀", title: "To The Stars",      subtitle: "Space & Science",       desc: "Your child blasts off into the cosmos on a mission to save the universe" },
-  { id: "ocean",     emoji: "🌊", title: "Deep Blue",          subtitle: "Ocean & Nature",        desc: "An underwater mystery only your child can solve" },
-  { id: "jungle",    emoji: "🦁", title: "Jungle Crown",       subtitle: "Animals & Wildlife",    desc: "Your child becomes ruler of the animal kingdom for a day" },
-  { id: "superpower",emoji: "🏆", title: "My Superpower",      subtitle: "Real Life Heroes",      desc: "Your child discovers their unique gift and uses it to help their community" },
+  { id: "adventure",  emoji: "🌋", title: "The Big Adventure", subtitle: "Quest & Exploration",  desc: "Your child discovers a hidden world and must be brave to save the day", popular: true },
+  { id: "dragon",     emoji: "🐉", title: "Dragon Tamer",      subtitle: "Fantasy & Magic",       desc: "A magical creature needs help and only your child has what it takes" },
+  { id: "space",      emoji: "🚀", title: "To The Stars",      subtitle: "Space & Science",        desc: "Your child blasts off into the cosmos on a mission to save the universe" },
+  { id: "ocean",      emoji: "🌊", title: "Deep Blue",          subtitle: "Ocean & Nature",         desc: "An underwater mystery only your child can solve" },
+  { id: "jungle",     emoji: "🦁", title: "Jungle Crown",       subtitle: "Animals & Wildlife",     desc: "Your child becomes ruler of the animal kingdom for a day" },
+  { id: "superpower", emoji: "🏆", title: "My Superpower",      subtitle: "Real Life Heroes",       desc: "Your child discovers their unique gift and uses it to help their community" },
+];
+
+const HAIR_COLORS = [
+  { id: "blonde",      label: "Blonde",      hex: "#E8C76B" },
+  { id: "brown",       label: "Brown",       hex: "#8B5E3C" },
+  { id: "dark-brown",  label: "Dark Brown",  hex: "#3B1F0E" },
+  { id: "black",       label: "Black",       hex: "#1A1A1A" },
+  { id: "red",         label: "Red",         hex: "#C0392B" },
+  { id: "auburn",      label: "Auburn",      hex: "#922B21" },
+  { id: "gray",        label: "White/Gray",  hex: "#C8C8C8" },
+];
+
+const EYE_COLORS = [
+  { id: "brown",       label: "Brown",       hex: "#7B4A3A" },
+  { id: "dark-brown",  label: "Dark Brown",  hex: "#3E2207" },
+  { id: "blue",        label: "Blue",        hex: "#4A90D9" },
+  { id: "green",       label: "Green",       hex: "#3A7D44" },
+  { id: "hazel",       label: "Hazel",       hex: "#8E7B5D" },
+  { id: "gray",        label: "Gray",        hex: "#8A9BA8" },
 ];
 
 const PAGE_BACKGROUNDS = [
@@ -19,34 +38,39 @@ const PAGE_BACKGROUNDS = [
   "linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)",
 ];
 
+const TOTAL_STEPS     = 5;
 const PAYMENTS_ENABLED = !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 
 const encodeShare = (data: object) => btoa(unescape(encodeURIComponent(JSON.stringify(data))));
-const decodeShare = (s: string) => JSON.parse(decodeURIComponent(escape(atob(s))));
-const rawFalUrl = (proxyUrl: string) => {
+const decodeShare = (s: string)    => JSON.parse(decodeURIComponent(escape(atob(s))));
+const rawFalUrl   = (proxyUrl: string) => {
   try { return decodeURIComponent(proxyUrl.replace("/api/proxy?url=", "")); }
   catch { return proxyUrl; }
 };
 
 export default function StorybookCreator() {
-  // ── Onboarding state ─────────────────────────────────────────────────────────
+  // ── Flow state ───────────────────────────────────────────────────────────────
   const [onboardingStep, setOnboardingStep] = useState(1);
-  const [stepDir, setStepDir]               = useState<"fwd" | "back">("fwd");
-  const [mainStep, setMainStep]             = useState<"onboarding" | "generating" | "book">("onboarding");
+  const [stepDir,  setStepDir]  = useState<"fwd" | "back">("fwd");
+  const [mainStep, setMainStep] = useState<"onboarding" | "generating" | "book">("onboarding");
 
   // ── Photo ────────────────────────────────────────────────────────────────────
-  const [photo, setPhoto]           = useState<string | null>(null);
+  const [photo,       setPhoto]       = useState<string | null>(null);
   const [photoBase64, setPhotoBase64] = useState<string | null>(null);
-  const [photoReady, setPhotoReady] = useState(false);
-  const [dragOver, setDragOver]     = useState(false);
+  const [photoReady,  setPhotoReady]  = useState(false);
+  const [dragOver,    setDragOver]    = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // ── Avatar (generated in background during step 2) ───────────────────────────
+  // ── Appearance ───────────────────────────────────────────────────────────────
+  const [hairColor, setHairColor] = useState("brown");
+  const [eyeColor,  setEyeColor]  = useState("brown");
+
+  // ── Avatar ───────────────────────────────────────────────────────────────────
   const [avatarStatus, setAvatarStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
-  const [cartoonUrl, setCartoonUrl]     = useState<string | null>(null);
-  const [photoFalUrl, setPhotoFalUrl]   = useState<string | null>(null);
-  const photoFalUrlRef  = useRef<string | null>(null);
-  const avatarGenRef    = useRef<Promise<void> | null>(null);
+  const [cartoonUrl,   setCartoonUrl]   = useState<string | null>(null);
+  const [photoFalUrl,  setPhotoFalUrl]  = useState<string | null>(null);
+  const photoFalUrlRef = useRef<string | null>(null);
+  const avatarGenRef   = useRef<Promise<void> | null>(null);
 
   // ── Form ─────────────────────────────────────────────────────────────────────
   const [childName,   setChildName]   = useState("");
@@ -54,10 +78,12 @@ export default function StorybookCreator() {
   const [childGender, setChildGender] = useState<"boy" | "girl" | "neutral">("boy");
   const [theme,       setTheme]       = useState("adventure");
 
-  // ── Preview (step 4 — pages 1-2 free) ────────────────────────────────────────
-  const [previewStory,  setPreviewStory]  = useState<any>(null);
-  const [previewImages, setPreviewImages] = useState<(string | null)[]>([null, null]);
-  const [previewStatus, setPreviewStatus] = useState<"idle" | "loading" | "done">("idle");
+  // ── Preview (step 5) ─────────────────────────────────────────────────────────
+  const [previewStory,   setPreviewStory]   = useState<any>(null);
+  const [previewImages,  setPreviewImages]  = useState<(string | null)[]>(Array(6).fill(null));
+  const [previewStatus,  setPreviewStatus]  = useState<"idle" | "loading" | "done">("idle");
+  const [previewMsg,     setPreviewMsg]     = useState("Writing your story...");
+  const [previewDone,    setPreviewDone]    = useState(0); // scenes completed count
   const previewStarted = useRef(false);
 
   // ── Full book ─────────────────────────────────────────────────────────────────
@@ -98,9 +124,7 @@ export default function StorybookCreator() {
         setPageImages((data.pageFalUrls || []).map((u: string | null) =>
           u ? `/api/proxy?url=${encodeURIComponent(u)}` : null
         ));
-        setIsSharedView(true);
-        setCurrentPage(-1);
-        setMainStep("book");
+        setIsSharedView(true); setCurrentPage(-1); setMainStep("book");
       } catch (e) { console.error("Invalid share link", e); }
       return;
     }
@@ -116,32 +140,28 @@ export default function StorybookCreator() {
       fetch(`/api/verify-session?session_id=${sessionId}`)
         .then(r => r.json())
         .then(result => {
-          if (result.ok) {
-            if (data.photoBase64) { setPhoto(`data:image/jpeg;base64,${data.photoBase64}`); setPhotoBase64(data.photoBase64); }
-            setChildName(data.childName || "");
-            setChildAge(data.childAge ?? 5);
-            setChildGender(data.childGender || "boy");
-            setTheme(data.theme || "adventure");
-            if (data.cartoonFalUrl) {
-              setPhotoFalUrl(data.cartoonFalUrl);
-              photoFalUrlRef.current = data.cartoonFalUrl;
-              setCartoonUrl(`/api/proxy?url=${encodeURIComponent(data.cartoonFalUrl)}`);
-              setAvatarStatus("done");
-            }
-            setTimeout(() => generateFullBook(data), 50);
+          if (!result.ok) return;
+          if (data.photoBase64) { setPhoto(`data:image/jpeg;base64,${data.photoBase64}`); setPhotoBase64(data.photoBase64); }
+          setChildName(data.childName || ""); setChildAge(data.childAge ?? 5);
+          setChildGender(data.childGender || "boy"); setTheme(data.theme || "adventure");
+          setHairColor(data.hairColor || "brown"); setEyeColor(data.eyeColor || "brown");
+          if (data.cartoonFalUrl) {
+            setPhotoFalUrl(data.cartoonFalUrl); photoFalUrlRef.current = data.cartoonFalUrl;
+            setCartoonUrl(`/api/proxy?url=${encodeURIComponent(data.cartoonFalUrl)}`);
+            setAvatarStatus("done");
           }
+          setTimeout(() => generateFullBook(data), 50);
         }).catch(console.error);
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Image compression ─────────────────────────────────────────────────────────
+  // ── Image helpers ─────────────────────────────────────────────────────────────
   const compressImage = (file: File): Promise<string> =>
     new Promise((resolve, reject) => {
       const img = new Image();
       const objectUrl = URL.createObjectURL(file);
       img.onload = () => {
-        const MAX = 1024;
-        let { width, height } = img;
+        const MAX = 1024; let { width, height } = img;
         if (width > MAX || height > MAX) {
           if (width > height) { height = Math.round((height * MAX) / width); width = MAX; }
           else { width = Math.round((width * MAX) / height); height = MAX; }
@@ -152,8 +172,7 @@ export default function StorybookCreator() {
         URL.revokeObjectURL(objectUrl);
         resolve(canvas.toDataURL("image/jpeg", 0.8).split(",")[1]);
       };
-      img.onerror = reject;
-      img.src = objectUrl;
+      img.onerror = reject; img.src = objectUrl;
     });
 
   const handleFile = useCallback((file: File) => {
@@ -161,16 +180,12 @@ export default function StorybookCreator() {
     setPhoto(URL.createObjectURL(file));
     setCartoonUrl(null); setAvatarStatus("idle"); setPhotoFalUrl(null);
     photoFalUrlRef.current = null; setPhotoReady(false);
-    compressImage(file).then(b64 => {
-      setPhotoBase64(b64); setPhotoReady(true);
-    }).catch(() => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const b64 = (e.target?.result as string).split(",")[1];
-        setPhotoBase64(b64); setPhotoReady(true);
-      };
-      reader.readAsDataURL(file);
-    });
+    compressImage(file).then(b64 => { setPhotoBase64(b64); setPhotoReady(true); })
+      .catch(() => {
+        const reader = new FileReader();
+        reader.onload = (e) => { setPhotoBase64((e.target?.result as string).split(",")[1]); setPhotoReady(true); };
+        reader.readAsDataURL(file);
+      });
   }, []);
 
   const handleDrop = (e: React.DragEvent) => {
@@ -178,21 +193,18 @@ export default function StorybookCreator() {
     if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
   };
 
-  // ── Avatar generation ─────────────────────────────────────────────────────────
-  const startAvatarGen = useCallback((base64: string) => {
+  // ── Avatar generation (called at step 2 → 3) ─────────────────────────────────
+  const startAvatarGen = useCallback((base64: string, hair: string, eye: string) => {
     setAvatarStatus("loading");
     const promise = (async () => {
       try {
         const res = await fetch("/api/cartoonify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ imageBase64: base64, gender: "neutral" }),
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ imageBase64: base64, gender: "neutral", hairColor: hair, eyeColor: eye }),
         }).then(r => r.json());
         if (res.url) {
           setCartoonUrl(`/api/proxy?url=${encodeURIComponent(res.url)}`);
-          setPhotoFalUrl(res.url);
-          photoFalUrlRef.current = res.url;
-          setAvatarStatus("done");
+          setPhotoFalUrl(res.url); photoFalUrlRef.current = res.url; setAvatarStatus("done");
         } else { setAvatarStatus("error"); }
       } catch { setAvatarStatus("error"); }
     })();
@@ -204,88 +216,121 @@ export default function StorybookCreator() {
     title: `${name || "A Child"}'s Big Adventure`,
     dedication: `For ${name || "every child"} who dares to dream`,
     pages: [
-      { pageNum: 1, text: `Once upon a time, ${name || "our hero"} woke up to find a magical map under their pillow.`, illustration: `A cozy bedroom at dawn, the child sitting up in bed holding a glowing treasure map that pulses with golden light` },
-      { pageNum: 2, text: `${name || "Our hero"} packed a backpack and set off into the forest. "I'm ready!" they cheered.`, illustration: `A child in explorer gear with a colorful backpack standing at the edge of a glowing enchanted forest at golden hour` },
-      { pageNum: 3, text: `The path led through an enchanted forest full of friendly butterflies and glowing flowers.`, illustration: `Inside a magical glowing forest, the child walking along a winding path surrounded by luminous mushrooms` },
-      { pageNum: 4, text: `Deep in the forest they found a tiny dragon who had lost his fire.`, illustration: `A clearing in the enchanted forest, the child kneeling beside a small blue dragon with droopy wings` },
+      { pageNum: 1, text: `Once upon a time, ${name || "our hero"} woke up to find a magical map under their pillow.`, illustration: `A cozy bedroom at dawn, the child sitting up in bed holding a glowing treasure map` },
+      { pageNum: 2, text: `${name || "Our hero"} packed a backpack and set off into the forest. "I'm ready!" they cheered.`, illustration: `A child in explorer gear at the edge of a glowing enchanted forest at golden hour` },
+      { pageNum: 3, text: `The path led through an enchanted forest full of friendly butterflies and glowing flowers.`, illustration: `Inside a magical glowing forest, the child walking along a winding path with giant luminous mushrooms` },
+      { pageNum: 4, text: `Deep in the forest they found a tiny dragon who had lost his fire.`, illustration: `A clearing in the enchanted forest, the child kneeling beside a small sad blue dragon` },
       { pageNum: 5, text: `${name || "Our hero"} told a joke and WHOOOOSH bright flames burst out! "You fixed me!" the dragon cried.`, illustration: `The child and a small dragon, the dragon joyfully breathing a spectacular rainbow flame into the sky` },
-      { pageNum: 6, text: `The dragon flew them home under the stars. "Best day ever," they whispered.`, illustration: `A child riding on the back of a friendly glowing dragon soaring through a spectacular star-filled night sky` },
+      { pageNum: 6, text: `The dragon flew them home under the stars. "Best day ever," they whispered.`, illustration: `A child riding on the back of a friendly glowing dragon soaring through a star-filled night sky` },
     ],
   });
 
-  // ── Preview generation (step 4) ───────────────────────────────────────────────
+  // ── Preview: generate ALL 6 scenes, show loading until done ─────────────────
   const generatePreview = useCallback(async () => {
     setPreviewStatus("loading");
+    setPreviewMsg("Writing your story... ✍️");
+    setPreviewDone(0);
+    setPreviewImages(Array(6).fill(null));
+
     const selectedTheme = THEMES.find(t => t.id === theme);
     try {
       const [storyRes] = await Promise.all([
         fetch("/api/story", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+          method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            childName,
-            childAge: String(childAge),
-            gender: childGender,
+            childName, childAge: String(childAge), gender: childGender, hairColor, eyeColor,
             theme: `${selectedTheme?.title} - ${selectedTheme?.subtitle}: ${selectedTheme?.desc}`,
           }),
         }).then(r => r.json()),
-        // Wait for avatar in parallel
         avatarGenRef.current ?? Promise.resolve(),
       ]);
+
       const storyData = storyRes?.pages ? storyRes : getFallbackStory(childName);
       setPreviewStory(storyData);
+      setPreviewMsg("Starting illustrations... 🖌️");
 
       const falUrl = photoFalUrlRef.current;
       if (falUrl && storyData.pages) {
-        await Promise.allSettled(storyData.pages.slice(0, 2).map(async (page: any, idx: number) => {
+        let done = 0;
+        await Promise.allSettled(storyData.pages.map(async (page: any, idx: number) => {
           try {
             const res = await fetch("/api/generate-scene", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
+              method: "POST", headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ photoUrl: falUrl, illustration: page.illustration, childName, gender: childGender }),
             }).then(r => r.json());
             if (res.url) {
               setPreviewImages(prev => { const n = [...prev]; n[idx] = `/api/proxy?url=${encodeURIComponent(res.url)}`; return n; });
+              done++;
+              setPreviewDone(done);
+              setPreviewMsg(
+                done < 6
+                  ? `Painted ${done} of 6 pages... ✨`
+                  : "All pages ready! 🎉"
+              );
             }
           } catch {}
         }));
       }
     } catch { setPreviewStory(getFallbackStory(childName)); }
+
     setPreviewStatus("done");
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [theme, childName, childAge, childGender]);
+  }, [theme, childName, childAge, childGender, hairColor, eyeColor]);
 
-  // Trigger preview when step 4 mounts
   useEffect(() => {
-    if (onboardingStep === 4 && !previewStarted.current) {
+    if (onboardingStep === 5 && !previewStarted.current) {
       previewStarted.current = true;
       generatePreview();
     }
   }, [onboardingStep, generatePreview]);
 
-  // ── Full book generation ──────────────────────────────────────────────────────
+  // ── Full book generation (post-purchase) ─────────────────────────────────────
   const generateFullBook = async (savedData?: any) => {
-    const _base64  = savedData?.photoBase64   ?? photoBase64;
-    const _name    = savedData?.childName     ?? childName;
-    const _age     = savedData?.childAge      ?? childAge;
-    const _gender  = savedData?.childGender   ?? childGender;
-    const _theme   = savedData?.theme         ?? theme;
-    const _story   = savedData?.story         ?? previewStory;
-    const _falUrl  = savedData?.cartoonFalUrl ?? photoFalUrlRef.current;
+    const _name          = savedData?.childName     ?? childName;
+    const _age           = savedData?.childAge      ?? childAge;
+    const _gender        = savedData?.childGender   ?? childGender;
+    const _theme         = savedData?.theme         ?? theme;
+    const _hair          = savedData?.hairColor     ?? hairColor;
+    const _eye           = savedData?.eyeColor      ?? eyeColor;
+    const _base64        = savedData?.photoBase64   ?? photoBase64;
+    const _savedStory    = savedData?.story         ?? previewStory;
+    const _savedFalUrls  = savedData?.previewFalUrls as (string | null)[] | undefined;
+    const _cartoonFalUrl = savedData?.cartoonFalUrl ?? photoFalUrlRef.current;
 
+    // Restore avatar
+    if (_cartoonFalUrl) {
+      setCartoonUrl(`/api/proxy?url=${encodeURIComponent(_cartoonFalUrl)}`);
+      setPhotoFalUrl(_cartoonFalUrl); photoFalUrlRef.current = _cartoonFalUrl; setAvatarStatus("done");
+    }
+
+    // Fast path: all scenes already generated in preview
+    if (_savedStory && _savedFalUrls && _savedFalUrls.filter(Boolean).length === 6) {
+      setStory(_savedStory);
+      setPageImages(_savedFalUrls.map(u => u ? `/api/proxy?url=${encodeURIComponent(u)}` : null));
+      setCurrentPage(-1); setMainStep("book"); return;
+    }
+
+    // If preview images exist in state, reuse them
+    const existingImages = previewImages.filter(Boolean).length === 6 ? previewImages : null;
+    if (_savedStory && existingImages) {
+      setStory(_savedStory); setPageImages(existingImages);
+      setCurrentPage(-1); setMainStep("book"); return;
+    }
+
+    // Full generation from scratch
     setMainStep("generating"); setFalError(null);
     setPageImages(Array(6).fill(null)); setScenesCompleted(0); setIsSharedView(false);
 
     try {
-      let storyData = _story;
-      let falUrl    = _falUrl;
+      let storyData = _savedStory;
+      let falUrl    = _cartoonFalUrl ?? photoFalUrlRef.current;
 
       if (!storyData) {
-        const selectedTheme = THEMES.find(t => t.id === _theme);
+        const sel = THEMES.find(t => t.id === _theme);
         setLoadingMsg("Writing your story... 📖");
         const res = await fetch("/api/story", {
           method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ childName: _name, childAge: String(_age), gender: _gender, theme: `${selectedTheme?.title} - ${selectedTheme?.subtitle}` }),
+          body: JSON.stringify({ childName: _name, childAge: String(_age), gender: _gender, hairColor: _hair, eyeColor: _eye, theme: `${sel?.title} - ${sel?.subtitle}` }),
         }).then(r => r.json());
         storyData = res?.pages ? res : getFallbackStory(_name);
       }
@@ -295,13 +340,9 @@ export default function StorybookCreator() {
         try {
           const res = await fetch("/api/cartoonify", {
             method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ imageBase64: _base64, gender: _gender }),
+            body: JSON.stringify({ imageBase64: _base64, gender: _gender, hairColor: _hair, eyeColor: _eye }),
           }).then(r => r.json());
-          if (res.url) {
-            falUrl = res.url;
-            setCartoonUrl(`/api/proxy?url=${encodeURIComponent(res.url)}`);
-            setPhotoFalUrl(res.url); photoFalUrlRef.current = res.url;
-          }
+          if (res.url) { falUrl = res.url; setCartoonUrl(`/api/proxy?url=${encodeURIComponent(res.url)}`); setPhotoFalUrl(res.url); photoFalUrlRef.current = res.url; }
         } catch { setFalError("Cartoon transformation failed — using original photo."); }
       }
 
@@ -315,10 +356,7 @@ export default function StorybookCreator() {
               method: "POST", headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ photoUrl: falUrl, illustration: page.illustration, childName: _name, gender: _gender }),
             }).then(r => r.json());
-            if (res.url) {
-              setPageImages(prev => { const n = [...prev]; n[idx] = `/api/proxy?url=${encodeURIComponent(res.url)}`; return n; });
-              setScenesCompleted(p => p + 1);
-            }
+            if (res.url) { setPageImages(prev => { const n = [...prev]; n[idx] = `/api/proxy?url=${encodeURIComponent(res.url)}`; return n; }); setScenesCompleted(p => p + 1); }
           } catch { setScenesCompleted(p => p + 1); }
         }));
       }
@@ -330,15 +368,18 @@ export default function StorybookCreator() {
     }
   };
 
-  // ── Purchase flow ─────────────────────────────────────────────────────────────
+  // ── Purchase ──────────────────────────────────────────────────────────────────
   const handlePurchase = async (plan: "digital" | "print") => {
     if (!PAYMENTS_ENABLED) { generateFullBook(); return; }
     setCheckoutLoading(plan);
     try {
       const ref = crypto.randomUUID();
       sessionStorage.setItem(ref, JSON.stringify({
-        photoBase64, childName, childAge, childGender, theme,
-        story: previewStory, cartoonFalUrl: photoFalUrlRef.current, plan,
+        photoBase64, childName, childAge, childGender, theme, hairColor, eyeColor,
+        story: previewStory,
+        cartoonFalUrl: photoFalUrlRef.current,
+        previewFalUrls: previewImages.map(u => u ? rawFalUrl(u) : null),
+        plan,
       }));
       const res = await fetch("/api/checkout", {
         method: "POST", headers: { "Content-Type": "application/json" },
@@ -346,10 +387,7 @@ export default function StorybookCreator() {
       }).then(r => r.json());
       if (res.url) window.location.href = res.url;
       else throw new Error(res.error || "Checkout failed");
-    } catch (err: any) {
-      alert("Payment setup failed: " + err.message);
-      setCheckoutLoading(null);
-    }
+    } catch (err: any) { alert("Payment setup failed: " + err.message); setCheckoutLoading(null); }
   };
 
   // ── Navigation ────────────────────────────────────────────────────────────────
@@ -363,7 +401,7 @@ export default function StorybookCreator() {
     setCurrentPage(newPage);
   };
 
-  // ── Regenerate / Share / PDF ──────────────────────────────────────────────────
+  // ── Regen / Share / PDF ───────────────────────────────────────────────────────
   const regenerateScene = async (pageIdx: number) => {
     if (!photoFalUrl || regeneratingPage !== null) return;
     setRegeneratingPage(pageIdx);
@@ -373,20 +411,14 @@ export default function StorybookCreator() {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ photoUrl: photoFalUrl, illustration: page.illustration, childName, gender: childGender }),
       }).then(r => r.json());
-      if (res.url) {
-        setPageImages(prev => { const n = [...prev]; n[pageIdx] = `/api/proxy?url=${encodeURIComponent(res.url)}`; return n; });
-      }
+      if (res.url) setPageImages(prev => { const n = [...prev]; n[pageIdx] = `/api/proxy?url=${encodeURIComponent(res.url)}`; return n; });
     } catch (err) { console.error("Regenerate failed:", err); }
     setRegeneratingPage(null);
   };
 
   const copyShareLink = async () => {
     if (!story) return;
-    const data = {
-      story,
-      cartoonFalUrl: cartoonUrl ? rawFalUrl(cartoonUrl) : null,
-      pageFalUrls: pageImages.map(u => u ? rawFalUrl(u) : null),
-    };
+    const data = { story, cartoonFalUrl: cartoonUrl ? rawFalUrl(cartoonUrl) : null, pageFalUrls: pageImages.map(u => u ? rawFalUrl(u) : null) };
     const url = `${window.location.origin}/create?share=${encodeShare(data)}`;
     try { await navigator.clipboard.writeText(url); setShareCopied(true); setTimeout(() => setShareCopied(false), 2500); } catch {}
   };
@@ -398,10 +430,7 @@ export default function StorybookCreator() {
       const html2canvas = (await import("html2canvas")).default;
       const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
       const pdfW = 297, pdfH = 210;
-      const capture = async (id: string) => {
-        const el = document.getElementById(id);
-        return el ? html2canvas(el, { useCORS: true, scale: 2, backgroundColor: null }) : null;
-      };
+      const capture = async (id: string) => { const el = document.getElementById(id); return el ? html2canvas(el, { useCORS: true, scale: 2, backgroundColor: null }) : null; };
       const coverCanvas = await capture("pdf-cover-capture");
       if (coverCanvas) pdf.addImage(coverCanvas.toDataURL("image/jpeg", 0.92), "JPEG", 0, 0, pdfW, pdfH);
       for (let i = 0; i < story.pages.length; i++) {
@@ -418,8 +447,9 @@ export default function StorybookCreator() {
     setPhoto(null); setPhotoBase64(null); setPhotoReady(false);
     setCartoonUrl(null); setAvatarStatus("idle"); setPhotoFalUrl(null);
     photoFalUrlRef.current = null; avatarGenRef.current = null;
-    setStory(null); setPreviewStory(null); setPreviewImages([null, null]); setPreviewStatus("idle");
-    previewStarted.current = false;
+    setHairColor("brown"); setEyeColor("brown");
+    setStory(null); setPreviewStory(null); setPreviewImages(Array(6).fill(null));
+    setPreviewStatus("idle"); setPreviewDone(0); previewStarted.current = false;
     setPageImages(Array(6).fill(null)); setScenesCompleted(0);
     setChildGender("boy"); setChildName(""); setChildAge(5); setTheme("adventure");
     setIsSharedView(false); setRegeneratingPage(null); setFalError(null);
@@ -428,39 +458,27 @@ export default function StorybookCreator() {
   const totalPages   = story?.pages?.length ?? 6;
   const displayPhoto = cartoonUrl || photo;
 
-  // ── BookPage ──────────────────────────────────────────────────────────────────
+  // ── BookPage / BookSpread ─────────────────────────────────────────────────────
   const BookPage = ({ page, isLeft, isLast }: { page: any; isLeft: boolean; isLast?: boolean }) => {
-    const bg          = PAGE_BACKGROUNDS[(page.pageNum - 1) % PAGE_BACKGROUNDS.length];
-    const sceneImage  = pageImages[page.pageNum - 1];
-    const isRegen     = regeneratingPage === page.pageNum - 1;
-
+    const bg      = PAGE_BACKGROUNDS[(page.pageNum - 1) % PAGE_BACKGROUNDS.length];
+    const sceneImg = pageImages[page.pageNum - 1];
+    const isRegen  = regeneratingPage === page.pageNum - 1;
     if (isLeft) return (
       <div style={{ flex: 1, padding: isMobile ? "16px 16px 8px" : "28px 24px", display: "flex", flexDirection: "column", justifyContent: "space-between", background: "#fffef7", borderBottom: isMobile ? "2px solid #e8dcc8" : "none" }}>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-          <div className="scene-wrap" style={{ width: "100%", aspectRatio: "4/3", borderRadius: 14, overflow: "hidden", background: sceneImage ? "#1a1a2e" : bg, border: "3px solid rgba(255,255,255,0.5)", position: "relative", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}>
-            {isRegen ? (
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
-                <div style={{ width: 36, height: 36, border: "3px solid rgba(255,215,0,0.3)", borderTop: "3px solid #ffd700", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
-                <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 12 }}>Repainting scene...</span>
-              </div>
-            ) : sceneImage ? (
-              <img crossOrigin="anonymous" src={sceneImage} alt={`Page ${page.pageNum}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-            ) : displayPhoto ? (
-              <img crossOrigin="anonymous" src={displayPhoto} alt="hero" style={{ height: "85%", width: "auto", maxWidth: "70%", objectFit: "contain", borderRadius: 12, filter: "drop-shadow(0 8px 16px rgba(0,0,0,0.2))" }} />
-            ) : null}
-            {!isSharedView && photoFalUrl && !isRegen && (
-              <button className="regen-btn" onClick={() => regenerateScene(page.pageNum - 1)} title="Regenerate this scene" style={{ position: "absolute", bottom: 8, left: 8, background: "rgba(0,0,0,0.6)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 8, padding: "4px 8px", color: "white", fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>🔄 Redo</button>
-            )}
-            {sceneImage && !isRegen
-              ? <div style={{ position: "absolute", top: 8, right: 8, borderRadius: 8, background: "rgba(255,215,0,0.95)", padding: "3px 8px", fontSize: 10, fontWeight: 700, color: "#1a0a2e" }}>✨ AI Scene</div>
-              : cartoonUrl && !isRegen ? <div style={{ position: "absolute", top: 8, right: 8, borderRadius: 8, background: "rgba(255,215,0,0.95)", padding: "3px 8px", fontSize: 10, fontWeight: 700, color: "#1a0a2e" }}>✨ Pixar Style</div>
+          <div className="scene-wrap" style={{ width: "100%", aspectRatio: "4/3", borderRadius: 14, overflow: "hidden", background: sceneImg ? "#1a1a2e" : bg, border: "3px solid rgba(255,255,255,0.5)", position: "relative", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}>
+            {isRegen ? <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}><div style={{ width: 36, height: 36, border: "3px solid rgba(255,215,0,0.3)", borderTop: "3px solid #ffd700", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} /><span style={{ color: "rgba(255,255,255,0.7)", fontSize: 12 }}>Repainting...</span></div>
+              : sceneImg ? <img crossOrigin="anonymous" src={sceneImg} alt={`Page ${page.pageNum}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              : displayPhoto ? <img crossOrigin="anonymous" src={displayPhoto} alt="hero" style={{ height: "85%", width: "auto", maxWidth: "70%", objectFit: "contain", borderRadius: 12, filter: "drop-shadow(0 8px 16px rgba(0,0,0,0.2))" }} />
               : null}
+            {!isSharedView && photoFalUrl && !isRegen && <button className="regen-btn" onClick={() => regenerateScene(page.pageNum - 1)} style={{ position: "absolute", bottom: 8, left: 8, background: "rgba(0,0,0,0.6)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 8, padding: "4px 8px", color: "white", fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>🔄 Redo</button>}
+            {sceneImg && !isRegen ? <div style={{ position: "absolute", top: 8, right: 8, borderRadius: 8, background: "rgba(255,215,0,0.95)", padding: "3px 8px", fontSize: 10, fontWeight: 700, color: "#1a0a2e" }}>✨ AI Scene</div>
+              : cartoonUrl && !isRegen ? <div style={{ position: "absolute", top: 8, right: 8, borderRadius: 8, background: "rgba(255,215,0,0.95)", padding: "3px 8px", fontSize: 10, fontWeight: 700, color: "#1a0a2e" }}>✨ Pixar Style</div> : null}
           </div>
         </div>
         {!isMobile && <div style={{ textAlign: "center", color: "#c4a882", fontFamily: "Georgia, serif", fontSize: 13, marginTop: 10 }}>— {page.pageNum} —</div>}
       </div>
     );
-
     return (
       <div style={{ flex: 1, padding: isMobile ? "12px 16px 20px" : "28px 24px", display: "flex", flexDirection: "column", justifyContent: "space-between", background: "#fff8f0" }}>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
@@ -473,29 +491,45 @@ export default function StorybookCreator() {
   };
 
   const BookSpread = ({ spreadIndex }: { spreadIndex: number }) => {
-    const page   = story.pages[spreadIndex];
-    const isLast = spreadIndex === story.pages.length - 1;
+    const page = story.pages[spreadIndex]; const isLast = spreadIndex === story.pages.length - 1;
     if (!page) return null;
-    return isMobile ? (
-      <div style={{ display: "flex", flexDirection: "column" }}>
-        <BookPage page={page} isLeft={true} />
-        <BookPage page={page} isLeft={false} isLast={isLast} />
-      </div>
-    ) : (
-      <div style={{ display: "flex", width: "100%", minHeight: 380 }}>
-        <BookPage page={page} isLeft={true} />
-        <div style={{ width: 6, flexShrink: 0, background: "linear-gradient(to right, #d4c4a8, #e8dcc8, #d4c4a8)", boxShadow: "inset -2px 0 4px rgba(0,0,0,0.06), inset 2px 0 4px rgba(0,0,0,0.06)" }} />
-        <BookPage page={page} isLeft={false} isLast={isLast} />
-      </div>
-    );
+    return isMobile ? <div style={{ display: "flex", flexDirection: "column" }}><BookPage page={page} isLeft={true} /><BookPage page={page} isLeft={false} isLast={isLast} /></div>
+      : <div style={{ display: "flex", width: "100%", minHeight: 380 }}><BookPage page={page} isLeft={true} /><div style={{ width: 6, flexShrink: 0, background: "linear-gradient(to right, #d4c4a8, #e8dcc8, #d4c4a8)", boxShadow: "inset -2px 0 4px rgba(0,0,0,0.06), inset 2px 0 4px rgba(0,0,0,0.06)" }} /><BookPage page={page} isLeft={false} isLast={isLast} /></div>;
   };
 
-  // ── Mascot speech bubble ──────────────────────────────────────────────────────
-  const Mascot = ({ message }: { message: string }) => (
+  // ── Mascot ────────────────────────────────────────────────────────────────────
+  const Mascot = ({ msg }: { msg: string }) => (
     <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 22 }}>
       <div style={{ fontSize: 38, flexShrink: 0, animation: "float 3s ease-in-out infinite" }}>🧙</div>
-      <div style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "18px 18px 18px 4px", padding: "11px 15px", maxWidth: 340 }}>
-        <p style={{ color: "white", fontSize: 14, margin: 0, lineHeight: 1.65 }}>{message}</p>
+      <div style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "18px 18px 18px 4px", padding: "11px 15px", maxWidth: 360 }}>
+        <p style={{ color: "white", fontSize: 14, margin: 0, lineHeight: 1.65 }}>{msg}</p>
+      </div>
+    </div>
+  );
+
+  // ── Color Picker ──────────────────────────────────────────────────────────────
+  const ColorPicker = ({ label, colors, selected, onSelect }: { label: string; colors: typeof HAIR_COLORS; selected: string; onSelect: (id: string) => void }) => (
+    <div>
+      <label style={{ color: "rgba(255,255,255,0.45)", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: 12 }}>{label}</label>
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+        {colors.map(c => (
+          <button
+            key={c.id}
+            onClick={() => onSelect(c.id)}
+            title={c.label}
+            style={{ position: "relative", width: 52, height: 52, borderRadius: "50%", background: c.hex, border: `3px solid ${selected === c.id ? "#ffd700" : "rgba(255,255,255,0.15)"}`, cursor: "pointer", boxShadow: selected === c.id ? "0 0 0 3px rgba(255,215,0,0.3), 0 4px 12px rgba(0,0,0,0.3)" : "0 2px 6px rgba(0,0,0,0.3)", transition: "all 0.15s ease", padding: 0, flexShrink: 0 }}
+            aria-label={c.label}
+          >
+            {selected === c.id && (
+              <span style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: c.hex === "#1A1A1A" || c.hex === "#3B1F0E" || c.hex === "#922B21" || c.hex === "#3E2207" ? "white" : "rgba(0,0,0,0.7)", fontSize: 20, fontWeight: 700 }}>✓</span>
+            )}
+          </button>
+        ))}
+      </div>
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 6 }}>
+        {colors.map(c => (
+          <div key={c.id} style={{ width: 52, textAlign: "center", color: selected === c.id ? "#ffd700" : "rgba(255,255,255,0.3)", fontSize: 9, fontWeight: selected === c.id ? 700 : 400, transition: "color 0.15s" }}>{c.label}</div>
+        ))}
       </div>
     </div>
   );
@@ -506,6 +540,7 @@ export default function StorybookCreator() {
       <style>{`
         @keyframes float     { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
         @keyframes fadeUp    { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes fadeIn    { from{opacity:0} to{opacity:1} }
         @keyframes shimmer   { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
         @keyframes slideInFwd  { from{opacity:0;transform:translateX(44px)}  to{opacity:1;transform:translateX(0)} }
         @keyframes slideInBack { from{opacity:0;transform:translateX(-44px)} to{opacity:1;transform:translateX(0)} }
@@ -520,8 +555,6 @@ export default function StorybookCreator() {
         .scene-wrap:hover .regen-btn{opacity:1;}
         .theme-card{transition:transform 0.15s ease,box-shadow 0.15s ease;}
         .theme-card:hover{transform:translateY(-4px);box-shadow:0 8px 28px rgba(0,0,0,0.3)!important;}
-        .gender-btn{transition:all 0.15s ease;}
-        .gender-btn:hover{transform:scale(1.03);}
       `}</style>
 
       {/* Logo */}
@@ -530,24 +563,23 @@ export default function StorybookCreator() {
         <h1 style={{ margin: 0, fontSize: isMobile ? 20 : 26, fontWeight: 800, background: "linear-gradient(90deg, #ffd700, #ff9a9e, #a18cd1, #ffd700)", backgroundSize: "300% 100%", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", animation: "shimmer 4s ease infinite" }}>StoryBook Magic</h1>
       </div>
 
-      {/* ════════════════ ONBOARDING ════════════════ */}
+      {/* ══ ONBOARDING ══════════════════════════════════════════════════════════ */}
       {mainStep === "onboarding" && (
         <>
           {/* Step indicator */}
-          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 28, animation: "fadeUp 0.4s ease both" }}>
-            {[1, 2, 3, 4].map(s => (
-              <div key={s} style={{ height: 6, borderRadius: 3, background: s <= onboardingStep ? "#ffd700" : "rgba(255,255,255,0.15)", width: s === onboardingStep ? 30 : 16, transition: "all 0.35s ease" }} />
+          <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 28, animation: "fadeUp 0.4s ease both" }}>
+            {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
+              <div key={i} style={{ height: 6, borderRadius: 3, background: i + 1 <= onboardingStep ? "#ffd700" : "rgba(255,255,255,0.15)", width: i + 1 === onboardingStep ? 28 : 14, transition: "all 0.35s ease" }} />
             ))}
-            <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 12, marginLeft: 4 }}>Step {onboardingStep} of 4</span>
+            <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 12, marginLeft: 4 }}>Step {onboardingStep} of {TOTAL_STEPS}</span>
           </div>
 
-          <div key={`step-${onboardingStep}`} style={{ width: "100%", maxWidth: onboardingStep === 3 ? 740 : 540, animation: `${stepDir === "fwd" ? "slideInFwd" : "slideInBack"} 0.3s ease both` }}>
+          <div key={`step-${onboardingStep}`} style={{ width: "100%", maxWidth: onboardingStep === 4 ? 740 : 540, animation: `${stepDir === "fwd" ? "slideInFwd" : "slideInBack"} 0.3s ease both` }}>
 
             {/* ── STEP 1: Upload ── */}
             {onboardingStep === 1 && (
               <div>
-                <Mascot message="Let's make some magic! ✨ Upload a clear photo of your child to get started." />
-
+                <Mascot msg="Let's make some magic! ✨ Upload a clear photo of your child to get started." />
                 <div
                   onClick={() => fileRef.current?.click()}
                   onDrop={handleDrop}
@@ -559,7 +591,7 @@ export default function StorybookCreator() {
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
                       <div style={{ position: "relative", display: "inline-block" }}>
                         <img src={photo} alt="preview" style={{ width: 120, height: 120, objectFit: "cover", borderRadius: "50%", border: "4px solid #4caf50" }} />
-                        <div style={{ position: "absolute", bottom: 0, right: 0, width: 36, height: 36, background: "#4caf50", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, border: "2.5px solid #1a0a2e", boxShadow: "0 2px 10px rgba(0,0,0,0.35)" }}>✓</div>
+                        <div style={{ position: "absolute", bottom: 0, right: 0, width: 36, height: 36, background: "#4caf50", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, border: "2.5px solid #1a0a2e" }}>✓</div>
                       </div>
                       <p style={{ color: "#4caf50", fontWeight: 700, fontSize: 18, margin: "0 0 2px" }}>Perfect photo!</p>
                       <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 12, margin: 0 }}>Tap to change</p>
@@ -577,10 +609,7 @@ export default function StorybookCreator() {
                     </>
                   )}
                 </div>
-
                 <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} />
-
-                {/* Photo tips */}
                 <div style={{ display: "flex", gap: 8, marginTop: 14, flexWrap: "wrap", justifyContent: "center" }}>
                   {[{ icon: "😊", text: "Face clearly visible" }, { icon: "☀️", text: "Good lighting" }, { icon: "🚫", text: "No sunglasses" }].map(tip => (
                     <div key={tip.icon} style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 12, padding: "7px 13px" }}>
@@ -589,33 +618,45 @@ export default function StorybookCreator() {
                     </div>
                   ))}
                 </div>
-
                 {photoReady && (
-                  <button
-                    onClick={() => { if (photoBase64) startAvatarGen(photoBase64); goToStep(2); }}
-                    style={{ width: "100%", marginTop: 20, padding: "17px", borderRadius: 16, border: "none", background: "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 17, fontWeight: 700, cursor: "pointer", animation: "fadeUp 0.35s ease both" }}
-                  >
-                    Continue — Name your hero →
+                  <button onClick={() => goToStep(2)} style={{ width: "100%", marginTop: 20, padding: "17px", borderRadius: 16, border: "none", background: "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 17, fontWeight: 700, cursor: "pointer", animation: "fadeUp 0.35s ease both" }}>
+                    Continue →
                   </button>
                 )}
               </div>
             )}
 
-            {/* ── STEP 2: Customize ── */}
+            {/* ── STEP 2: Appearance ── */}
             {onboardingStep === 2 && (
               <div>
-                <Mascot message="Amazing! Every hero needs a name. What should we call them? 🌟" />
+                <Mascot msg="Let's make sure we get every detail right! 🎨 Pick your child's hair and eye colour." />
+                <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: 22, padding: isMobile ? 18 : 28, border: "1px solid rgba(255,255,255,0.08)", display: "flex", flexDirection: "column", gap: 28 }}>
+                  <ColorPicker label="Hair colour" colors={HAIR_COLORS} selected={hairColor} onSelect={setHairColor} />
+                  <ColorPicker label="Eye colour"  colors={EYE_COLORS}  selected={eyeColor}  onSelect={setEyeColor}  />
+                </div>
+                <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
+                  <button onClick={() => goToStep(1)} style={{ padding: "14px 20px", borderRadius: 14, border: "1px solid rgba(255,255,255,0.12)", background: "transparent", color: "rgba(255,255,255,0.5)", fontSize: 14, cursor: "pointer" }}>← Back</button>
+                  <button
+                    onClick={() => { if (photoBase64) startAvatarGen(photoBase64, hairColor, eyeColor); goToStep(3); }}
+                    style={{ flex: 1, padding: "16px", borderRadius: 14, border: "none", background: "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 16, fontWeight: 700, cursor: "pointer" }}
+                  >
+                    Looks perfect! →
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ── STEP 3: Customize (name / gender / age) ── */}
+            {onboardingStep === 3 && (
+              <div>
+                <Mascot msg="Amazing! Every hero needs a name. What should we call them? 🌟" />
 
                 {/* Avatar loading card */}
                 <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,215,0,0.15)", borderRadius: 18, padding: "14px 18px", marginBottom: 20, display: "flex", alignItems: "center", gap: 14 }}>
                   <div style={{ position: "relative", flexShrink: 0 }}>
                     <img src={photo!} alt="original" style={{ width: 56, height: 56, objectFit: "cover", borderRadius: "50%", border: "2px solid rgba(255,215,0,0.3)" }} />
-                    {avatarStatus === "loading" && (
-                      <div style={{ position: "absolute", inset: -3, borderRadius: "50%", border: "2.5px solid transparent", borderTop: "2.5px solid #ffd700", animation: "spin 1s linear infinite" }} />
-                    )}
-                    {avatarStatus === "done" && (
-                      <div style={{ position: "absolute", bottom: -2, right: -2, width: 20, height: 20, background: "#4caf50", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, border: "1.5px solid #1a0a2e" }}>✓</div>
-                    )}
+                    {avatarStatus === "loading" && <div style={{ position: "absolute", inset: -3, borderRadius: "50%", border: "2.5px solid transparent", borderTop: "2.5px solid #ffd700", animation: "spin 1s linear infinite" }} />}
+                    {avatarStatus === "done"    && <div style={{ position: "absolute", bottom: -2, right: -2, width: 20, height: 20, background: "#4caf50", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, border: "1.5px solid #1a0a2e" }}>✓</div>}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ color: "white", fontWeight: 600, fontSize: 13, margin: "0 0 7px" }}>
@@ -625,48 +666,29 @@ export default function StorybookCreator() {
                       <div style={{ height: "100%", borderRadius: 4, background: "linear-gradient(90deg, #ffd700, #ff9a9e)", width: avatarStatus === "done" || avatarStatus === "error" ? "100%" : "0%", animation: avatarStatus === "loading" ? "fwdBar 30s linear forwards" : "none", transition: "width 0.5s" }} />
                     </div>
                     <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 11, margin: "4px 0 0" }}>
-                      {avatarStatus === "done" ? "Hero is ready to star in your story" : avatarStatus === "error" ? "We'll use your photo directly" : "Transforming into Pixar style — 30 secs"}
+                      {avatarStatus === "done" ? "Hero is ready to star in your story" : avatarStatus === "error" ? "We'll use your photo directly" : "Transforming into Pixar style..."}
                     </p>
                   </div>
-                  {avatarStatus === "done" && cartoonUrl && (
-                    <img src={cartoonUrl} alt="hero" style={{ width: 56, height: 56, objectFit: "cover", borderRadius: "50%", border: "2px solid #ffd700", flexShrink: 0 }} />
-                  )}
+                  {avatarStatus === "done" && cartoonUrl && <img src={cartoonUrl} alt="hero" style={{ width: 56, height: 56, objectFit: "cover", borderRadius: "50%", border: "2px solid #ffd700", flexShrink: 0 }} />}
                 </div>
 
                 {/* Form */}
                 <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: 22, padding: isMobile ? 18 : 26, border: "1px solid rgba(255,255,255,0.08)", display: "flex", flexDirection: "column", gap: 22 }}>
-
-                  {/* Name */}
                   <div>
                     <label style={{ color: "rgba(255,255,255,0.45)", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: 9 }}>Child's first name</label>
-                    <input
-                      value={childName}
-                      onChange={(e) => setChildName(e.target.value)}
-                      placeholder="e.g. Emma, Liam, Zara..."
-                      autoFocus
-                      style={{ width: "100%", padding: "14px 16px", borderRadius: 13, border: "1.5px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.06)", color: "white", fontSize: 20, fontWeight: 600, boxSizing: "border-box" }}
-                    />
+                    <input value={childName} onChange={(e) => setChildName(e.target.value)} placeholder="e.g. Emma, Liam, Zara..." autoFocus style={{ width: "100%", padding: "14px 16px", borderRadius: 13, border: "1.5px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.06)", color: "white", fontSize: 20, fontWeight: 600, boxSizing: "border-box" }} />
                   </div>
-
-                  {/* Gender */}
                   <div>
                     <label style={{ color: "rgba(255,255,255,0.45)", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: 9 }}>Boy or Girl?</label>
                     <div style={{ display: "flex", gap: 12 }}>
                       {[{ id: "boy", emoji: "👦", label: "Boy" }, { id: "girl", emoji: "👧", label: "Girl" }].map(g => (
-                        <div
-                          key={g.id}
-                          className="gender-btn"
-                          onClick={() => setChildGender(g.id as "boy" | "girl" | "neutral")}
-                          style={{ flex: 1, padding: "18px 12px", borderRadius: 16, cursor: "pointer", textAlign: "center", border: `2px solid ${childGender === g.id ? "#ffd700" : "rgba(255,255,255,0.1)"}`, background: childGender === g.id ? "rgba(255,215,0,0.1)" : "rgba(255,255,255,0.03)", boxShadow: childGender === g.id ? "0 0 16px rgba(255,215,0,0.15)" : "none" }}
-                        >
+                        <div key={g.id} onClick={() => setChildGender(g.id as "boy" | "girl" | "neutral")} style={{ flex: 1, padding: "18px 12px", borderRadius: 16, cursor: "pointer", textAlign: "center", border: `2px solid ${childGender === g.id ? "#ffd700" : "rgba(255,255,255,0.1)"}`, background: childGender === g.id ? "rgba(255,215,0,0.1)" : "rgba(255,255,255,0.03)", transition: "all 0.15s", boxShadow: childGender === g.id ? "0 0 16px rgba(255,215,0,0.15)" : "none" }}>
                           <div style={{ fontSize: 36, marginBottom: 6 }}>{g.emoji}</div>
                           <div style={{ color: childGender === g.id ? "#ffd700" : "rgba(255,255,255,0.6)", fontWeight: 700, fontSize: 15 }}>{g.label}</div>
                         </div>
                       ))}
                     </div>
                   </div>
-
-                  {/* Age slider */}
                   <div>
                     <label style={{ color: "rgba(255,255,255,0.45)", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: 9 }}>
                       Age — <span style={{ color: "#ffd700", fontSize: 17, fontWeight: 700 }}>{childAge} years old</span>
@@ -678,36 +700,23 @@ export default function StorybookCreator() {
                     </div>
                   </div>
                 </div>
-
                 <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
-                  <button onClick={() => goToStep(1)} style={{ padding: "14px 20px", borderRadius: 14, border: "1px solid rgba(255,255,255,0.12)", background: "transparent", color: "rgba(255,255,255,0.5)", fontSize: 14, cursor: "pointer" }}>← Back</button>
-                  <button
-                    onClick={() => goToStep(3)}
-                    disabled={!childName.trim()}
-                    style={{ flex: 1, padding: "15px", borderRadius: 14, border: "none", background: childName.trim() ? "linear-gradient(135deg, #ffd700, #ff9a9e)" : "rgba(255,255,255,0.08)", color: childName.trim() ? "#1a0a2e" : "rgba(255,255,255,0.3)", fontSize: 16, fontWeight: 700, cursor: childName.trim() ? "pointer" : "not-allowed", transition: "all 0.2s" }}
-                  >
+                  <button onClick={() => goToStep(2)} style={{ padding: "14px 20px", borderRadius: 14, border: "1px solid rgba(255,255,255,0.12)", background: "transparent", color: "rgba(255,255,255,0.5)", fontSize: 14, cursor: "pointer" }}>← Back</button>
+                  <button onClick={() => goToStep(4)} disabled={!childName.trim()} style={{ flex: 1, padding: "15px", borderRadius: 14, border: "none", background: childName.trim() ? "linear-gradient(135deg, #ffd700, #ff9a9e)" : "rgba(255,255,255,0.08)", color: childName.trim() ? "#1a0a2e" : "rgba(255,255,255,0.3)", fontSize: 16, fontWeight: 700, cursor: childName.trim() ? "pointer" : "not-allowed", transition: "all 0.2s" }}>
                     {childName.trim() ? `Pick ${childName}'s adventure →` : "Enter a name to continue →"}
                   </button>
                 </div>
               </div>
             )}
 
-            {/* ── STEP 3: Themes ── */}
-            {onboardingStep === 3 && (
+            {/* ── STEP 4: Themes ── */}
+            {onboardingStep === 4 && (
               <div>
-                <Mascot message={`Great choice! Now pick the perfect adventure for ${childName || "your little hero"}...`} />
-
+                <Mascot msg={`Great! Now pick the perfect adventure for ${childName || "your little hero"}...`} />
                 <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: 14 }}>
                   {THEMES.map((t) => (
-                    <div
-                      key={t.id}
-                      className="theme-card"
-                      onClick={() => setTheme(t.id)}
-                      style={{ position: "relative", padding: "22px 18px 18px", borderRadius: 20, cursor: "pointer", border: `2px solid ${theme === t.id ? "#ffd700" : "rgba(255,255,255,0.1)"}`, background: theme === t.id ? "rgba(255,215,0,0.08)" : "rgba(255,255,255,0.04)", boxShadow: theme === t.id ? "0 0 24px rgba(255,215,0,0.18)" : "0 2px 8px rgba(0,0,0,0.2)" }}
-                    >
-                      {t.popular && (
-                        <div style={{ position: "absolute", top: -10, right: 12, background: "linear-gradient(135deg, #ff6b6b, #ee5a24)", color: "white", fontSize: 9, fontWeight: 800, padding: "3px 10px", borderRadius: 20, letterSpacing: "0.06em", boxShadow: "0 2px 8px rgba(238,90,36,0.4)" }}>⭐ MOST POPULAR</div>
-                      )}
+                    <div key={t.id} className="theme-card" onClick={() => setTheme(t.id)} style={{ position: "relative", padding: "22px 18px 18px", borderRadius: 20, cursor: "pointer", border: `2px solid ${theme === t.id ? "#ffd700" : "rgba(255,255,255,0.1)"}`, background: theme === t.id ? "rgba(255,215,0,0.08)" : "rgba(255,255,255,0.04)", boxShadow: theme === t.id ? "0 0 24px rgba(255,215,0,0.18)" : "0 2px 8px rgba(0,0,0,0.2)" }}>
+                      {t.popular && <div style={{ position: "absolute", top: -10, right: 12, background: "linear-gradient(135deg, #ff6b6b, #ee5a24)", color: "white", fontSize: 9, fontWeight: 800, padding: "3px 10px", borderRadius: 20, letterSpacing: "0.06em" }}>⭐ MOST POPULAR</div>}
                       <div style={{ fontSize: 44, marginBottom: 11 }}>{t.emoji}</div>
                       <div style={{ color: theme === t.id ? "#ffd700" : "white", fontWeight: 700, fontSize: 16, marginBottom: 3 }}>{t.title}</div>
                       <div style={{ color: theme === t.id ? "rgba(255,215,0,0.65)" : "rgba(255,255,255,0.35)", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 9 }}>{t.subtitle}</div>
@@ -715,124 +724,117 @@ export default function StorybookCreator() {
                     </div>
                   ))}
                 </div>
-
                 <div style={{ display: "flex", gap: 10, marginTop: 22 }}>
-                  <button onClick={() => goToStep(2)} style={{ padding: "14px 20px", borderRadius: 14, border: "1px solid rgba(255,255,255,0.12)", background: "transparent", color: "rgba(255,255,255,0.5)", fontSize: 14, cursor: "pointer" }}>← Back</button>
-                  <button onClick={() => goToStep(4)} style={{ flex: 1, padding: "16px", borderRadius: 14, border: "none", background: "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>
+                  <button onClick={() => goToStep(3)} style={{ padding: "14px 20px", borderRadius: 14, border: "1px solid rgba(255,255,255,0.12)", background: "transparent", color: "rgba(255,255,255,0.5)", fontSize: 14, cursor: "pointer" }}>← Back</button>
+                  <button onClick={() => goToStep(5)} style={{ flex: 1, padding: "16px", borderRadius: 14, border: "none", background: "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>
                     Preview your story →
                   </button>
                 </div>
               </div>
             )}
 
-            {/* ── STEP 4: Free Preview ── */}
-            {onboardingStep === 4 && (
+            {/* ── STEP 5: Preview ── */}
+            {onboardingStep === 5 && (
               <div>
-                <Mascot message={`Here's a sneak peek of ${childName || "your child"}'s magical story! 🎉`} />
+                {/* Full-screen loading — shown until ALL 6 scenes done */}
+                {previewStatus !== "done" && (
+                  <div style={{ textAlign: "center", padding: isMobile ? "48px 20px" : "64px 32px", background: "rgba(255,255,255,0.04)", borderRadius: 24, border: "1px solid rgba(255,255,255,0.08)" }}>
+                    <div style={{ fontSize: 64, marginBottom: 18, animation: "float 2s ease-in-out infinite" }}>🪄</div>
+                    <h2 style={{ color: "white", fontSize: isMobile ? 20 : 24, fontWeight: 700, margin: "0 0 10px" }}>Creating your story...</h2>
+                    <p style={{ color: "rgba(255,215,0,0.85)", fontSize: 15, fontWeight: 600, margin: "0 0 6px", minHeight: 24 }}>{previewMsg}</p>
+                    <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 13, margin: "0 0 24px" }}>Painting all 6 pages with Pixar-style AI art</p>
 
-                {/* Loading state */}
-                {previewStatus === "loading" && (
-                  <div style={{ textAlign: "center", padding: "40px 20px", background: "rgba(255,255,255,0.04)", borderRadius: 20, border: "1px solid rgba(255,255,255,0.08)", marginBottom: 20 }}>
-                    <div style={{ fontSize: 52, marginBottom: 14, animation: "float 2s ease-in-out infinite" }}>🪄</div>
-                    <p style={{ color: "white", fontWeight: 700, fontSize: 17, margin: "0 0 8px" }}>Writing your story...</p>
-                    <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 13, margin: "0 0 18px" }}>Creating pages 1 & 2 for your free preview</p>
+                    {/* Progress bar */}
+                    <div style={{ maxWidth: 280, margin: "0 auto 10px", background: "rgba(255,255,255,0.1)", borderRadius: 99, height: 10, overflow: "hidden" }}>
+                      <div style={{ height: "100%", borderRadius: 99, background: "linear-gradient(90deg, #ffd700, #ff9a9e)", width: previewDone === 0 ? "5%" : `${(previewDone / 6) * 100}%`, transition: "width 0.6s ease", animation: previewDone === 0 && previewStatus === "loading" ? "fwdBar 60s linear forwards" : "none" }} />
+                    </div>
+                    <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, margin: "0 0 24px" }}>{previewDone} of 6 pages complete</p>
+
                     <div style={{ display: "flex", justifyContent: "center", gap: 8 }}>
                       {[0, 1, 2].map(i => <div key={i} style={{ width: 9, height: 9, borderRadius: "50%", background: "#ffd700", animation: "pulseDot 1s ease-in-out infinite", animationDelay: `${i * 0.2}s` }} />)}
                     </div>
                   </div>
                 )}
 
-                {/* Pages 1-2 preview */}
-                {previewStory && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 20 }}>
-                    {previewStory.pages.slice(0, 2).map((page: any, idx: number) => {
-                      const bg    = PAGE_BACKGROUNDS[idx % PAGE_BACKGROUNDS.length];
-                      const img   = previewImages[idx];
-                      const photo_ = cartoonUrl || photo;
-                      return (
-                        <div key={idx} style={{ background: "white", borderRadius: 16, overflow: "hidden", boxShadow: "0 8px 32px rgba(0,0,0,0.3)", display: "flex", flexDirection: isMobile ? "column" : "row" }}>
-                          {/* Image side */}
-                          <div style={{ flex: 1, aspectRatio: isMobile ? "4/2.5" : undefined, minHeight: isMobile ? undefined : 180, background: img ? "#1a1a2e" : bg, position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                            {img ? (
-                              <img src={img} alt={`Page ${page.pageNum}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                            ) : photo_ ? (
-                              <img src={photo_} alt="hero" style={{ height: "80%", width: "auto", maxWidth: "60%", objectFit: "contain", borderRadius: 10, filter: "drop-shadow(0 6px 12px rgba(0,0,0,0.2))" }} />
-                            ) : (
-                              <div style={{ width: 32, height: 32, border: "3px solid rgba(255,215,0,0.3)", borderTop: "3px solid #ffd700", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
-                            )}
-                            <div style={{ position: "absolute", top: 8, left: 8, background: "rgba(0,0,0,0.6)", borderRadius: 8, padding: "3px 8px", color: "rgba(255,255,255,0.7)", fontSize: 10, fontWeight: 700 }}>Page {page.pageNum}</div>
-                            {img && <div style={{ position: "absolute", top: 8, right: 8, background: "rgba(255,215,0,0.95)", borderRadius: 8, padding: "3px 8px", color: "#1a0a2e", fontSize: 10, fontWeight: 700 }}>✨ AI Scene</div>}
-                          </div>
-                          {/* Text side */}
-                          <div style={{ flex: 1, padding: "18px 20px", background: "#fff8f0", display: "flex", alignItems: "center" }}>
-                            <p style={{ fontFamily: "Georgia, serif", fontSize: isMobile ? 14 : 15, lineHeight: 1.8, color: "#3d2b1f", margin: 0 }}>{page.text}</p>
-                          </div>
-                        </div>
-                      );
-                    })}
+                {/* Revealed preview — fades in once ALL 6 done */}
+                {previewStatus === "done" && previewStory && (
+                  <div style={{ animation: "fadeIn 0.7s ease both" }}>
+                    <Mascot msg={`Here's a sneak peek of ${childName || "your child"}'s story! 🎉`} />
 
-                    {/* Locked pages 3-6 */}
-                    <div style={{ position: "relative" }}>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 10, filter: "blur(4px)", pointerEvents: "none", userSelect: "none" }}>
-                        {[3, 4, 5, 6].map(n => (
-                          <div key={n} style={{ background: "white", borderRadius: 14, overflow: "hidden", height: 80, display: "flex" }}>
-                            <div style={{ flex: 1, background: PAGE_BACKGROUNDS[n % PAGE_BACKGROUNDS.length] }} />
-                            <div style={{ flex: 1, background: "#fff8f0", padding: "12px 16px" }}>
-                              <div style={{ height: 10, background: "#e0d4c8", borderRadius: 5, marginBottom: 7, width: "80%" }} />
-                              <div style={{ height: 10, background: "#e0d4c8", borderRadius: 5, width: "60%" }} />
+                    {/* Pages 1 & 2 */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 18 }}>
+                      {previewStory.pages.slice(0, 2).map((page: any, idx: number) => {
+                        const img = previewImages[idx];
+                        return (
+                          <div key={idx} style={{ background: "white", borderRadius: 16, overflow: "hidden", boxShadow: "0 8px 32px rgba(0,0,0,0.3)", display: "flex", flexDirection: isMobile ? "column" : "row" }}>
+                            <div style={{ flex: isMobile ? undefined : "0 0 45%", aspectRatio: isMobile ? "4/2.5" : undefined, minHeight: isMobile ? undefined : 180, background: "#1a1a2e", position: "relative", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+                              {img && <img src={img} alt={`Page ${page.pageNum}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
+                              <div style={{ position: "absolute", top: 8, left: 8, background: "rgba(0,0,0,0.55)", borderRadius: 8, padding: "2px 8px", color: "rgba(255,255,255,0.8)", fontSize: 10, fontWeight: 700 }}>Page {page.pageNum}</div>
+                              <div style={{ position: "absolute", top: 8, right: 8, background: "rgba(255,215,0,0.95)", borderRadius: 8, padding: "2px 8px", color: "#1a0a2e", fontSize: 10, fontWeight: 700 }}>✨ AI Scene</div>
+                            </div>
+                            <div style={{ flex: 1, padding: "18px 20px", background: "#fff8f0", display: "flex", alignItems: "center" }}>
+                              <p style={{ fontFamily: "Georgia, serif", fontSize: isMobile ? 14 : 15, lineHeight: 1.8, color: "#3d2b1f", margin: 0 }}>{page.text}</p>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                      <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "rgba(26,10,46,0.7)", borderRadius: 14, backdropFilter: "blur(2px)" }}>
-                        <div style={{ fontSize: 32, marginBottom: 8 }}>🔒</div>
-                        <p style={{ color: "white", fontWeight: 700, fontSize: 15, margin: "0 0 4px", textAlign: "center" }}>Pages 3–6 are waiting!</p>
-                        <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, margin: 0 }}>Unlock your full story below</p>
+                        );
+                      })}
+
+                      {/* Locked pages 3-6 */}
+                      <div style={{ position: "relative" }}>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 10, filter: "blur(5px)", pointerEvents: "none", userSelect: "none" }}>
+                          {previewStory.pages.slice(2).map((page: any, idx: number) => {
+                            const img = previewImages[idx + 2];
+                            return (
+                              <div key={idx} style={{ background: "white", borderRadius: 14, overflow: "hidden", height: 90, display: "flex" }}>
+                                <div style={{ flex: "0 0 40%", background: img ? "#1a1a2e" : PAGE_BACKGROUNDS[(idx + 2) % PAGE_BACKGROUNDS.length], position: "relative", overflow: "hidden" }}>
+                                  {img && <img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
+                                </div>
+                                <div style={{ flex: 1, background: "#fff8f0", padding: "14px 16px" }}>
+                                  <div style={{ height: 10, background: "#e0d4c8", borderRadius: 5, marginBottom: 8, width: "80%" }} />
+                                  <div style={{ height: 10, background: "#e0d4c8", borderRadius: 5, width: "55%" }} />
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "rgba(26,10,46,0.72)", borderRadius: 14, backdropFilter: "blur(2px)" }}>
+                          <div style={{ fontSize: 32, marginBottom: 8 }}>🔒</div>
+                          <p style={{ color: "white", fontWeight: 700, fontSize: 15, margin: "0 0 3px", textAlign: "center" }}>Pages 3–6 are waiting!</p>
+                          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, margin: 0 }}>Unlock your full story below</p>
+                        </div>
                       </div>
                     </div>
+
+                    {/* CTAs */}
+                    <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,215,0,0.2)", borderRadius: 22, padding: isMobile ? 18 : 24 }}>
+                      <p style={{ color: "rgba(255,215,0,0.9)", fontSize: 13, fontWeight: 700, textAlign: "center", margin: "0 0 4px", letterSpacing: "0.04em" }}>⚡ Ready in under 2 minutes</p>
+                      <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, textAlign: "center", margin: "0 0 18px" }}>6 personalised Pixar-style pages starring {childName || "your child"}</p>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                        <button onClick={() => handlePurchase("digital")} disabled={!!checkoutLoading} style={{ width: "100%", padding: "17px", borderRadius: 16, border: "none", background: checkoutLoading === "digital" ? "rgba(255,215,0,0.5)" : "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 17, fontWeight: 800, cursor: checkoutLoading ? "not-allowed" : "pointer" }}>
+                          {checkoutLoading === "digital" ? "Redirecting..." : PAYMENTS_ENABLED ? "Get Digital Book — $24.99 →" : "✨ Create My Storybook!"}
+                        </button>
+                        {PAYMENTS_ENABLED && (
+                          <button onClick={() => handlePurchase("print")} disabled={!!checkoutLoading} style={{ width: "100%", padding: "15px", borderRadius: 16, border: "2px solid rgba(255,215,0,0.35)", background: "rgba(255,215,0,0.07)", color: "#ffd700", fontSize: 16, fontWeight: 700, cursor: checkoutLoading ? "not-allowed" : "pointer" }}>
+                            {checkoutLoading === "print" ? "Redirecting..." : "🖨️ Print + Digital — $44.99"}
+                          </button>
+                        )}
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "center", gap: isMobile ? 10 : 20, marginTop: 14, flexWrap: "wrap" }}>
+                        {["🔒 Secure checkout", "📥 Instant download", "🔄 30-day guarantee"].map(t => (
+                          <span key={t} style={{ color: "rgba(255,255,255,0.3)", fontSize: 11 }}>{t}</span>
+                        ))}
+                      </div>
+                    </div>
+                    <button onClick={() => goToStep(4)} style={{ display: "block", margin: "14px auto 0", padding: "8px 16px", borderRadius: 10, border: "none", background: "transparent", color: "rgba(255,255,255,0.3)", fontSize: 13, cursor: "pointer" }}>← Change adventure</button>
                   </div>
                 )}
-
-                {/* CTAs */}
-                <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,215,0,0.2)", borderRadius: 22, padding: isMobile ? 18 : 24 }}>
-                  <p style={{ color: "rgba(255,215,0,0.9)", fontSize: 13, fontWeight: 700, textAlign: "center", margin: "0 0 6px", letterSpacing: "0.04em" }}>⚡ Ready in under 2 minutes</p>
-                  <p style={{ color: "rgba(255,255,255,0.45)", fontSize: 12, textAlign: "center", margin: "0 0 18px" }}>6 personalised Pixar-style pages starring your child</p>
-
-                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                    <button
-                      onClick={() => handlePurchase("digital")}
-                      disabled={!!checkoutLoading}
-                      style={{ width: "100%", padding: "17px", borderRadius: 16, border: "none", background: checkoutLoading === "digital" ? "rgba(255,215,0,0.5)" : "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 17, fontWeight: 800, cursor: checkoutLoading ? "not-allowed" : "pointer", position: "relative" }}
-                    >
-                      {checkoutLoading === "digital" ? "Redirecting..." : PAYMENTS_ENABLED ? "Get Digital Book — $24.99 →" : "✨ Create My Storybook!"}
-                    </button>
-
-                    {PAYMENTS_ENABLED && (
-                      <button
-                        onClick={() => handlePurchase("print")}
-                        disabled={!!checkoutLoading}
-                        style={{ width: "100%", padding: "15px", borderRadius: 16, border: "2px solid rgba(255,215,0,0.35)", background: checkoutLoading === "print" ? "rgba(255,215,0,0.1)" : "rgba(255,215,0,0.07)", color: "#ffd700", fontSize: 16, fontWeight: 700, cursor: checkoutLoading ? "not-allowed" : "pointer" }}
-                      >
-                        {checkoutLoading === "print" ? "Redirecting..." : "🖨️ Print + Digital — $44.99"}
-                      </button>
-                    )}
-                  </div>
-
-                  <div style={{ display: "flex", justifyContent: "center", gap: isMobile ? 10 : 20, marginTop: 14, flexWrap: "wrap" }}>
-                    {["🔒 Secure checkout", "📥 Instant download", "🔄 30-day guarantee"].map(t => (
-                      <span key={t} style={{ color: "rgba(255,255,255,0.35)", fontSize: 11 }}>{t}</span>
-                    ))}
-                  </div>
-                </div>
-
-                <button onClick={() => goToStep(3)} style={{ display: "block", margin: "14px auto 0", padding: "8px 16px", borderRadius: 10, border: "none", background: "transparent", color: "rgba(255,255,255,0.35)", fontSize: 13, cursor: "pointer" }}>← Change adventure</button>
               </div>
             )}
           </div>
         </>
       )}
 
-      {/* ════════════════ GENERATING ════════════════ */}
+      {/* ══ GENERATING ══════════════════════════════════════════════════════════ */}
       {mainStep === "generating" && (
         <div style={{ textAlign: "center", animation: "fadeUp 0.5s ease both", maxWidth: 400, width: "100%", padding: "0 16px" }}>
           <div style={{ fontSize: 72, marginBottom: 20, animation: "float 2s ease-in-out infinite" }}>🪄</div>
@@ -853,7 +855,7 @@ export default function StorybookCreator() {
         </div>
       )}
 
-      {/* ════════════════ BOOK ════════════════ */}
+      {/* ══ BOOK ════════════════════════════════════════════════════════════════ */}
       {mainStep === "book" && story && (
         <div style={{ width: "100%", maxWidth: isMobile ? "100%" : 880, animation: "fadeUp 0.5s ease both" }}>
           {falError    && <div style={{ background: "rgba(255,100,100,0.09)", border: "1px solid rgba(255,100,100,0.25)", borderRadius: 10, padding: "9px 14px", marginBottom: 12, color: "#ffaaaa", fontSize: 13, textAlign: "center" }}>⚠️ {falError}</div>}
@@ -874,16 +876,14 @@ export default function StorybookCreator() {
           )}
 
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: isMobile ? 10 : 16, marginTop: 18 }}>
-            <button onClick={() => navigate(Math.max(-1, currentPage - 1))} disabled={currentPage === -1}
-              style={{ padding: isMobile ? "10px 16px" : "11px 22px", borderRadius: 11, border: "1px solid rgba(255,255,255,0.18)", background: "rgba(255,255,255,0.07)", color: "white", fontSize: 14, cursor: currentPage === -1 ? "not-allowed" : "pointer", opacity: currentPage === -1 ? 0.3 : 1 }}>← Prev</button>
+            <button onClick={() => navigate(Math.max(-1, currentPage - 1))} disabled={currentPage === -1} style={{ padding: isMobile ? "10px 16px" : "11px 22px", borderRadius: 11, border: "1px solid rgba(255,255,255,0.18)", background: "rgba(255,255,255,0.07)", color: "white", fontSize: 14, cursor: currentPage === -1 ? "not-allowed" : "pointer", opacity: currentPage === -1 ? 0.3 : 1 }}>← Prev</button>
             <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
               <div onClick={() => navigate(-1)} style={{ width: currentPage === -1 ? 10 : 7, height: currentPage === -1 ? 10 : 7, borderRadius: "50%", background: currentPage === -1 ? "#ffd700" : "rgba(255,255,255,0.25)", cursor: "pointer", transition: "all 0.2s" }} />
               {story.pages.map((_: any, i: number) => (
                 <div key={i} onClick={() => navigate(i)} style={{ width: currentPage === i ? 10 : 7, height: currentPage === i ? 10 : 7, borderRadius: "50%", background: currentPage === i ? "#ffd700" : "rgba(255,255,255,0.25)", cursor: "pointer", transition: "all 0.2s" }} />
               ))}
             </div>
-            <button onClick={() => navigate(Math.min(totalPages - 1, currentPage + 1))} disabled={currentPage >= totalPages - 1}
-              style={{ padding: isMobile ? "10px 16px" : "11px 22px", borderRadius: 11, border: "none", background: "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 14, fontWeight: 600, cursor: currentPage >= totalPages - 1 ? "not-allowed" : "pointer", opacity: currentPage >= totalPages - 1 ? 0.4 : 1 }}>Next →</button>
+            <button onClick={() => navigate(Math.min(totalPages - 1, currentPage + 1))} disabled={currentPage >= totalPages - 1} style={{ padding: isMobile ? "10px 16px" : "11px 22px", borderRadius: 11, border: "none", background: "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 14, fontWeight: 600, cursor: currentPage >= totalPages - 1 ? "not-allowed" : "pointer", opacity: currentPage >= totalPages - 1 ? 0.4 : 1 }}>Next →</button>
           </div>
 
           <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 16, flexWrap: "wrap" }}>

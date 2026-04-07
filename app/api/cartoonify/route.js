@@ -35,7 +35,7 @@ export async function POST(request) {
     const result = await fal.subscribe("fal-ai/flux-pulid", {
       input: {
         reference_image_url: photoUrl,
-        prompt: `${childName || "the child"}, ${ageDesc} ${genderWord}${appearance ? ` with ${appearance}` : ""}, facing camera, warm friendly smile, cinematic 3D animated storybook portrait, colorful storybook outfit, soft studio lighting, clean pastel gradient background, high-quality CGI render`,
+        prompt: `${ageDesc} ${genderWord}${appearance ? ` with ${appearance}` : ""}, facing camera, warm friendly smile, cinematic 3D animated storybook portrait, colorful storybook outfit, soft studio lighting, clean pastel gradient background, high-quality CGI render`,
         negative_prompt: "different person, wrong face, altered face, realistic photo, dark, scary, blurry, low quality, adult, teenager, wrong age, text, watermark, deformed, ugly, multiple people, sunglasses",
         num_inference_steps: 32,
         guidance_scale: 3.0,

@@ -9,7 +9,7 @@ export async function POST(request) {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
   try {
     const { ref, plan } = await request.json();
-    const origin = request.headers.get("origin") || "https://storybookapp-vercel.app";
+    const origin = request.headers.get("origin") || "https://mytinytales.studio";
 
     const isPrint   = plan === "print";
     const unitPrice = isPrint ? Number(process.env.PRINT_PRICE_CENTS || 4499) : PRICE;
@@ -21,9 +21,9 @@ export async function POST(request) {
         price_data: {
           currency: "usd",
           product_data: {
-            name: `StoryBook Magic — Personalised Storybook (${planLabel})`,
+            name: `My Tiny Tales — Personalised Storybook (${planLabel})`,
             description: "A unique cinematic 3D-style illustrated book starring your child",
-            images: ["https://storybookapp-vercel.app/og-image.png"],
+            images: ["https://mytinytales.studio/og-image.png"],
           },
           unit_amount: unitPrice,
         },

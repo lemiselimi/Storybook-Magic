@@ -48,6 +48,13 @@ const rawFalUrl   = (proxyUrl: string) => {
   catch { return proxyUrl; }
 };
 
+// GA4 helper
+const gtagEvent = (event: string, params?: object) => {
+  if (typeof window !== "undefined" && (window as any).gtag) {
+    (window as any).gtag("event", event, params);
+  }
+};
+
 export default function StorybookCreator() {
   // ── Flow state ───────────────────────────────────────────────────────────────
   const [onboardingStep, setOnboardingStep] = useState(1);
@@ -104,6 +111,11 @@ export default function StorybookCreator() {
   const [shareCopied,      setShareCopied]      = useState(false);
   const [isMobile,         setIsMobile]         = useState(false);
   const [isSharedView,     setIsSharedView]     = useState(false);
+
+  // ── Email lead capture ────────────────────────────────────────────────────────
+  const [leadEmail,    setLeadEmail]    = useState("");
+  const [leadSent,     setLeadSent]     = useState(false);
+  const [leadSending,  setLeadSending]  = useState(false);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 680);
@@ -184,7 +196,7 @@ export default function StorybookCreator() {
     setPhoto(URL.createObjectURL(file));
     setCartoonUrl(null); setAvatarStatus("idle"); setPhotoFalUrl(null);
     photoFalUrlRef.current = null; setPhotoReady(false);
-    compressImage(file).then(b64 => { setPhotoBase64(b64); setPhotoReady(true); })
+    compressImage(file).then(b64 => { setPhotoBase64(b64); setPhotoReady(true); gtagEvent("photo_uploaded"); })
       .catch(() => {
         const reader = new FileReader();
         reader.onload = (e) => { setPhotoBase64((e.target?.result as string).split(",")[1]); setPhotoReady(true); };
@@ -298,6 +310,7 @@ export default function StorybookCreator() {
     } catch { setPreviewStory(getFallbackStory(childName)); }
 
     setPreviewStatus("done");
+    gtagEvent("book_generated", { theme, childAge });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [theme, childName, childAge, childGender, hairColor, eyeColor]);
 
@@ -414,6 +427,7 @@ export default function StorybookCreator() {
 
   // ── Purchase ──────────────────────────────────────────────────────────────────
   const handlePurchase = async (plan: "digital" | "print") => {
+    gtagEvent("begin_checkout", { plan, value: plan === "print" ? 44.99 : 24.99, currency: "USD" });
     if (!PAYMENTS_ENABLED) { generateFullBook(); return; }
     setCheckoutLoading(plan);
     try {
@@ -459,6 +473,18 @@ export default function StorybookCreator() {
       if (res.url) setPageImages(prev => { const n = [...prev]; n[pageIdx] = `/api/proxy?url=${encodeURIComponent(res.url)}`; return n; });
     } catch (err) { console.error("Regenerate failed:", err); }
     setRegeneratingPage(null);
+  };
+
+  const submitLeadEmail = async () => {
+    if (!leadEmail || leadSent) return;
+    setLeadSending(true);
+    try {
+      const shareUrl = `${window.location.origin}/create?share=${encodeShare({ story: previewStory, cartoonFalUrl: cartoonUrl ? rawFalUrl(cartoonUrl) : null, coverFalUrl: previewCoverUrl ? rawFalUrl(previewCoverUrl) : null, pageFalUrls: previewImages.map(u => u ? rawFalUrl(u) : null) })}`;
+      await fetch("/api/email", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "preview_lead", email: leadEmail, shareUrl }) });
+      setLeadSent(true);
+      gtagEvent("lead_captured", { method: "preview_email" });
+    } catch {}
+    setLeadSending(false);
   };
 
   const copyShareLink = async () => {
@@ -605,8 +631,8 @@ export default function StorybookCreator() {
 
       {/* Logo */}
       <div style={{ textAlign: "center", marginBottom: isMobile ? 18 : 24, animation: "fadeUp 0.5s ease both" }}>
-        <div style={{ fontSize: isMobile ? 30 : 38, marginBottom: 4, animation: "float 3s ease-in-out infinite" }}>📚</div>
-        <h1 style={{ margin: 0, fontSize: isMobile ? 20 : 26, fontWeight: 800, background: "linear-gradient(90deg, #ffd700, #ff9a9e, #a18cd1, #ffd700)", backgroundSize: "300% 100%", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", animation: "shimmer 4s ease infinite" }}>StoryBook Magic</h1>
+        <div style={{ fontSize: isMobile ? 30 : 38, marginBottom: 4, animation: "float 3s ease-in-out infinite" }}>✨</div>
+        <h1 style={{ margin: 0, fontSize: isMobile ? 20 : 26, fontWeight: 800, background: "linear-gradient(90deg, #ffd700, #ff9a9e, #a18cd1, #ffd700)", backgroundSize: "300% 100%", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", animation: "shimmer 4s ease infinite" }}>My Tiny Tales</h1>
       </div>
 
       {/* ══ ONBOARDING ══════════════════════════════════════════════════════════ */}
@@ -869,6 +895,25 @@ export default function StorybookCreator() {
                           <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, margin: 0 }}>Unlock your full story below</p>
                         </div>
                       </div>
+                    </div>
+
+                    {/* Email lead capture */}
+                    <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16, padding: "16px 18px", marginBottom: 14, display: "flex", flexDirection: isMobile ? "column" : "row", gap: 10, alignItems: isMobile ? "stretch" : "center" }}>
+                      <div style={{ flex: 1 }}>
+                        <p style={{ color: "white", fontWeight: 600, fontSize: 13, margin: "0 0 3px" }}>📧 Email me my preview link</p>
+                        <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, margin: 0 }}>Save it to come back and purchase later</p>
+                      </div>
+                      {leadSent ? (
+                        <div style={{ color: "#4caf50", fontWeight: 700, fontSize: 13, flexShrink: 0 }}>✓ Sent!</div>
+                      ) : (
+                        <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+                          <input value={leadEmail} onChange={e => setLeadEmail(e.target.value)} type="email" placeholder="your@email.com"
+                            style={{ padding: "9px 12px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.08)", color: "white", fontSize: 13, width: 180 }} />
+                          <button onClick={submitLeadEmail} disabled={leadSending || !leadEmail} style={{ padding: "9px 16px", borderRadius: 10, border: "none", background: leadEmail ? "linear-gradient(135deg, #ffd700, #ff9a9e)" : "rgba(255,255,255,0.1)", color: leadEmail ? "#1a0a2e" : "rgba(255,255,255,0.3)", fontWeight: 700, fontSize: 13, cursor: leadEmail ? "pointer" : "not-allowed", whiteSpace: "nowrap" }}>
+                            {leadSending ? "…" : "Send →"}
+                          </button>
+                        </div>
+                      )}
                     </div>
 
                     {/* CTAs */}

@@ -14,7 +14,7 @@ const WARM_BROWN   = "#3d2b1f";
 const STEPS = [
   { num: "01", icon: "📸", title: "Upload a Photo",       desc: "One clear photo is all we need. Our AI reads your child's features to create their unique cinematic 3D-style character." },
   { num: "02", icon: "✨", title: "Personalise the Story", desc: "Enter their name, age, and choose an adventure theme. AI writes a story crafted just for them." },
-  { num: "03", icon: "📚", title: "Preview Free",          desc: "See the first 2 pages of your book completely free. Love it? Unlock all 6 pages — ready in under 2 minutes." },
+  { num: "03", icon: "✨", title: "Preview Free",          desc: "See the first 2 pages of your book completely free. Love it? Unlock all 6 pages — ready in under 2 minutes." },
 ];
 
 const FEATURES = [
@@ -108,8 +108,8 @@ export default function LandingPage() {
       {/* ── NAV ── */}
       <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, padding: isMobile ? "14px 20px" : "16px 48px", display: "flex", alignItems: "center", justifyContent: "space-between", background: scrolled ? "rgba(255,254,247,0.97)" : "transparent", backdropFilter: scrolled ? "blur(12px)" : "none", boxShadow: scrolled ? "0 2px 20px rgba(26,10,46,0.08)" : "none", transition: "all 0.3s ease" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ fontSize: 24 }}>📚</span>
-          <span style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontWeight: 700, fontSize: isMobile ? 16 : 20, color: scrolled ? PURPLE_DARK : "white", transition: "color 0.3s" }}>StoryBook Magic</span>
+          <span style={{ fontSize: 24 }}>✨</span>
+          <span style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontWeight: 700, fontSize: isMobile ? 16 : 20, color: scrolled ? PURPLE_DARK : "white", transition: "color 0.3s" }}>My Tiny Tales</span>
         </div>
         <Link href="/create" style={{ textDecoration: "none" }}>
           <button className="cta-btn" style={{ padding: isMobile ? "8px 16px" : "10px 24px", borderRadius: 50, border: "none", background: `linear-gradient(135deg, ${GOLD}, #ffb347)`, color: PURPLE_DARK, fontWeight: 700, fontSize: isMobile ? 12 : 14, cursor: "pointer", boxShadow: "0 4px 20px rgba(244,196,48,0.35)" }}>
@@ -434,7 +434,7 @@ export default function LandingPage() {
           <div key={i} style={{ position: "absolute", left: pos.split(",")[0], top: pos.split(",")[1], fontSize: [24,16,20][i], animation: `sparkle ${3 + i}s ease-in-out infinite`, opacity: 0.2 }}>✦</div>
         ))}
         <div style={{ maxWidth: 600, margin: "0 auto" }}>
-          <div style={{ fontSize: isMobile ? 40 : 52, marginBottom: 16, animation: "float 3s ease-in-out infinite" }}>📚</div>
+          <div style={{ fontSize: isMobile ? 40 : 52, marginBottom: 16, animation: "float 3s ease-in-out infinite" }}>✨</div>
           <h2 style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: isMobile ? 30 : 44, fontWeight: 700, color: "white", margin: "0 0 16px", lineHeight: 1.2 }}>
             Give Them a Story{" "}
             <span style={{ background: `linear-gradient(90deg, ${GOLD_LIGHT}, #ffb347)`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
@@ -457,15 +457,15 @@ export default function LandingPage() {
       <footer style={{ background: PURPLE_DARK, borderTop: "1px solid rgba(255,255,255,0.06)", padding: isMobile ? "36px 24px" : "44px 48px" }}>
         <div style={{ maxWidth: 1000, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 20 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ fontSize: 22 }}>📚</span>
-            <span style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontWeight: 700, fontSize: 18, color: "white" }}>StoryBook Magic</span>
+            <span style={{ fontSize: 22 }}>✨</span>
+            <span style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontWeight: 700, fontSize: 18, color: "white" }}>My Tiny Tales</span>
           </div>
           <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
-            {[["Privacy Policy", "#"], ["Terms of Service", "#"], ["Contact Us", "#"], ["FAQ", "#"]].map(([label, href]) => (
+            {[["Privacy Policy", "/privacy"], ["Terms of Service", "/terms"], ["Contact Us", "/contact"], ["FAQ", "/faq"]].map(([label, href]) => (
               <a key={label} href={href} style={{ color: "rgba(255,255,255,0.38)", fontSize: 13, textDecoration: "none" }}>{label}</a>
             ))}
           </div>
-          <p style={{ color: "rgba(255,255,255,0.25)", fontSize: 12, margin: 0 }}>© {new Date().getFullYear()} StoryBook Magic. All rights reserved.</p>
+          <p style={{ color: "rgba(255,255,255,0.25)", fontSize: 12, margin: 0 }}>© {new Date().getFullYear()} My Tiny Tales. All rights reserved.</p>
         </div>
       </footer>
     </div>

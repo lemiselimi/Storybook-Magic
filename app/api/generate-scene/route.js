@@ -33,7 +33,7 @@ export async function POST(request) {
         negative_prompt: "different person, wrong face, altered face, realistic photo, dark, scary, blurry, low quality, adult, teenager, text, watermark, deformed, ugly, multiple people, violence, wrong age",
         num_inference_steps: 30,
         guidance_scale: 3.0,
-        true_cfg: 1.3,
+        true_cfg: 1,
         id_weight: 0.65,
         num_images: 1,
         image_size: "landscape_4_3",

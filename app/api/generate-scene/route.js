@@ -2,9 +2,8 @@ import { fal } from "@fal-ai/client";
 
 export const maxDuration = 60;
 
-fal.config({ credentials: process.env.FAL_API_KEY });
-
 export async function POST(request) {
+  fal.config({ credentials: process.env.FAL_API_KEY });
   try {
     const { photoUrl, illustration, childName, gender, childAge, hairColor, eyeColor } = await request.json();
     console.log("Generate scene called:", illustration?.substring(0, 80));
@@ -31,10 +30,10 @@ export async function POST(request) {
         reference_image_url: photoUrl,
         prompt: `${characterDesc} as the main character in this scene, ${illustration}, cinematic 3D animated children's book illustration, Disney-quality CGI render, vibrant colors, soft cinematic lighting, magical storybook atmosphere, wide establishing shot, whimsical and joyful`,
         negative_prompt: "different person, wrong face, altered face, realistic photo, dark, scary, blurry, low quality, adult, teenager, text, watermark, deformed, ugly, multiple people, violence, wrong age",
-        num_inference_steps: 30,
-        guidance_scale: 3.0,
+        num_inference_steps: 32,
+        guidance_scale: 2.5,
         true_cfg: 1,
-        id_weight: 0.65,
+        id_weight: 0.8,
         num_images: 1,
         image_size: "landscape_4_3",
       },

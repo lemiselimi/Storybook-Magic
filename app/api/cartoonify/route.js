@@ -2,9 +2,8 @@ import { fal } from "@fal-ai/client";
 
 export const maxDuration = 60;
 
-fal.config({ credentials: process.env.FAL_API_KEY });
-
 export async function POST(request) {
+  fal.config({ credentials: process.env.FAL_API_KEY });
   try {
     const { imageBase64, gender, hairColor, eyeColor, childAge } = await request.json();
     console.log("Cartoonify called, gender:", gender, "hair:", hairColor, "eyes:", eyeColor, "age:", childAge);
@@ -37,10 +36,10 @@ export async function POST(request) {
         reference_image_url: photoUrl,
         prompt: `${ageDesc} ${genderWord}${appearance ? ` with ${appearance}` : ""}, facing camera, warm friendly smile, cinematic 3D animated storybook portrait, colorful storybook outfit, soft studio lighting, clean pastel gradient background, high-quality CGI render`,
         negative_prompt: "different person, wrong face, altered face, realistic photo, dark, scary, blurry, low quality, adult, teenager, wrong age, text, watermark, deformed, ugly, multiple people, sunglasses",
-        num_inference_steps: 32,
-        guidance_scale: 3.0,
+        num_inference_steps: 35,
+        guidance_scale: 2.5,
         true_cfg: 1,
-        id_weight: 0.85,
+        id_weight: 1.0,
         num_images: 1,
         image_size: "portrait_4_3",
       },

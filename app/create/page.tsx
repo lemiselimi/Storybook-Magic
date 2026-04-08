@@ -72,23 +72,22 @@ export default function StorybookCreator() {
   const [stepDir,  setStepDir]  = useState<"fwd" | "back">("fwd");
   const [mainStep, setMainStep] = useState<"onboarding" | "generating" | "book">("onboarding");
 
-  // ── Photo ────────────────────────────────────────────────────────────────────
-  const [photo,       setPhoto]       = useState<string | null>(null);
-  const [photoBase64, setPhotoBase64] = useState<string | null>(null);
-  const [photoReady,  setPhotoReady]  = useState(false);
-  const [dragOver,    setDragOver]    = useState(false);
+  // ── Photos (multi-upload) ────────────────────────────────────────────────────
+  const [photos,       setPhotos]       = useState<string[]>([]); // object URLs for display
+  const [photosBase64, setPhotosBase64] = useState<string[]>([]); // compressed base64 for upload
+  const [photosReady,  setPhotosReady]  = useState(false);        // true when >= 3 photos
+  const [dragOver,     setDragOver]     = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // ── Appearance ───────────────────────────────────────────────────────────────
   const [hairColor, setHairColor] = useState("brown");
   const [eyeColor,  setEyeColor]  = useState("brown");
 
-  // ── Avatar ───────────────────────────────────────────────────────────────────
-  const [avatarStatus, setAvatarStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
-  const [cartoonUrl,   setCartoonUrl]   = useState<string | null>(null);
-  const [photoFalUrl,  setPhotoFalUrl]  = useState<string | null>(null);
-  const photoFalUrlRef = useRef<string | null>(null);
-  const avatarGenRef   = useRef<Promise<void> | null>(null);
+  // ── LoRA training ─────────────────────────────────────────────────────────────
+  const [loraStatus, setLoraStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
+  const [loraUrl,    setLoraUrl]    = useState<string | null>(null);
+  const loraUrlRef      = useRef<string | null>(null);
+  const loraTrainingRef = useRef<Promise<void> | null>(null);
 
   // ── Form ─────────────────────────────────────────────────────────────────────
   const [childName,   setChildName]   = useState("");
@@ -145,7 +144,6 @@ export default function StorybookCreator() {
       try {
         const data = decodeShare(share);
         setStory(data.story);
-        if (data.cartoonFalUrl) setCartoonUrl(`/api/proxy?url=${encodeURIComponent(data.cartoonFalUrl)}`);
         if (data.coverFalUrl) setCoverImageUrl(`/api/proxy?url=${encodeURIComponent(data.coverFalUrl)}`);
         setPageImages((data.pageFalUrls || []).map((u: string | null) =>
           u ? `/api/proxy?url=${encodeURIComponent(u)}` : null
@@ -167,14 +165,11 @@ export default function StorybookCreator() {
         .then(r => r.json())
         .then(result => {
           if (!result.ok) return;
-          if (data.photoBase64) { setPhoto(`data:image/jpeg;base64,${data.photoBase64}`); setPhotoBase64(data.photoBase64); }
           setChildName(data.childName || ""); setChildAge(data.childAge ?? 5);
           setChildGender(data.childGender || "boy"); setTheme(data.theme || "adventure");
           setHairColor(data.hairColor || "brown"); setEyeColor(data.eyeColor || "brown");
-          if (data.cartoonFalUrl) {
-            setPhotoFalUrl(data.cartoonFalUrl); photoFalUrlRef.current = data.cartoonFalUrl;
-            setCartoonUrl(`/api/proxy?url=${encodeURIComponent(data.cartoonFalUrl)}`);
-            setAvatarStatus("done");
+          if (data.loraUrl) {
+            setLoraUrl(data.loraUrl); loraUrlRef.current = data.loraUrl; setLoraStatus("done");
           }
           if (data.coverFalUrl) setCoverImageUrl(`/api/proxy?url=${encodeURIComponent(data.coverFalUrl)}`);
           setTimeout(() => generateFullBook(data), 50);
@@ -202,40 +197,68 @@ export default function StorybookCreator() {
       img.onerror = reject; img.src = objectUrl;
     });
 
-  const handleFile = useCallback((file: File) => {
+  const addPhoto = useCallback((file: File) => {
     if (!file || !file.type.startsWith("image/")) return;
-    setPhoto(URL.createObjectURL(file));
-    setCartoonUrl(null); setAvatarStatus("idle"); setPhotoFalUrl(null);
-    photoFalUrlRef.current = null; setPhotoReady(false);
-    compressImage(file).then(b64 => { setPhotoBase64(b64); setPhotoReady(true); gtagEvent("photo_uploaded"); })
+    setPhotosBase64(prev => {
+      if (prev.length >= 5) return prev; // hard cap at 5
+      return prev; // will be updated after compress
+    });
+    const objectUrl = URL.createObjectURL(file);
+    setPhotos(prev => { if (prev.length >= 5) return prev; return [...prev, objectUrl]; });
+    compressImage(file)
+      .then(b64 => {
+        setPhotosBase64(prev => {
+          if (prev.length >= 5) return prev;
+          const next = [...prev, b64];
+          setPhotosReady(next.length >= 3);
+          gtagEvent("photo_uploaded");
+          return next;
+        });
+      })
       .catch(() => {
         const reader = new FileReader();
-        reader.onload = (e) => { setPhotoBase64((e.target?.result as string).split(",")[1]); setPhotoReady(true); };
+        reader.onload = (e) => {
+          const b64 = (e.target?.result as string).split(",")[1];
+          setPhotosBase64(prev => {
+            if (prev.length >= 5) return prev;
+            const next = [...prev, b64];
+            setPhotosReady(next.length >= 3);
+            return next;
+          });
+        };
         reader.readAsDataURL(file);
       });
   }, []);
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault(); setDragOver(false);
-    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+  const removePhoto = (idx: number) => {
+    setPhotos(prev => prev.filter((_, i) => i !== idx));
+    setPhotosBase64(prev => {
+      const next = prev.filter((_, i) => i !== idx);
+      setPhotosReady(next.length >= 3);
+      return next;
+    });
   };
 
-  // ── Avatar generation (called at step 3 → 4, after gender/age collected) ─────
-  const startAvatarGen = useCallback((base64: string, hair: string, eye: string, age: number, gender: string) => {
-    setAvatarStatus("loading");
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault(); setDragOver(false);
+    Array.from(e.dataTransfer.files).forEach(f => addPhoto(f));
+  };
+
+  // ── LoRA training (called at step 3 → 4, after gender/age collected) ──────────
+  const startLoraTraining = useCallback((base64s: string[]) => {
+    setLoraStatus("loading");
     const promise = (async () => {
       try {
-        const res = await fetch("/api/cartoonify", {
+        const res = await fetch("/api/train-lora", {
           method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ imageBase64: base64, gender, hairColor: hair, eyeColor: eye, childAge: age }),
+          body: JSON.stringify({ photosBase64: base64s }),
         }).then(r => r.json());
         if (res.url) {
-          setCartoonUrl(`/api/proxy?url=${encodeURIComponent(res.url)}`);
-          setPhotoFalUrl(res.url); photoFalUrlRef.current = res.url; setAvatarStatus("done");
-        } else { setAvatarStatus("error"); }
-      } catch { setAvatarStatus("error"); }
+          setLoraUrl(res.url); loraUrlRef.current = res.url; setLoraStatus("done");
+        } else { setLoraStatus("error"); }
+      } catch { setLoraStatus("error"); }
     })();
-    avatarGenRef.current = promise;
+    loraTrainingRef.current = promise;
   }, []);
 
   // ── Fallback story ────────────────────────────────────────────────────────────
@@ -272,26 +295,26 @@ export default function StorybookCreator() {
             theme: `${selectedTheme?.title} - ${selectedTheme?.subtitle}: ${selectedTheme?.desc}`,
           }),
         }).then(r => r.json()),
-        avatarGenRef.current ?? Promise.resolve(),
+        loraTrainingRef.current ?? Promise.resolve(),
       ]);
 
       const storyData = storyRes?.pages ? storyRes : getFallbackStory(childName);
       setPreviewStory(storyData);
       setPreviewMsg("Starting illustrations... 🖌️");
 
-      const falUrl = photoFalUrlRef.current;
+      const falUrl = loraUrlRef.current;
       if (falUrl && storyData.pages) {
         let done = 0;
         const total = 7; // 1 cover + 6 pages
 
         // Generate cover + all 6 page scenes in parallel
         await Promise.allSettled([
-          // Cover image
+          // Cover image (portrait orientation)
           (async () => {
             try {
               const res = await fetch("/api/generate-scene", {
                 method: "POST", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ photoUrl: falUrl, illustration: coverIllustration, childName, gender: childGender, childAge, hairColor, eyeColor }),
+                body: JSON.stringify({ loraUrl: falUrl, illustration: coverIllustration, childName, gender: childGender, childAge, hairColor, eyeColor, isCover: true }),
               }).then(r => r.json());
               if (res.url) {
                 setPreviewCoverUrl(`/api/proxy?url=${encodeURIComponent(res.url)}`);
@@ -306,7 +329,7 @@ export default function StorybookCreator() {
             try {
               const res = await fetch("/api/generate-scene", {
                 method: "POST", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ photoUrl: falUrl, illustration: page.illustration, childName, gender: childGender, childAge, hairColor, eyeColor }),
+                body: JSON.stringify({ loraUrl: falUrl, illustration: page.illustration, childName, gender: childGender, childAge, hairColor, eyeColor }),
               }).then(r => r.json());
               if (res.url) {
                 setPreviewImages(prev => { const n = [...prev]; n[idx] = `/api/proxy?url=${encodeURIComponent(res.url)}`; return n; });
@@ -340,17 +363,13 @@ export default function StorybookCreator() {
     const _theme         = savedData?.theme         ?? theme;
     const _hair          = savedData?.hairColor     ?? hairColor;
     const _eye           = savedData?.eyeColor      ?? eyeColor;
-    const _base64        = savedData?.photoBase64   ?? photoBase64;
     const _savedStory    = savedData?.story         ?? previewStory;
     const _savedFalUrls  = savedData?.previewFalUrls as (string | null)[] | undefined;
     const _savedCoverUrl = savedData?.coverFalUrl   as string | undefined;
-    const _cartoonFalUrl = savedData?.cartoonFalUrl ?? photoFalUrlRef.current;
+    const _loraUrl       = savedData?.loraUrl ?? loraUrlRef.current;
 
-    // Restore avatar
-    if (_cartoonFalUrl) {
-      setCartoonUrl(`/api/proxy?url=${encodeURIComponent(_cartoonFalUrl)}`);
-      setPhotoFalUrl(_cartoonFalUrl); photoFalUrlRef.current = _cartoonFalUrl; setAvatarStatus("done");
-    }
+    // Restore LoRA URL
+    if (_loraUrl) { setLoraUrl(_loraUrl); loraUrlRef.current = _loraUrl; setLoraStatus("done"); }
 
     // Restore cover if it came back from Stripe session
     if (_savedCoverUrl) setCoverImageUrl(`/api/proxy?url=${encodeURIComponent(_savedCoverUrl)}`);
@@ -376,7 +395,7 @@ export default function StorybookCreator() {
 
     try {
       let storyData = _savedStory;
-      let falUrl    = _cartoonFalUrl ?? photoFalUrlRef.current;
+      let falUrl    = _loraUrl;
 
       if (!storyData) {
         const sel = THEMES.find(t => t.id === _theme);
@@ -386,17 +405,6 @@ export default function StorybookCreator() {
           body: JSON.stringify({ childName: _name, childAge: String(_age), gender: _gender, hairColor: _hair, eyeColor: _eye, theme: `${sel?.title} - ${sel?.subtitle}` }),
         }).then(r => r.json());
         storyData = res?.pages ? res : getFallbackStory(_name);
-      }
-
-      if (!falUrl && _base64) {
-        setLoadingMsg("Creating your hero... 🎨");
-        try {
-          const res = await fetch("/api/cartoonify", {
-            method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ imageBase64: _base64, gender: _gender, hairColor: _hair, eyeColor: _eye }),
-          }).then(r => r.json());
-          if (res.url) { falUrl = res.url; setCartoonUrl(`/api/proxy?url=${encodeURIComponent(res.url)}`); setPhotoFalUrl(res.url); photoFalUrlRef.current = res.url; }
-        } catch { setFalError("Cartoon transformation failed — using original photo."); }
       }
 
       setStory(storyData);
@@ -411,7 +419,7 @@ export default function StorybookCreator() {
             try {
               const res = await fetch("/api/generate-scene", {
                 method: "POST", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ photoUrl: falUrl, illustration: coverIllustration, childName: _name, gender: _gender, childAge: _age, hairColor: _hair, eyeColor: _eye }),
+                body: JSON.stringify({ loraUrl: falUrl, illustration: coverIllustration, childName: _name, gender: _gender, childAge: _age, hairColor: _hair, eyeColor: _eye, isCover: true }),
               }).then(r => r.json());
               if (res.url) { setCoverImageUrl(`/api/proxy?url=${encodeURIComponent(res.url)}`); setScenesCompleted(p => p + 1); }
             } catch { setScenesCompleted(p => p + 1); }
@@ -421,7 +429,7 @@ export default function StorybookCreator() {
             try {
               const res = await fetch("/api/generate-scene", {
                 method: "POST", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ photoUrl: falUrl, illustration: page.illustration, childName: _name, gender: _gender, childAge: _age, hairColor: _hair, eyeColor: _eye }),
+                body: JSON.stringify({ loraUrl: falUrl, illustration: page.illustration, childName: _name, gender: _gender, childAge: _age, hairColor: _hair, eyeColor: _eye }),
               }).then(r => r.json());
               if (res.url) { setPageImages(prev => { const n = [...prev]; n[idx] = `/api/proxy?url=${encodeURIComponent(res.url)}`; return n; }); setScenesCompleted(p => p + 1); }
             } catch { setScenesCompleted(p => p + 1); }
@@ -444,9 +452,9 @@ export default function StorybookCreator() {
     try {
       const ref = crypto.randomUUID();
       sessionStorage.setItem(ref, JSON.stringify({
-        photoBase64, childName, childAge, childGender, theme, hairColor, eyeColor,
+        childName, childAge, childGender, theme, hairColor, eyeColor,
         story: previewStory,
-        cartoonFalUrl: photoFalUrlRef.current,
+        loraUrl: loraUrlRef.current,
         coverFalUrl: previewCoverUrl ? rawFalUrl(previewCoverUrl) : null,
         previewFalUrls: previewImages.map(u => u ? rawFalUrl(u) : null),
         plan,
@@ -473,13 +481,13 @@ export default function StorybookCreator() {
 
   // ── Regen / Share / PDF ───────────────────────────────────────────────────────
   const regenerateScene = async (pageIdx: number) => {
-    if (!photoFalUrl || regeneratingPage !== null) return;
+    if (!loraUrl || regeneratingPage !== null) return;
     setRegeneratingPage(pageIdx);
     try {
       const page = story.pages[pageIdx];
       const res = await fetch("/api/generate-scene", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ photoUrl: photoFalUrl, illustration: page.illustration, childName, gender: childGender, childAge, hairColor, eyeColor }),
+        body: JSON.stringify({ loraUrl, illustration: page.illustration, childName, gender: childGender, childAge, hairColor, eyeColor }),
       }).then(r => r.json());
       if (res.url) setPageImages(prev => { const n = [...prev]; n[pageIdx] = `/api/proxy?url=${encodeURIComponent(res.url)}`; return n; });
     } catch (err) { console.error("Regenerate failed:", err); }
@@ -490,7 +498,7 @@ export default function StorybookCreator() {
     if (!leadEmail || leadSent) return;
     setLeadSending(true);
     try {
-      const shareUrl = `${window.location.origin}/create?share=${encodeShare({ story: previewStory, cartoonFalUrl: cartoonUrl ? rawFalUrl(cartoonUrl) : null, coverFalUrl: previewCoverUrl ? rawFalUrl(previewCoverUrl) : null, pageFalUrls: previewImages.map(u => u ? rawFalUrl(u) : null) })}`;
+      const shareUrl = `${window.location.origin}/create?share=${encodeShare({ story: previewStory, coverFalUrl: previewCoverUrl ? rawFalUrl(previewCoverUrl) : null, pageFalUrls: previewImages.map(u => u ? rawFalUrl(u) : null) })}`;
       await fetch("/api/email", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "preview_lead", email: leadEmail, shareUrl }) });
       setLeadSent(true);
       gtagEvent("lead_captured", { method: "preview_email" });
@@ -500,7 +508,7 @@ export default function StorybookCreator() {
 
   const copyShareLink = async () => {
     if (!story) return;
-    const data = { story, cartoonFalUrl: cartoonUrl ? rawFalUrl(cartoonUrl) : null, coverFalUrl: coverImageUrl ? rawFalUrl(coverImageUrl) : null, pageFalUrls: pageImages.map(u => u ? rawFalUrl(u) : null) };
+    const data = { story, coverFalUrl: coverImageUrl ? rawFalUrl(coverImageUrl) : null, pageFalUrls: pageImages.map(u => u ? rawFalUrl(u) : null) };
     const url = `${window.location.origin}/create?share=${encodeShare(data)}`;
     try { await navigator.clipboard.writeText(url); setShareCopied(true); setTimeout(() => setShareCopied(false), 2500); } catch {}
   };
@@ -512,12 +520,12 @@ export default function StorybookCreator() {
       const html2canvas = (await import("html2canvas")).default;
       const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
       const pdfW = 297, pdfH = 210;
-      const capture = async (id: string) => { const el = document.getElementById(id); return el ? html2canvas(el, { useCORS: true, scale: 2, backgroundColor: null }) : null; };
+      const capture = async (id: string) => { const el = document.getElementById(id); return el ? html2canvas(el, { useCORS: true, scale: 3, backgroundColor: null }) : null; };
       const coverCanvas = await capture("pdf-cover-capture");
-      if (coverCanvas) pdf.addImage(coverCanvas.toDataURL("image/jpeg", 0.92), "JPEG", 0, 0, pdfW, pdfH);
+      if (coverCanvas) pdf.addImage(coverCanvas.toDataURL("image/jpeg", 1.0), "JPEG", 0, 0, pdfW, pdfH);
       for (let i = 0; i < story.pages.length; i++) {
         const canvas = await capture(`pdf-spread-${i}`);
-        if (canvas) { pdf.addPage("a4", "landscape"); pdf.addImage(canvas.toDataURL("image/jpeg", 0.92), "JPEG", 0, 0, pdfW, pdfH); }
+        if (canvas) { pdf.addPage("a4", "landscape"); pdf.addImage(canvas.toDataURL("image/jpeg", 1.0), "JPEG", 0, 0, pdfW, pdfH); }
       }
       pdf.save(`${(story.title || "StoryBook").replace(/[^a-z0-9]/gi, "_")}.pdf`);
     } catch (err) { console.error("PDF error:", err); alert("PDF generation failed. Please try again."); }
@@ -526,9 +534,9 @@ export default function StorybookCreator() {
 
   const resetAll = () => {
     setMainStep("onboarding"); setOnboardingStep(1); setStepDir("fwd");
-    setPhoto(null); setPhotoBase64(null); setPhotoReady(false);
-    setCartoonUrl(null); setAvatarStatus("idle"); setPhotoFalUrl(null);
-    photoFalUrlRef.current = null; avatarGenRef.current = null;
+    setPhotos([]); setPhotosBase64([]); setPhotosReady(false);
+    setLoraUrl(null); setLoraStatus("idle");
+    loraUrlRef.current = null; loraTrainingRef.current = null;
     setHairColor("brown"); setEyeColor("brown");
     setStory(null); setPreviewStory(null); setPreviewImages(Array(6).fill(null));
     setPreviewCoverUrl(null); setCoverImageUrl(null);
@@ -539,7 +547,7 @@ export default function StorybookCreator() {
   };
 
   const totalPages   = story?.pages?.length ?? 6;
-  const displayPhoto = cartoonUrl || photo;
+  const displayPhoto = photos[0] ?? null;
 
   // ── BookPage / BookSpread — premium printed book layout ──────────────────────
   const BookTextPage = ({ page, isLast }: { page: any; isLast?: boolean }) => {
@@ -602,7 +610,7 @@ export default function StorybookCreator() {
             <img crossOrigin="anonymous" src={displayPhoto} alt="hero" style={{ maxHeight: "80%", maxWidth: "70%", objectFit: "contain", filter: "drop-shadow(0 8px 24px rgba(0,0,0,0.5))" }} />
           </div>
         ) : null}
-        {!isSharedView && photoFalUrl && !isRegen && (
+        {!isSharedView && loraUrl && !isRegen && (
           <button className="regen-btn" onClick={() => regenerateScene(page.pageNum - 1)} style={{ position: "absolute", bottom: 12, right: 12, background: "rgba(0,0,0,0.6)", border: "1px solid rgba(255,255,255,0.18)", borderRadius: 8, padding: "5px 10px", color: "rgba(255,255,255,0.75)", fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, backdropFilter: "blur(4px)" }}>🔄 Redo</button>
         )}
       </div>
@@ -712,53 +720,68 @@ export default function StorybookCreator() {
             {/* ── STEP 1: Upload ── */}
             {onboardingStep === 1 && (
               <div>
-                <Mascot msg="Let's make some magic! ✨ Upload a clear photo of your child to get started." />
+                <Mascot msg="More photos = better resemblance! ✨ Upload 3–5 clear photos of your child for the best likeness." />
+
+                {/* Photo grid */}
                 <div
-                  onClick={() => fileRef.current?.click()}
                   onDrop={handleDrop}
                   onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
                   onDragLeave={() => setDragOver(false)}
-                  style={{ background: dragOver ? "rgba(255,215,0,0.06)" : "rgba(255,255,255,0.04)", border: `2px dashed ${dragOver ? "#ffd700" : photo && photoReady ? "#4caf50" : "rgba(255,255,255,0.18)"}`, borderRadius: 24, padding: isMobile ? "44px 24px" : "60px 44px", textAlign: "center", cursor: "pointer", transition: "all 0.2s" }}
+                  style={{ background: dragOver ? "rgba(255,215,0,0.04)" : "rgba(255,255,255,0.03)", border: `2px dashed ${dragOver ? "#ffd700" : "rgba(255,255,255,0.15)"}`, borderRadius: 22, padding: "20px", transition: "all 0.2s" }}
                 >
-                  {photo && photoReady ? (
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
-                      <div style={{ position: "relative", display: "inline-block" }}>
-                        <img src={photo} alt="preview" style={{ width: 120, height: 120, objectFit: "cover", borderRadius: "50%", border: "4px solid #4caf50" }} />
-                        <div style={{ position: "absolute", bottom: 0, right: 0, width: 36, height: 36, background: "#4caf50", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, border: "2.5px solid #1a0a2e" }}>✓</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: photos.length < 5 ? 12 : 0 }}>
+                    {photos.map((src, i) => (
+                      <div key={i} style={{ position: "relative", aspectRatio: "1", borderRadius: 14, overflow: "hidden", border: "2px solid rgba(76,175,80,0.5)" }}>
+                        <img src={src} alt={`Photo ${i + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        <button onClick={() => removePhoto(i)} style={{ position: "absolute", top: 4, right: 4, width: 24, height: 24, borderRadius: "50%", background: "rgba(0,0,0,0.7)", border: "none", color: "white", fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>×</button>
+                        {i === 0 && <div style={{ position: "absolute", bottom: 4, left: 4, background: "rgba(76,175,80,0.9)", borderRadius: 6, padding: "2px 6px", fontSize: 9, fontWeight: 700, color: "white" }}>MAIN</div>}
                       </div>
-                      <p style={{ color: "#4caf50", fontWeight: 700, fontSize: 18, margin: "0 0 2px" }}>Perfect photo!</p>
-                      <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 12, margin: 0 }}>Tap to change</p>
+                    ))}
+                    {photos.length < 5 && (
+                      <div onClick={() => fileRef.current?.click()} style={{ aspectRatio: "1", borderRadius: 14, border: "2px dashed rgba(255,255,255,0.2)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", gap: 6, background: "rgba(255,255,255,0.03)", transition: "all 0.15s" }}>
+                        <span style={{ fontSize: 28, opacity: 0.5 }}>+</span>
+                        <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, textAlign: "center" }}>{photos.length === 0 ? "Add photo" : "Add more"}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {photos.length === 0 && (
+                    <div style={{ textAlign: "center", padding: "24px 0 8px" }}>
+                      <div style={{ fontSize: 52, marginBottom: 10 }}>📸</div>
+                      <p style={{ color: "white", fontSize: 17, fontWeight: 700, margin: "0 0 4px" }}>Upload 3–5 photos</p>
+                      <p style={{ color: "rgba(255,255,255,0.38)", fontSize: 13, margin: 0 }}>Tap + or drag & drop photos here</p>
                     </div>
-                  ) : photo ? (
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
-                      <div style={{ width: 44, height: 44, border: "3px solid rgba(255,215,0,0.3)", borderTop: "3px solid #ffd700", borderRadius: "50%", animation: "spin 0.9s linear infinite" }} />
-                      <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 14, margin: 0 }}>Processing...</p>
-                    </div>
-                  ) : (
-                    <>
-                      <div style={{ fontSize: 68, marginBottom: 14 }}>📸</div>
-                      <p style={{ color: "white", fontSize: 19, fontWeight: 700, margin: "0 0 6px" }}>Upload your child's photo</p>
-                      <p style={{ color: "rgba(255,255,255,0.38)", fontSize: 13, margin: 0 }}>Tap here or drag & drop</p>
-                    </>
                   )}
                 </div>
-                <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} />
+
+                <input ref={fileRef} type="file" accept="image/*" multiple style={{ display: "none" }} onChange={(e) => { Array.from(e.target.files ?? []).forEach(f => addPhoto(f)); e.target.value = ""; }} />
+
+                {/* Progress indicator */}
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 12 }}>
+                  {[1, 2, 3, 4, 5].map(n => (
+                    <div key={n} style={{ flex: 1, height: 5, borderRadius: 3, background: n <= photos.length ? (n <= 2 ? "#ff9a9e" : "#4caf50") : "rgba(255,255,255,0.12)", transition: "background 0.3s" }} />
+                  ))}
+                  <span style={{ color: photos.length >= 3 ? "#4caf50" : "rgba(255,255,255,0.4)", fontSize: 12, fontWeight: 700, whiteSpace: "nowrap" }}>
+                    {photos.length}/5 {photos.length >= 3 ? "✓ Ready!" : `(need ${3 - photos.length} more)`}
+                  </span>
+                </div>
 
                 {/* Privacy reassurance */}
                 <div style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(76,175,80,0.08)", border: "1px solid rgba(76,175,80,0.2)", borderRadius: 12, padding: "10px 14px", marginTop: 12 }}>
                   <span style={{ fontSize: 16, flexShrink: 0 }}>🔒</span>
-                  <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, margin: 0, lineHeight: 1.5 }}>Your photo is <strong style={{ color: "#4caf50" }}>private & secure</strong> — never stored, never shared, deleted after your book is created.</p>
+                  <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, margin: 0, lineHeight: 1.5 }}>Photos are <strong style={{ color: "#4caf50" }}>private & secure</strong> — used only to personalise your book, then permanently deleted.</p>
                 </div>
 
-                <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap", justifyContent: "center" }}>
-                  {[{ icon: "😊", text: "Face clearly visible" }, { icon: "☀️", text: "Good lighting" }, { icon: "🚫", text: "No sunglasses" }].map(tip => (
+                <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap", justifyContent: "center" }}>
+                  {[{ icon: "😊", text: "Face clearly visible" }, { icon: "☀️", text: "Good lighting" }, { icon: "🔄", text: "Different angles" }].map(tip => (
                     <div key={tip.icon} style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 12, padding: "7px 13px" }}>
                       <span style={{ fontSize: 16 }}>{tip.icon}</span>
                       <span style={{ color: "rgba(255,255,255,0.55)", fontSize: 12 }}>{tip.text}</span>
                     </div>
                   ))}
                 </div>
-                {photoReady && (
+
+                {photosReady && (
                   <button onClick={() => goToStep(2)} style={{ width: "100%", marginTop: 20, padding: "17px", borderRadius: 16, border: "none", background: "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 17, fontWeight: 700, cursor: "pointer", animation: "fadeUp 0.35s ease both" }}>
                     Continue →
                   </button>
@@ -821,7 +844,7 @@ export default function StorybookCreator() {
                 </div>
                 <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
                   <button onClick={() => goToStep(2)} style={{ padding: "14px 20px", borderRadius: 14, border: "1px solid rgba(255,255,255,0.12)", background: "transparent", color: "rgba(255,255,255,0.5)", fontSize: 14, cursor: "pointer" }}>← Back</button>
-                  <button onClick={() => { if (photoBase64) startAvatarGen(photoBase64, hairColor, eyeColor, childAge, childGender); goToStep(4); }} disabled={!childName.trim()} style={{ flex: 1, padding: "15px", borderRadius: 14, border: "none", background: childName.trim() ? "linear-gradient(135deg, #ffd700, #ff9a9e)" : "rgba(255,255,255,0.08)", color: childName.trim() ? "#1a0a2e" : "rgba(255,255,255,0.3)", fontSize: 16, fontWeight: 700, cursor: childName.trim() ? "pointer" : "not-allowed", transition: "all 0.2s" }}>
+                  <button onClick={() => { if (photosBase64.length > 0 && loraStatus === "idle") startLoraTraining(photosBase64); goToStep(4); }} disabled={!childName.trim()} style={{ flex: 1, padding: "15px", borderRadius: 14, border: "none", background: childName.trim() ? "linear-gradient(135deg, #ffd700, #ff9a9e)" : "rgba(255,255,255,0.08)", color: childName.trim() ? "#1a0a2e" : "rgba(255,255,255,0.3)", fontSize: 16, fontWeight: 700, cursor: childName.trim() ? "pointer" : "not-allowed", transition: "all 0.2s" }}>
                     {childName.trim() ? `Pick ${childName}'s adventure →` : "Enter a name to continue →"}
                   </button>
                 </div>
@@ -833,23 +856,30 @@ export default function StorybookCreator() {
               <div>
                 <Mascot msg={`Great! Now pick the perfect adventure for ${childName || "your little hero"}...`} />
 
-                {/* Avatar loading indicator */}
-                {avatarStatus !== "idle" && (
-                  <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,215,0,0.15)", borderRadius: 18, padding: "14px 18px", marginBottom: 18, display: "flex", alignItems: "center", gap: 14 }}>
-                    <div style={{ position: "relative", flexShrink: 0 }}>
-                      <img src={photo!} alt="original" style={{ width: 48, height: 48, objectFit: "cover", borderRadius: "50%", border: "2px solid rgba(255,215,0,0.3)" }} />
-                      {avatarStatus === "loading" && <div style={{ position: "absolute", inset: -3, borderRadius: "50%", border: "2.5px solid transparent", borderTop: "2.5px solid #ffd700", animation: "spin 1s linear infinite" }} />}
-                      {avatarStatus === "done"    && <div style={{ position: "absolute", bottom: -2, right: -2, width: 18, height: 18, background: "#4caf50", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, border: "1.5px solid #1a0a2e" }}>✓</div>}
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ color: "white", fontWeight: 600, fontSize: 13, margin: "0 0 5px" }}>
-                        {avatarStatus === "done" ? "✨ 3D portrait complete!" : avatarStatus === "error" ? "⚠️ Using original photo" : "🎨 Creating your hero..."}
-                      </p>
-                      <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: 4, height: 4, overflow: "hidden" }}>
-                        <div style={{ height: "100%", borderRadius: 4, background: "linear-gradient(90deg, #ffd700, #ff9a9e)", width: avatarStatus === "done" || avatarStatus === "error" ? "100%" : "0%", animation: avatarStatus === "loading" ? "fwdBar 30s linear forwards" : "none", transition: "width 0.5s" }} />
+                {/* LoRA training progress indicator */}
+                {loraStatus !== "idle" && (
+                  <div style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${loraStatus === "done" ? "rgba(76,175,80,0.35)" : loraStatus === "error" ? "rgba(255,80,80,0.3)" : "rgba(255,215,0,0.2)"}`, borderRadius: 18, padding: "18px 20px", marginBottom: 18 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                      {/* Photo thumbnails */}
+                      <div style={{ display: "flex", flexShrink: 0 }}>
+                        {photos.slice(0, 3).map((src, i) => (
+                          <div key={i} style={{ position: "relative", width: 38, height: 38, borderRadius: "50%", overflow: "hidden", border: "2px solid rgba(255,215,0,0.3)", marginLeft: i > 0 ? -10 : 0 }}>
+                            <img src={src} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                          </div>
+                        ))}
                       </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ color: "white", fontWeight: 600, fontSize: 13, margin: "0 0 6px" }}>
+                          {loraStatus === "done" ? "✨ Learning complete — ready to illustrate!" : loraStatus === "error" ? "⚠️ Training issue — proceeding anyway" : "🧠 Learning your child's unique look..."}
+                        </p>
+                        <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: 4, height: 5, overflow: "hidden" }}>
+                          <div style={{ height: "100%", borderRadius: 4, background: loraStatus === "done" ? "linear-gradient(90deg, #4caf50, #43e97b)" : "linear-gradient(90deg, #ffd700, #ff9a9e)", width: loraStatus === "done" || loraStatus === "error" ? "100%" : "5%", animation: loraStatus === "loading" ? "fwdBar 150s linear forwards" : "none", transition: "width 0.5s" }} />
+                        </div>
+                        {loraStatus === "loading" && <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, margin: "5px 0 0" }}>This creates a truly personalised character — takes ~2 min</p>}
+                      </div>
+                      {loraStatus === "loading" && <div style={{ width: 20, height: 20, border: "2.5px solid rgba(255,215,0,0.2)", borderTop: "2.5px solid #ffd700", borderRadius: "50%", animation: "spin 1s linear infinite", flexShrink: 0 }} />}
+                      {loraStatus === "done"    && <div style={{ fontSize: 22, flexShrink: 0 }}>✅</div>}
                     </div>
-                    {avatarStatus === "done" && cartoonUrl && <img src={cartoonUrl} alt="hero" style={{ width: 48, height: 48, objectFit: "cover", borderRadius: "50%", border: "2px solid #ffd700", flexShrink: 0 }} />}
                   </div>
                 )}
 
@@ -1034,44 +1064,30 @@ export default function StorybookCreator() {
           {isSharedView && <div style={{ background: "rgba(255,215,0,0.07)", border: "1px solid rgba(255,215,0,0.2)", borderRadius: 10, padding: "8px 14px", marginBottom: 12, color: "rgba(255,215,0,0.8)", fontSize: 13, textAlign: "center" }}>📖 Viewing a shared storybook</div>}
 
           {currentPage === -1 ? (
-            // ── BOOK COVER — premium hardcover style ─────────────────────────────
-            <div style={{ position: "relative", borderRadius: isMobile ? 16 : 20, overflow: "hidden", boxShadow: "0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,215,0,0.12)", animation: "fadeUp 0.4s ease both", minHeight: isMobile ? 380 : 520, cursor: "pointer" }} onClick={() => navigate(0)}>
-              {/* Full-bleed illustration */}
-              {coverImageUrl
-                ? <img crossOrigin="anonymous" src={coverImageUrl} alt="Book cover" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
-                : <div style={{ position: "absolute", inset: 0, background: "linear-gradient(160deg, #1a0a2e 0%, #4a2060 50%, #1a3040 100%)" }} />}
+            // ── BOOK COVER — split layout: top 60% clean illustration, bottom 40% banner ─
+            <div style={{ borderRadius: isMobile ? 16 : 20, overflow: "hidden", boxShadow: "0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,215,0,0.12)", animation: "fadeUp 0.4s ease both", cursor: "pointer", display: "flex", flexDirection: "column", minHeight: isMobile ? 420 : 560 }} onClick={() => navigate(0)}>
+              {/* Top 60%: clean illustration — NO overlaid text */}
+              <div style={{ flex: "0 0 60%", position: "relative", overflow: "hidden", background: "linear-gradient(160deg, #1a0a2e 0%, #4a2060 50%, #1a3040 100%)" }}>
+                {coverImageUrl && <img crossOrigin="anonymous" src={coverImageUrl} alt="Book cover" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />}
+                {/* Subtle bottom fade into banner */}
+                <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "30%", background: "linear-gradient(to bottom, transparent, rgba(13,7,30,0.6))" }} />
+                {/* Open hint */}
+                <div style={{ position: "absolute", top: isMobile ? 12 : 16, right: isMobile ? 12 : 16 }}>
+                  <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 11, background: "rgba(0,0,0,0.45)", borderRadius: 8, padding: "4px 10px", backdropFilter: "blur(4px)" }}>Tap to open →</span>
+                </div>
+              </div>
 
-              {/* Edge vignette */}
-              <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse at 50% 50%, transparent 20%, rgba(0,0,0,0.55) 100%)" }} />
-              {/* Top & bottom fades */}
-              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, transparent 30%, transparent 55%, rgba(0,0,0,0.5) 100%)" }} />
-
-              {/* ── TITLE RIBBON across the middle ── */}
-              <div style={{
-                position: "absolute", left: 0, right: 0, top: "50%", transform: "translateY(-50%)",
-                background: "rgba(8,4,20,0.87)",
-                borderTop: "1.5px solid rgba(255,215,0,0.55)",
-                borderBottom: "1.5px solid rgba(255,215,0,0.55)",
-                padding: isMobile ? "20px 28px 18px" : "28px 48px 24px",
-                textAlign: "center",
-                backdropFilter: "blur(10px)",
-              }}>
-                <p style={{ color: "rgba(255,215,0,0.55)", fontSize: 9, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", margin: "0 0 10px" }}>A My Tiny Tales Original Storybook</p>
-                <h1 style={{ fontFamily: "var(--font-playfair, Georgia, serif)", color: "white", fontSize: isMobile ? 22 : 32, fontWeight: 800, margin: "0 0 10px", lineHeight: 1.25, letterSpacing: "-0.01em", textShadow: "0 2px 20px rgba(0,0,0,0.8)" }}>
+              {/* Bottom 40%: dark purple title banner */}
+              <div style={{ flex: "0 0 40%", background: "linear-gradient(160deg, #0d071e 0%, #1a0a2e 60%, #150d28 100%)", borderTop: "1.5px solid rgba(255,215,0,0.3)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: isMobile ? "18px 24px 14px" : "24px 48px 20px", textAlign: "center", gap: isMobile ? 8 : 10 }}>
+                <p style={{ color: "rgba(255,215,0,0.6)", fontSize: isMobile ? 8 : 9, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", margin: 0 }}>A My Tiny Tales Original Storybook</p>
+                <h1 style={{ fontFamily: "var(--font-playfair, Georgia, serif)", color: "white", fontSize: isMobile ? 24 : 36, fontWeight: 900, margin: 0, lineHeight: 1.15, letterSpacing: "-0.01em", textShadow: "0 2px 16px rgba(0,0,0,0.6)" }}>
                   {story.title}
                 </h1>
-                <p style={{ color: "rgba(255,255,255,0.55)", fontFamily: "Georgia, serif", fontStyle: "italic", fontSize: isMobile ? 12 : 14, margin: 0 }}>{story.dedication}</p>
-              </div>
-
-              {/* ── My Tiny Tales badge — bottom centre ── */}
-              <div style={{ position: "absolute", bottom: isMobile ? 18 : 28, left: "50%", transform: "translateX(-50%)", display: "flex", alignItems: "center", gap: 6, background: "linear-gradient(135deg, #ffd700, #ffb347)", borderRadius: 50, padding: isMobile ? "5px 16px" : "7px 20px", boxShadow: "0 4px 20px rgba(0,0,0,0.5)", whiteSpace: "nowrap" }}>
-                <span style={{ fontSize: isMobile ? 13 : 15 }}>✨</span>
-                <span style={{ color: "#1a0a2e", fontWeight: 800, fontSize: isMobile ? 11 : 13, letterSpacing: "0.04em" }}>My Tiny Tales</span>
-              </div>
-
-              {/* Open hint */}
-              <div style={{ position: "absolute", top: isMobile ? 14 : 20, right: isMobile ? 14 : 20 }}>
-                <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, background: "rgba(0,0,0,0.4)", borderRadius: 8, padding: "4px 10px", backdropFilter: "blur(4px)" }}>Tap to open →</span>
+                <p style={{ color: "rgba(255,255,255,0.5)", fontFamily: "Georgia, serif", fontStyle: "italic", fontSize: isMobile ? 12 : 14, margin: 0 }}>{story.dedication}</p>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, background: "linear-gradient(135deg, #ffd700, #ffb347)", borderRadius: 50, padding: isMobile ? "5px 14px" : "6px 18px", boxShadow: "0 4px 16px rgba(0,0,0,0.4)", marginTop: isMobile ? 2 : 4 }}>
+                  <span style={{ fontSize: isMobile ? 12 : 14 }}>✨</span>
+                  <span style={{ color: "#1a0a2e", fontWeight: 800, fontSize: isMobile ? 10 : 12, letterSpacing: "0.04em" }}>My Tiny Tales</span>
+                </div>
               </div>
             </div>
           ) : (
@@ -1106,23 +1122,22 @@ export default function StorybookCreator() {
       {/* Off-screen PDF targets */}
       {mainStep === "book" && story && (
         <div style={{ position: "fixed", left: "-9999px", top: 0, width: 880, pointerEvents: "none" }} aria-hidden="true">
-          {/* PDF Cover */}
-          <div id="pdf-cover-capture" style={{ width: 880, height: 560, position: "relative", overflow: "hidden" }}>
-            {coverImageUrl
-              ? <img crossOrigin="anonymous" src={coverImageUrl} alt="cover" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
-              : <div style={{ position: "absolute", inset: 0, background: "linear-gradient(160deg, #1a0a2e, #4a2060, #1a3040)" }} />}
-            <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse at 50% 50%, transparent 20%, rgba(0,0,0,0.55) 100%)" }} />
-            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, transparent 30%, transparent 55%, rgba(0,0,0,0.5) 100%)" }} />
-            {/* Ribbon */}
-            <div style={{ position: "absolute", left: 0, right: 0, top: "50%", transform: "translateY(-50%)", background: "rgba(8,4,20,0.88)", borderTop: "1.5px solid rgba(255,215,0,0.55)", borderBottom: "1.5px solid rgba(255,215,0,0.55)", padding: "32px 60px", textAlign: "center" }}>
-              <div style={{ color: "rgba(255,215,0,0.55)", fontSize: 10, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 12 }}>A My Tiny Tales Original Storybook</div>
-              <div style={{ color: "white", fontSize: 36, fontWeight: 800, marginBottom: 10, fontFamily: "Georgia, serif" }}>{story.title}</div>
-              <div style={{ color: "rgba(255,255,255,0.55)", fontStyle: "italic", fontSize: 16, fontFamily: "Georgia, serif" }}>{story.dedication}</div>
+          {/* PDF Cover — split layout matching the book view */}
+          <div id="pdf-cover-capture" style={{ width: 880, height: 560, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+            {/* Top 60%: clean illustration */}
+            <div style={{ flex: "0 0 60%", position: "relative", background: "linear-gradient(160deg, #1a0a2e, #4a2060, #1a3040)", overflow: "hidden" }}>
+              {coverImageUrl && <img crossOrigin="anonymous" src={coverImageUrl} alt="cover" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />}
+              <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "30%", background: "linear-gradient(to bottom, transparent, rgba(13,7,30,0.6))" }} />
             </div>
-            {/* Badge */}
-            <div style={{ position: "absolute", bottom: 32, left: "50%", transform: "translateX(-50%)", display: "flex", alignItems: "center", gap: 7, background: "linear-gradient(135deg, #ffd700, #ffb347)", borderRadius: 50, padding: "8px 22px", whiteSpace: "nowrap" }}>
-              <span style={{ fontSize: 16 }}>✨</span>
-              <span style={{ color: "#1a0a2e", fontWeight: 800, fontSize: 14 }}>My Tiny Tales</span>
+            {/* Bottom 40%: dark banner */}
+            <div style={{ flex: "0 0 40%", background: "linear-gradient(160deg, #0d071e, #1a0a2e, #150d28)", borderTop: "1.5px solid rgba(255,215,0,0.3)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 80px 20px", textAlign: "center", gap: 10 }}>
+              <div style={{ color: "rgba(255,215,0,0.6)", fontSize: 9, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase" }}>A My Tiny Tales Original Storybook</div>
+              <div style={{ color: "white", fontSize: 38, fontWeight: 900, fontFamily: "Georgia, serif", lineHeight: 1.15 }}>{story.title}</div>
+              <div style={{ color: "rgba(255,255,255,0.5)", fontStyle: "italic", fontSize: 15, fontFamily: "Georgia, serif" }}>{story.dedication}</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 7, background: "linear-gradient(135deg, #ffd700, #ffb347)", borderRadius: 50, padding: "7px 20px", marginTop: 4 }}>
+                <span style={{ fontSize: 15 }}>✨</span>
+                <span style={{ color: "#1a0a2e", fontWeight: 800, fontSize: 13 }}>My Tiny Tales</span>
+              </div>
             </div>
           </div>
           {/* PDF Spreads */}

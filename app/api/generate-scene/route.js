@@ -5,16 +5,18 @@ export const maxDuration = 60;
 export async function POST(request) {
   fal.config({ credentials: process.env.FAL_API_KEY });
   try {
-    const { photoUrl, illustration, childName, gender, childAge, hairColor, eyeColor } = await request.json();
+    const { loraUrl, illustration, childName, gender, childAge, hairColor, eyeColor, isCover } = await request.json();
+
+    if (!loraUrl) return Response.json({ error: "loraUrl required" }, { status: 400 });
+
     console.log("Generate scene called:", illustration?.substring(0, 80));
 
     const genderWord = gender === "girl" ? "girl" : gender === "boy" ? "boy" : "child";
 
-    // Age-accurate descriptor so the model renders the right body size/proportions
     const ageNum = Number(childAge) || 5;
     let ageDesc;
-    if      (ageNum <= 2)  ageDesc = "toddler aged 1-2, tiny, chubby cheeks, very small stature, short pudgy legs";
-    else if (ageNum <= 4)  ageDesc = "preschooler aged 3-4, small child, round face, small body";
+    if      (ageNum <= 2)  ageDesc = "toddler aged 1-2, tiny, chubby cheeks, very small stature";
+    else if (ageNum <= 4)  ageDesc = "preschooler aged 3-4, small child, round face";
     else if (ageNum <= 7)  ageDesc = "young child aged 5-7, small and cute";
     else if (ageNum <= 10) ageDesc = "child aged 8-10";
     else                   ageDesc = "preteen aged 11-12, taller child";
@@ -23,19 +25,20 @@ export async function POST(request) {
     const eyeDesc  = eyeColor  ? `${eyeColor.replace(/-/g, " ")} eyes`  : "";
     const appearance = [hairDesc, eyeDesc].filter(Boolean).join(", ");
 
-    const characterDesc = `${childName || "the child"}, a ${ageDesc} ${genderWord}${appearance ? ` with ${appearance}` : ""},`;
+    const characterDesc = `${childName || "the child"}, a ${ageDesc} ${genderWord}${appearance ? ` with ${appearance}` : ""}`;
 
-    const result = await fal.subscribe("fal-ai/flux-pulid", {
+    const prompt = `a photo of TOK, ${characterDesc}, ${illustration}, cinematic 3D animated children's book illustration, Disney-quality CGI render, vibrant colors, soft cinematic lighting, magical storybook atmosphere, whimsical and joyful`;
+
+    const result = await fal.subscribe("fal-ai/flux-lora", {
       input: {
-        reference_image_url: photoUrl,
-        prompt: `${characterDesc} as the main character in this scene, ${illustration}, cinematic 3D animated children's book illustration, Disney-quality CGI render, vibrant colors, soft cinematic lighting, magical storybook atmosphere, wide establishing shot, whimsical and joyful`,
-        negative_prompt: "different person, wrong face, altered face, realistic photo, dark, scary, blurry, low quality, adult, teenager, text, watermark, deformed, ugly, multiple people, violence, wrong age",
-        num_inference_steps: 32,
-        guidance_scale: 2.5,
-        true_cfg: 1,
-        id_weight: 0.8,
+        prompt,
+        negative_prompt: "realistic photo, dark, scary, blurry, low quality, adult, teenager, text, watermark, deformed, ugly, multiple people, violence, wrong age",
+        loras: [{ path: loraUrl, scale: 1.0 }],
+        num_inference_steps: 28,
+        guidance_scale: 3.5,
         num_images: 1,
-        image_size: "landscape_4_3",
+        image_size: isCover ? "portrait_4_3" : "landscape_4_3",
+        enable_safety_checker: true,
       },
     });
 

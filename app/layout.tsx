@@ -18,14 +18,23 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "My Tiny Tales — Your Child, The Hero of Their Own Story",
-  description: "Create a unique AI-generated children's book starring your child. Cinematic 3D-style illustrations, personalised story, ready in minutes.",
+  description: "AI-generated personalised storybooks starring your child. Beautiful cinematic 3D illustrations, delivered in minutes.",
   icons: {
-    icon: "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✨</text></svg>",
+    icon: "/favicon.svg",
   },
   openGraph: {
-    title: "My Tiny Tales",
-    description: "A unique AI-generated book starring your child — written just for them, delivered in minutes.",
+    title: "My Tiny Tales — Your Child, The Hero of Their Own Story",
+    description: "AI-generated personalised storybooks starring your child. Beautiful cinematic 3D illustrations, delivered in minutes.",
+    url: "https://mytinytales.studio",
     siteName: "My Tiny Tales",
+    images: [{ url: "https://mytinytales.studio/og-image.jpg", width: 1200, height: 630 }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "My Tiny Tales — Your Child, The Hero of Their Own Story",
+    description: "AI-generated personalised storybooks starring your child. Beautiful cinematic 3D illustrations, delivered in minutes.",
+    images: ["https://mytinytales.studio/og-image.jpg"],
   },
 };
 
@@ -42,6 +51,7 @@ export default function RootLayout({
       className={`${playfair.variable} ${inter.variable} h-full antialiased`}
     >
       <head>
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         {GA_ID && (
           <>
             <Script

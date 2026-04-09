@@ -32,7 +32,7 @@ export async function POST(request) {
                 <a href="${shareUrl || "#"}" style="display:block;margin:20px 0;padding:14px 28px;background:linear-gradient(135deg,#f4c430,#ffb347);color:#1a0a2e;font-weight:700;font-size:15px;text-decoration:none;border-radius:50px;text-align:center;">
                   View My Book Preview →
                 </a>
-                <p style="color:#8a6d5a;font-size:13px;">Love what you see? Unlock all 6 pages for just $24.99.</p>
+                <p style="color:#8a6d5a;font-size:13px;">Love what you see? Unlock all 6 pages for just $17.99.</p>
               </div>
               <div style="background:#1a0a2e;padding:20px;text-align:center;">
                 <p style="color:rgba(255,255,255,0.35);font-size:11px;margin:0;">© ${new Date().getFullYear()} My Tiny Tales · <a href="https://mytinytales.studio/privacy" style="color:rgba(255,255,255,0.35);">Privacy Policy</a></p>

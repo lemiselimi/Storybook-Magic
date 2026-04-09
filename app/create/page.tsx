@@ -446,7 +446,7 @@ export default function StorybookCreator() {
 
   // ── Purchase ──────────────────────────────────────────────────────────────────
   const handlePurchase = async (plan: "digital" | "print") => {
-    gtagEvent("begin_checkout", { plan, value: plan === "print" ? 44.99 : 24.99, currency: "USD" });
+    gtagEvent("begin_checkout", { plan, value: plan === "print" ? 37.99 : 17.99, currency: "USD" });
     if (!PAYMENTS_ENABLED) { generateFullBook(); return; }
     setCheckoutLoading(plan);
     try {
@@ -1016,11 +1016,11 @@ export default function StorybookCreator() {
                       <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, textAlign: "center", margin: "0 0 18px" }}>6 personalised cinematic 3D-illustrated pages starring {childName || "your child"}</p>
                       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                         <button onClick={() => handlePurchase("digital")} disabled={!!checkoutLoading} style={{ width: "100%", padding: "17px", borderRadius: 16, border: "none", background: checkoutLoading === "digital" ? "rgba(255,215,0,0.5)" : "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 17, fontWeight: 800, cursor: checkoutLoading ? "not-allowed" : "pointer" }}>
-                          {checkoutLoading === "digital" ? "Redirecting..." : PAYMENTS_ENABLED ? "Get Digital Book — $24.99 →" : "✨ Create My Storybook!"}
+                          {checkoutLoading === "digital" ? "Redirecting..." : PAYMENTS_ENABLED ? "Get Digital Book — $17.99 →" : "✨ Create My Storybook!"}
                         </button>
                         {PAYMENTS_ENABLED && (
                           <button onClick={() => handlePurchase("print")} disabled={!!checkoutLoading} style={{ width: "100%", padding: "15px", borderRadius: 16, border: "2px solid rgba(255,215,0,0.35)", background: "rgba(255,215,0,0.07)", color: "#ffd700", fontSize: 16, fontWeight: 700, cursor: checkoutLoading ? "not-allowed" : "pointer" }}>
-                            {checkoutLoading === "print" ? "Redirecting..." : "🖨️ Print + Digital — $44.99"}
+                            {checkoutLoading === "print" ? "Redirecting..." : "🖨️ Print + Digital — $37.99"}
                           </button>
                         )}
                       </div>

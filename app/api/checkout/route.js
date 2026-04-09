@@ -1,6 +1,6 @@
 import Stripe from "stripe";
 
-const PRICE = Number(process.env.BOOK_PRICE_CENTS || 499); // $4.99 default
+const PRICE = Number(process.env.BOOK_PRICE_CENTS || 1799); // $17.99 digital
 
 export async function POST(request) {
   if (!process.env.STRIPE_SECRET_KEY) {
@@ -12,7 +12,7 @@ export async function POST(request) {
     const origin = request.headers.get("origin") || "https://mytinytales.studio";
 
     const isPrint   = plan === "print";
-    const unitPrice = isPrint ? Number(process.env.PRINT_PRICE_CENTS || 4499) : PRICE;
+    const unitPrice = isPrint ? Number(process.env.PRINT_PRICE_CENTS || 3799) : PRICE; // $37.99 print
     const planLabel = isPrint ? "Print + Digital" : "Digital";
 
     const session = await stripe.checkout.sessions.create({

@@ -9,43 +9,43 @@ const GOLD = "#f4c430";
 const FAQS = [
   {
     q: "How long does it take to create a book?",
-    a: "Your free preview (first 2 pages) is ready in under 2 minutes. Once you purchase, the full 6-page illustrated book is generated and available to download immediately — usually within 90 seconds. Print orders are produced and shipped within 5–7 business days.",
+    a: "Your personalised preview is ready in under 2 minutes. The full 6-page book generates while you read the preview — so by the time you decide to purchase, it's already done and available to download instantly. Print orders are produced and shipped within 5–7 business days.",
   },
   {
     q: "What photo works best?",
-    a: "For the best results use a clear, well-lit photo where your child's face is plainly visible and looking towards the camera. Avoid photos with sunglasses, heavy shadows, multiple people in frame, or blurry faces. A simple portrait photo or a recent clear selfie works perfectly. The higher the quality of the photo, the better the resemblance in the illustrations.",
+    a: "A clear, well-lit front-facing photo works best — one where your child's face is plainly visible. One photo is enough, though uploading 3–5 photos gives better resemblance in the illustrations. Avoid sunglasses, hats, heavy shadows, or blurry images. A simple portrait or recent selfie is perfect.",
   },
   {
     q: "Is my child's photo safe?",
-    a: "Absolutely. Your child's photo is used only to generate the book illustrations and is permanently deleted from our systems immediately after the generation is complete. We never store, archive, or share photos. The image processing is handled by fal.ai, a trusted AI infrastructure provider, and photos are not retained after your request completes. See our Privacy Policy for full details.",
+    a: "Your photo is used only to generate the illustrations and is permanently deleted immediately after. We never store, share, or use it for anything else — not for training AI models, not for marketing, nothing. See our Privacy Policy for full details.",
   },
   {
     q: "Can I order a printed copy?",
-    a: "Yes! Our Print + Digital option ($44.99) includes a premium hardcover book with lay-flat binding, plus the instant digital PDF. The book is printed and shipped within 5–7 business days, with gift wrapping available. We ship worldwide.",
+    a: "Yes — our Print + Digital plan ($37.99) includes a premium hardcover book with lay-flat binding, plus the instant digital PDF. The book is printed and shipped within 5–7 business days, with gift wrapping available. We ship worldwide.",
   },
   {
     q: "How do I get a refund?",
-    a: "We offer a 30-day satisfaction guarantee. If you are not happy with your book for any reason, email us at hello@mytinytales.studio within 30 days of your purchase. We'll either regenerate the book with adjusted settings until you're delighted, or issue a full refund — your choice. We want every family to love their book.",
+    a: "We offer a 30-day satisfaction guarantee. If you're not delighted with your book for any reason, email us at hello@mytinytales.studio within 30 days of your purchase and we'll make it right — either a regenerated book or a full refund, your choice.",
   },
   {
     q: "Can I customise the story theme?",
-    a: "Yes — during the creation flow you can choose from 6 adventure themes: The Big Adventure, Dragon Tamer, To The Stars, Deep Blue, Jungle Crown, and My Superpower. The AI writes a completely unique story tailored to your chosen theme and your child's name, age, and personality.",
+    a: "Yes — you choose from 6 adventure themes: The Big Adventure, Dragon Tamer, To The Stars, Deep Blue, Jungle Crown, or My Superpower. The AI writes a completely unique story tailored to your chosen theme, your child's name, and their age.",
   },
   {
     q: "Can I share the book with family?",
-    a: "Yes. After your book is generated you'll see a 'Share Book' button that copies a shareable link. Anyone with the link can view the full book — great for sending to grandparents or family far away.",
+    a: "Yes — your digital book comes with a shareable link you can send to grandparents and family anywhere in the world. Anyone with the link can view the full book for free.",
   },
   {
     q: "What format is the digital download?",
-    a: "The digital book is a high-quality PDF, formatted for A4 landscape (the standard double-page spread format). You can print it at home on any printer, send it to a local print shop, or simply read it on screen.",
+    a: "A high-resolution PDF, print-ready at home on standard A4 or letter paper. You can also send it to any local print shop, or simply read it on screen or tablet.",
   },
   {
     q: "Do you offer books in other languages?",
-    a: "Currently My Tiny Tales generates stories in English only. We're working on adding more languages — sign up for updates at hello@mytinytales.studio.",
+    a: "Currently English only, with more languages coming soon. Sign up for updates at hello@mytinytales.studio.",
   },
   {
     q: "What age range is the book suitable for?",
-    a: "We support children aged 1–12. During setup you enter your child's age and our AI adjusts both the writing level and the illustration style accordingly — from very simple one-sentence pages for toddlers, to richer vocabulary and more complex plots for preteens.",
+    a: "Best suited for ages 2–10. During setup you enter your child's age and the AI adjusts both the writing level and illustration style accordingly — from very simple one-sentence pages for toddlers, to richer vocabulary and more complex plots for older children.",
   },
 ];
 

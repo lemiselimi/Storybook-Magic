@@ -434,7 +434,7 @@ export default function LandingPage() {
               <div style={{ marginBottom: 24 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.6)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Digital Book</div>
                 <div style={{ display: "flex", alignItems: "flex-start", gap: 4 }}>
-                  <span style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: 48, fontWeight: 700, color: "white", lineHeight: 1 }}>$24</span>
+                  <span style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: 48, fontWeight: 700, color: "white", lineHeight: 1 }}>$17</span>
                   <span style={{ fontSize: 20, color: "white", marginTop: 8, fontWeight: 700 }}>.99</span>
                 </div>
                 <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 13, margin: "8px 0 0" }}>One-time · Instant delivery</p>
@@ -450,6 +450,14 @@ export default function LandingPage() {
               <Link href="/create" style={{ textDecoration: "none" }}>
                 <button className="cta-btn" style={{ width: "100%", padding: "14px", borderRadius: 50, border: "1px solid rgba(255,255,255,0.25)", background: "transparent", color: "white", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>Preview Free, Then Buy →</button>
               </Link>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 12, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 11 }}>🔒</span>
+                <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 11 }}>Secure Checkout</span>
+                <span style={{ color: "rgba(255,255,255,0.15)", fontSize: 11 }}>·</span>
+                <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 11 }}>Stripe</span>
+                <span style={{ color: "rgba(255,255,255,0.15)", fontSize: 11 }}>·</span>
+                <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 11 }}>SSL Encrypted</span>
+              </div>
             </div>
 
             {/* Print + Digital */}
@@ -459,7 +467,7 @@ export default function LandingPage() {
               <div style={{ marginBottom: 24 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: GOLD, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Print + Digital</div>
                 <div style={{ display: "flex", alignItems: "flex-start", gap: 4 }}>
-                  <span style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: 48, fontWeight: 700, color: "white", lineHeight: 1 }}>$44</span>
+                  <span style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: 48, fontWeight: 700, color: "white", lineHeight: 1 }}>$37</span>
                   <span style={{ fontSize: 20, color: "white", marginTop: 8, fontWeight: 700 }}>.99</span>
                 </div>
                 <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, margin: "8px 0 0" }}>One-time · Ships in 5–7 days</p>
@@ -475,6 +483,14 @@ export default function LandingPage() {
               <Link href="/create" style={{ textDecoration: "none" }}>
                 <button className="cta-btn" style={{ width: "100%", padding: "14px", borderRadius: 50, border: "none", background: `linear-gradient(135deg, ${GOLD}, #ffb347)`, color: PURPLE_DARK, fontWeight: 700, fontSize: 15, cursor: "pointer", boxShadow: "0 6px 24px rgba(245,166,35,0.35)" }}>Preview Free, Then Buy →</button>
               </Link>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 12, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 11 }}>🔒</span>
+                <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 11 }}>Secure Checkout</span>
+                <span style={{ color: "rgba(255,255,255,0.18)", fontSize: 11 }}>·</span>
+                <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 11 }}>Stripe</span>
+                <span style={{ color: "rgba(255,255,255,0.18)", fontSize: 11 }}>·</span>
+                <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 11 }}>SSL Encrypted</span>
+              </div>
             </div>
           </div>
           <p style={{ textAlign: "center", color: "rgba(255,255,255,0.35)", fontSize: 13, marginTop: 24 }}>🛡️ 30-day satisfaction guarantee. If you're not delighted, we'll make it right.</p>

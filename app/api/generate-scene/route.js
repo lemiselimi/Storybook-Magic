@@ -27,7 +27,13 @@ export async function POST(request) {
 
     const characterDesc = `${childName || "the child"}, a ${ageDesc} ${genderWord}${appearance ? ` with ${appearance}` : ""}`;
 
-    const prompt = `a photo of TOK, ${characterDesc}, ${illustration}, cinematic 3D-style children's book illustration, vibrant colors, soft cinematic lighting, magical storybook atmosphere, whimsical and joyful`;
+    const genderDirective = gender === "boy"
+      ? "The child is a boy. All characters, creatures, and companions in the scene must also be clearly masculine or gender-neutral in design. No feminine colors such as pink bows or purple ribbons, no feminine creatures, no princess or fairy aesthetics."
+      : gender === "girl"
+      ? "The child is a girl. Scenes can include feminine elements if appropriate to the theme."
+      : "";
+
+    const prompt = `a photo of TOK, ${characterDesc}, ${illustration}, cinematic 3D-style children's book illustration, vibrant colors, soft cinematic lighting, magical storybook atmosphere, whimsical and joyful${genderDirective ? `. ${genderDirective}` : ""}`;
 
     const result = await fal.subscribe("fal-ai/flux-lora", {
       input: {

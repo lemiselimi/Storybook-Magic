@@ -116,7 +116,7 @@ export default function StorybookCreator() {
   const [falError,         setFalError]         = useState<string | null>(null);
   const [loadingMsg,       setLoadingMsg]       = useState("");
   const [checkoutLoading,  setCheckoutLoading]  = useState<string | null>(null);
-  const [pdfLoading,       setPdfLoading]       = useState(false);
+  const [pdfLoading,       setPdfLoading]       = useState(false); // kept for compat
   const [regeneratingPage, setRegeneratingPage] = useState<number | null>(null);
   const [shareCopied,      setShareCopied]      = useState(false);
   const [isMobile,         setIsMobile]         = useState(false);
@@ -513,23 +513,8 @@ export default function StorybookCreator() {
     try { await navigator.clipboard.writeText(url); setShareCopied(true); setTimeout(() => setShareCopied(false), 2500); } catch {}
   };
 
-  const downloadPDF = async () => {
-    setPdfLoading(true);
-    try {
-      const { jsPDF } = await import("jspdf");
-      const html2canvas = (await import("html2canvas")).default;
-      const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
-      const pdfW = 297, pdfH = 210;
-      const capture = async (id: string) => { const el = document.getElementById(id); return el ? html2canvas(el, { useCORS: true, scale: 3, backgroundColor: null }) : null; };
-      const coverCanvas = await capture("pdf-cover-capture");
-      if (coverCanvas) pdf.addImage(coverCanvas.toDataURL("image/jpeg", 1.0), "JPEG", 0, 0, pdfW, pdfH);
-      for (let i = 0; i < story.pages.length; i++) {
-        const canvas = await capture(`pdf-spread-${i}`);
-        if (canvas) { pdf.addPage("a4", "landscape"); pdf.addImage(canvas.toDataURL("image/jpeg", 1.0), "JPEG", 0, 0, pdfW, pdfH); }
-      }
-      pdf.save(`${(story.title || "StoryBook").replace(/[^a-z0-9]/gi, "_")}.pdf`);
-    } catch (err) { console.error("PDF error:", err); alert("PDF generation failed. Please try again."); }
-    setPdfLoading(false);
+  const printBook = () => {
+    window.print();
   };
 
   const resetAll = () => {
@@ -696,6 +681,24 @@ export default function StorybookCreator() {
         .scene-wrap:hover .regen-btn{opacity:1;}
         .theme-card{transition:transform 0.15s ease,box-shadow 0.15s ease;}
         .theme-card:hover{transform:translateY(-4px);box-shadow:0 8px 28px rgba(0,0,0,0.3)!important;}
+
+        /* ── Print styles ── */
+        @media print {
+          @page { size: landscape; margin: 0; }
+          body > *:not(#print-book-root) { display: none !important; }
+          #print-book-root { display: block !important; }
+          .print-page {
+            width: 100vw; height: 100vh;
+            page-break-after: always;
+            break-after: page;
+            overflow: hidden;
+            display: flex;
+          }
+          .print-page:last-child { page-break-after: avoid; break-after: avoid; }
+        }
+        @media not print {
+          #print-book-root { display: none !important; }
+        }
       `}</style>
 
       {/* Logo */}
@@ -1078,16 +1081,20 @@ export default function StorybookCreator() {
               </div>
 
               {/* Bottom 40%: dark purple title banner */}
-              <div style={{ flex: "0 0 40%", background: "linear-gradient(160deg, #0d071e 0%, #1a0a2e 60%, #150d28 100%)", borderTop: "1.5px solid rgba(255,215,0,0.3)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: isMobile ? "18px 24px 14px" : "24px 48px 20px", textAlign: "center", gap: isMobile ? 8 : 10 }}>
-                <p style={{ color: "rgba(255,215,0,0.6)", fontSize: isMobile ? 8 : 9, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", margin: 0 }}>A My Tiny Tales Original Storybook</p>
-                <h1 style={{ fontFamily: "var(--font-playfair, Georgia, serif)", color: "white", fontSize: isMobile ? 24 : 36, fontWeight: 900, margin: 0, lineHeight: 1.15, letterSpacing: "-0.01em", textShadow: "0 2px 16px rgba(0,0,0,0.6)" }}>
+              <div style={{ flex: "0 0 40%", background: "linear-gradient(160deg, #0d071e 0%, #1a0a2e 60%, #150d28 100%)", borderTop: "1.5px solid rgba(255,215,0,0.3)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: isMobile ? "16px 22px 14px" : "22px 48px 20px", textAlign: "center", gap: isMobile ? 7 : 9 }}>
+                {/* Badge — top of banner */}
+                <div style={{ display: "flex", alignItems: "center", gap: 5, background: "linear-gradient(135deg, #ffd700, #ffb347)", borderRadius: 50, padding: isMobile ? "4px 12px" : "5px 16px", boxShadow: "0 3px 12px rgba(0,0,0,0.4)" }}>
+                  <span style={{ fontSize: isMobile ? 11 : 13 }}>✨</span>
+                  <span style={{ color: "#1a0a2e", fontWeight: 800, fontSize: isMobile ? 9 : 11, letterSpacing: "0.05em" }}>My Tiny Tales</span>
+                </div>
+                {/* Child's name — large bold title */}
+                <h1 style={{ fontFamily: "var(--font-playfair, Georgia, serif)", color: "white", fontSize: isMobile ? 28 : 42, fontWeight: 900, margin: 0, lineHeight: 1.1, letterSpacing: "-0.02em", textShadow: "0 2px 20px rgba(0,0,0,0.7)" }}>
                   {story.title}
                 </h1>
-                <p style={{ color: "rgba(255,255,255,0.5)", fontFamily: "Georgia, serif", fontStyle: "italic", fontSize: isMobile ? 12 : 14, margin: 0 }}>{story.dedication}</p>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, background: "linear-gradient(135deg, #ffd700, #ffb347)", borderRadius: 50, padding: isMobile ? "5px 14px" : "6px 18px", boxShadow: "0 4px 16px rgba(0,0,0,0.4)", marginTop: isMobile ? 2 : 4 }}>
-                  <span style={{ fontSize: isMobile ? 12 : 14 }}>✨</span>
-                  <span style={{ color: "#1a0a2e", fontWeight: 800, fontSize: isMobile ? 10 : 12, letterSpacing: "0.04em" }}>My Tiny Tales</span>
-                </div>
+                {/* Theme subtitle */}
+                <p style={{ color: "rgba(255,215,0,0.7)", fontFamily: "Georgia, serif", fontStyle: "italic", fontSize: isMobile ? 12 : 15, margin: 0, letterSpacing: "0.03em" }}>
+                  {THEMES.find(t => t.id === theme)?.subtitle ?? story.dedication}
+                </p>
               </div>
             </div>
           ) : (
@@ -1108,8 +1115,8 @@ export default function StorybookCreator() {
           </div>
 
           <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 16, flexWrap: "wrap" }}>
-            <button onClick={downloadPDF} disabled={pdfLoading} style={{ padding: "10px 20px", borderRadius: 11, border: "none", background: pdfLoading ? "rgba(255,255,255,0.1)" : "linear-gradient(135deg, #43e97b, #38f9d7)", color: pdfLoading ? "rgba(255,255,255,0.4)" : "#1a2e1a", fontSize: 13, fontWeight: 700, cursor: pdfLoading ? "not-allowed" : "pointer" }}>
-              {pdfLoading ? "⏳ Generating..." : "📥 Download PDF"}
+            <button onClick={printBook} style={{ padding: "10px 20px", borderRadius: 11, border: "none", background: "linear-gradient(135deg, #43e97b, #38f9d7)", color: "#1a2e1a", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+              🖨️ Print / Save PDF
             </button>
             <button onClick={copyShareLink} style={{ padding: "10px 20px", borderRadius: 11, border: "1px solid rgba(255,255,255,0.15)", background: shareCopied ? "linear-gradient(135deg, #667eea, #764ba2)" : "rgba(255,255,255,0.1)", color: shareCopied ? "white" : "rgba(255,255,255,0.8)", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.3s" }}>
               {shareCopied ? "✓ Link Copied!" : "🔗 Share Book"}
@@ -1119,30 +1126,25 @@ export default function StorybookCreator() {
         </div>
       )}
 
-      {/* Off-screen PDF targets */}
+      {/* ── Print-only book pages (hidden on screen, shown on print) ── */}
       {mainStep === "book" && story && (
-        <div style={{ position: "fixed", left: "-9999px", top: 0, width: 880, pointerEvents: "none" }} aria-hidden="true">
-          {/* PDF Cover — split layout matching the book view */}
-          <div id="pdf-cover-capture" style={{ width: 880, height: 560, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-            {/* Top 60%: clean illustration */}
-            <div style={{ flex: "0 0 60%", position: "relative", background: "linear-gradient(160deg, #1a0a2e, #4a2060, #1a3040)", overflow: "hidden" }}>
+        <div id="print-book-root">
+          {/* Print Cover page */}
+          <div className="print-page" style={{ flexDirection: "column", background: "#0d071e" }}>
+            <div style={{ flex: "0 0 60%", position: "relative", overflow: "hidden", background: "linear-gradient(160deg, #1a0a2e, #4a2060, #1a3040)" }}>
               {coverImageUrl && <img crossOrigin="anonymous" src={coverImageUrl} alt="cover" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />}
-              <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "30%", background: "linear-gradient(to bottom, transparent, rgba(13,7,30,0.6))" }} />
             </div>
-            {/* Bottom 40%: dark banner */}
-            <div style={{ flex: "0 0 40%", background: "linear-gradient(160deg, #0d071e, #1a0a2e, #150d28)", borderTop: "1.5px solid rgba(255,215,0,0.3)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 80px 20px", textAlign: "center", gap: 10 }}>
-              <div style={{ color: "rgba(255,215,0,0.6)", fontSize: 9, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase" }}>A My Tiny Tales Original Storybook</div>
-              <div style={{ color: "white", fontSize: 38, fontWeight: 900, fontFamily: "Georgia, serif", lineHeight: 1.15 }}>{story.title}</div>
-              <div style={{ color: "rgba(255,255,255,0.5)", fontStyle: "italic", fontSize: 15, fontFamily: "Georgia, serif" }}>{story.dedication}</div>
-              <div style={{ display: "flex", alignItems: "center", gap: 7, background: "linear-gradient(135deg, #ffd700, #ffb347)", borderRadius: 50, padding: "7px 20px", marginTop: 4 }}>
-                <span style={{ fontSize: 15 }}>✨</span>
-                <span style={{ color: "#1a0a2e", fontWeight: 800, fontSize: 13 }}>My Tiny Tales</span>
+            <div style={{ flex: "0 0 40%", background: "linear-gradient(160deg, #0d071e, #1a0a2e)", borderTop: "1.5px solid rgba(255,215,0,0.3)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", gap: 10, padding: "20px 80px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, background: "linear-gradient(135deg, #ffd700, #ffb347)", borderRadius: 50, padding: "5px 16px" }}>
+                <span>✨</span><span style={{ color: "#1a0a2e", fontWeight: 800, fontSize: 12 }}>My Tiny Tales</span>
               </div>
+              <div style={{ color: "white", fontSize: 38, fontWeight: 900, fontFamily: "Georgia, serif", lineHeight: 1.15 }}>{story.title}</div>
+              <div style={{ color: "rgba(255,215,0,0.7)", fontStyle: "italic", fontSize: 15, fontFamily: "Georgia, serif" }}>{THEMES.find(t => t.id === theme)?.subtitle ?? story.dedication}</div>
             </div>
           </div>
-          {/* PDF Spreads */}
+          {/* Print spreads — one per page */}
           {story.pages.map((_: any, i: number) => (
-            <div key={i} id={`pdf-spread-${i}`} style={{ width: 880, overflow: "hidden" }}>
+            <div key={i} className="print-page">
               <BookSpread spreadIndex={i} />
             </div>
           ))}

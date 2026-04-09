@@ -12,8 +12,9 @@ export async function POST(request) {
     const hairDesc       = hairColor ? `${hairColor.replace(/-/g, " ")} hair` : "";
     const eyeDesc        = eyeColor  ? `${eyeColor.replace(/-/g, " ")} eyes`  : "";
     const appearanceParts = [hairDesc, eyeDesc].filter(Boolean);
+    // Appearance is passed only for illustration descriptions — never mentioned in story text
     const appearanceNote = appearanceParts.length
-      ? `The child has ${appearanceParts.join(" and ")}. Mention this naturally once early in the story.`
+      ? `Appearance for illustration descriptions only: ${appearanceParts.join(", ")}. Use this ONLY in the "illustration" fields, never in the story text.`
       : "";
 
     const ageNum = Number(childAge) || 5;
@@ -30,6 +31,8 @@ export async function POST(request) {
       messages: [{
         role: "user",
         content: `Create a 6-page children's book for ${childName || "a child"}, age ${childAge || 5}, gender: ${gender === "girl" ? "girl (use she/her)" : gender === "boy" ? "boy (use he/him)" : "neutral (use they/them)"}, with the theme: ${theme}. ${appearanceNote}
+
+IMPORTANT: Never describe the child's physical appearance in the story text. Do not mention hair colour, eye colour, skin tone, height, or any physical traits. The story should focus entirely on personality, actions, emotions, and adventure.
 
 Age writing level — ${ageGuidance}
 

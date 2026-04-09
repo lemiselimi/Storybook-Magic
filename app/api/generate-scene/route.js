@@ -27,7 +27,7 @@ export async function POST(request) {
 
     const characterDesc = `${childName || "the child"}, a ${ageDesc} ${genderWord}${appearance ? ` with ${appearance}` : ""}`;
 
-    const prompt = `a photo of TOK, ${characterDesc}, ${illustration}, cinematic 3D animated children's book illustration, Disney-quality CGI render, vibrant colors, soft cinematic lighting, magical storybook atmosphere, whimsical and joyful`;
+    const prompt = `a photo of TOK, ${characterDesc}, ${illustration}, cinematic 3D-style children's book illustration, vibrant colors, soft cinematic lighting, magical storybook atmosphere, whimsical and joyful`;
 
     const result = await fal.subscribe("fal-ai/flux-lora", {
       input: {

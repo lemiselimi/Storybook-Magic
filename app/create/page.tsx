@@ -535,9 +535,8 @@ export default function StorybookCreator() {
   const displayPhoto = photos[0] ?? null;
 
   // ── BookPage / BookSpread — premium printed book layout ──────────────────────
-  const BookTextPage = ({ page, isLast }: { page: any; isLast?: boolean }) => {
+  const BookTextPage = ({ page }: { page: any }) => {
     const chapterNum = CHAPTER_NAMES[(page.pageNum - 1)] || String(page.pageNum);
-    const closingMsg = isLast ? (THEME_CLOSING[theme]?.(childName) || "") : "";
     return (
       <div style={{ flex: 1, background: "linear-gradient(160deg, #1a0a2e 0%, #2d1b4e 100%)", display: "flex", flexDirection: "column", justifyContent: "space-between", padding: isMobile ? "24px 22px 20px" : "44px 42px 36px", position: "relative", overflow: "hidden" }}>
         {/* Subtle radial glow */}
@@ -554,19 +553,10 @@ export default function StorybookCreator() {
         </div>
 
         {/* Story text */}
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: isMobile ? "20px 0" : "28px 0" }}>
+        <div style={{ flex: 1, display: "flex", alignItems: "center", padding: isMobile ? "20px 0" : "28px 0" }}>
           <p style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: isMobile ? 15 : 18, lineHeight: 2, color: "rgba(255,255,255,0.92)", margin: 0, letterSpacing: "0.01em" }}>
             {page.text}
           </p>
-          {isLast && (
-            <>
-              <div style={{ height: 1, background: "rgba(255,215,0,0.18)", margin: "22px 0" }} />
-              <p style={{ fontFamily: "Georgia, serif", fontSize: isMobile ? 13 : 15, lineHeight: 1.85, color: "rgba(255,215,0,0.75)", fontStyle: "italic", margin: 0 }}>
-                {closingMsg}
-              </p>
-              <p style={{ fontFamily: "Georgia, serif", fontSize: isMobile ? 16 : 20, color: "rgba(255,215,0,0.55)", fontStyle: "italic", margin: "20px 0 0", textAlign: "center", letterSpacing: "0.04em" }}>✦ The End ✦</p>
-            </>
-          )}
         </div>
 
         {/* Page number */}
@@ -604,24 +594,35 @@ export default function StorybookCreator() {
 
   const BookSpread = ({ spreadIndex }: { spreadIndex: number }) => {
     const page = story.pages[spreadIndex];
-    const isLast = spreadIndex === story.pages.length - 1;
     if (!page) return null;
-    // Mobile: illustration on top, text below
     if (isMobile) return (
       <div style={{ display: "flex", flexDirection: "column" }}>
         <BookIllustrationPage page={page} />
-        <BookTextPage page={page} isLast={isLast} />
+        <BookTextPage page={page} />
       </div>
     );
-    // Desktop: left = text (purple), spine, right = full-bleed illustration
     return (
       <div style={{ display: "flex", width: "100%", height: 500 }}>
-        <BookTextPage page={page} isLast={isLast} />
+        <BookTextPage page={page} />
         <div style={{ width: 10, flexShrink: 0, background: "linear-gradient(to right, #0a0518 0%, #1a0a2e 40%, #0d0818 100%)", boxShadow: "inset -4px 0 8px rgba(0,0,0,0.4), inset 4px 0 8px rgba(0,0,0,0.4)" }} />
         <BookIllustrationPage page={page} />
       </div>
     );
   };
+
+  // ── Shared dark-page frame (dedication + closing) ─────────────────────────────
+  const DarkFrame = ({ children }: { children: React.ReactNode }) => (
+    <div style={{ borderRadius: isMobile ? 16 : 20, overflow: "hidden", boxShadow: "0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,215,0,0.18)", animation: "fadeUp 0.4s ease both", background: "linear-gradient(160deg, #0d071e 0%, #2D1B69 50%, #0d071e 100%)", minHeight: isMobile ? 420 : 560, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", padding: isMobile ? 32 : 60 }}>
+      {/* Double gold border */}
+      <div style={{ position: "absolute", inset: isMobile ? 16 : 24, border: "1.5px solid rgba(255,215,0,0.35)", borderRadius: 10, pointerEvents: "none" }} />
+      <div style={{ position: "absolute", inset: isMobile ? 24 : 36, border: "0.5px solid rgba(255,215,0,0.15)", borderRadius: 6, pointerEvents: "none" }} />
+      {/* Corner sparkles */}
+      {(["6%,6%", "88%,6%", "6%,88%", "88%,88%"] as const).map((pos, i) => (
+        <span key={i} style={{ position: "absolute", left: pos.split(",")[0], top: pos.split(",")[1], color: "rgba(255,215,0,0.5)", fontSize: isMobile ? 14 : 18, lineHeight: 1 }}>✦</span>
+      ))}
+      <div style={{ position: "relative", zIndex: 1, textAlign: "center", maxWidth: 500 }}>{children}</div>
+    </div>
+  );
 
   // ── Mascot ────────────────────────────────────────────────────────────────────
   const Mascot = ({ msg }: { msg: string }) => (
@@ -685,14 +686,25 @@ export default function StorybookCreator() {
         /* ── Print styles ── */
         @media print {
           @page { size: landscape; margin: 0; }
-          body > *:not(#print-book-root) { display: none !important; }
-          #print-book-root { display: block !important; }
+          body * { visibility: hidden; }
+          #print-book-root, #print-book-root * {
+            visibility: visible;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            color-adjust: exact;
+          }
+          #print-book-root {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            overflow: visible;
+          }
           .print-page {
             width: 100vw; height: 100vh;
             page-break-after: always;
             break-after: page;
             overflow: hidden;
-            display: flex;
+            display: flex !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
           }
           .print-page:last-child { page-break-after: avoid; break-after: avoid; }
         }
@@ -1066,56 +1078,92 @@ export default function StorybookCreator() {
           {falError    && <div style={{ background: "rgba(255,100,100,0.09)", border: "1px solid rgba(255,100,100,0.25)", borderRadius: 10, padding: "9px 14px", marginBottom: 12, color: "#ffaaaa", fontSize: 13, textAlign: "center" }}>⚠️ {falError}</div>}
           {isSharedView && <div style={{ background: "rgba(255,215,0,0.07)", border: "1px solid rgba(255,215,0,0.2)", borderRadius: 10, padding: "8px 14px", marginBottom: 12, color: "rgba(255,215,0,0.8)", fontSize: 13, textAlign: "center" }}>📖 Viewing a shared storybook</div>}
 
-          {currentPage === -1 ? (
-            // ── BOOK COVER — split layout: top 60% clean illustration, bottom 40% banner ─
+          {currentPage === -2 ? (
+            // ── DEDICATION PAGE ──────────────────────────────────────────────────
+            <DarkFrame>
+              <p style={{ color: "rgba(255,215,0,0.6)", fontSize: isMobile ? 10 : 12, fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase", margin: "0 0 20px", fontFamily: "Georgia, serif" }}>
+                This story was created especially for
+              </p>
+              <h1 style={{ fontFamily: "var(--font-playfair, Georgia, serif)", color: "white", fontSize: isMobile ? 40 : 56, fontWeight: 900, margin: "0 0 24px", letterSpacing: "-0.02em", lineHeight: 1.05 }}>
+                {childName || "You"}
+              </h1>
+              <div style={{ height: 1, background: "rgba(255,215,0,0.25)", maxWidth: 240, margin: "0 auto 24px" }} />
+              <p style={{ fontFamily: "Georgia, 'Times New Roman', serif", color: "rgba(255,255,255,0.78)", fontSize: isMobile ? 14 : 17, lineHeight: 1.9, fontStyle: "italic", margin: "0 0 32px" }}>
+                "May every adventure remind you how loved, brave, and magical you are."
+              </p>
+              <p style={{ color: "rgba(255,215,0,0.4)", fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.16em", margin: 0 }}>✦ My Tiny Tales ✦</p>
+            </DarkFrame>
+          ) : currentPage === -1 ? (
+            // ── BOOK COVER — top 60% illustration, bottom 40% banner ──────────
             <div style={{ borderRadius: isMobile ? 16 : 20, overflow: "hidden", boxShadow: "0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,215,0,0.12)", animation: "fadeUp 0.4s ease both", cursor: "pointer", display: "flex", flexDirection: "column", minHeight: isMobile ? 420 : 560 }} onClick={() => navigate(0)}>
-              {/* Top 60%: clean illustration — NO overlaid text */}
-              <div style={{ flex: "0 0 60%", position: "relative", overflow: "hidden", background: "linear-gradient(160deg, #1a0a2e 0%, #4a2060 50%, #1a3040 100%)" }}>
-                {coverImageUrl && <img crossOrigin="anonymous" src={coverImageUrl} alt="Book cover" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />}
-                {/* Subtle bottom fade into banner */}
-                <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "30%", background: "linear-gradient(to bottom, transparent, rgba(13,7,30,0.6))" }} />
-                {/* Open hint */}
-                <div style={{ position: "absolute", top: isMobile ? 12 : 16, right: isMobile ? 12 : 16 }}>
-                  <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 11, background: "rgba(0,0,0,0.45)", borderRadius: 8, padding: "4px 10px", backdropFilter: "blur(4px)" }}>Tap to open →</span>
-                </div>
-              </div>
-
+              {/* Top 60%: clean illustration */}
+              {(() => {
+                const coverSrc = coverImageUrl || pageImages[0];
+                if (typeof window !== "undefined") console.log("[Cover] coverImageUrl:", coverImageUrl, "pageImages[0]:", pageImages[0], "using:", coverSrc);
+                return (
+                  <div style={{ flex: "0 0 60%", position: "relative", overflow: "hidden", background: "linear-gradient(160deg, #1a0a2e 0%, #4a2060 50%, #1a3040 100%)" }}>
+                    {coverSrc && <img crossOrigin="anonymous" src={coverSrc} alt="Book cover" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }} />}
+                    <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "28%", background: "linear-gradient(to bottom, transparent, rgba(13,7,30,0.65))" }} />
+                    <div style={{ position: "absolute", top: isMobile ? 12 : 16, right: isMobile ? 12 : 16 }}>
+                      <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 11, background: "rgba(0,0,0,0.45)", borderRadius: 8, padding: "4px 10px", backdropFilter: "blur(4px)" }}>Tap to open →</span>
+                    </div>
+                  </div>
+                );
+              })()}
               {/* Bottom 40%: dark purple title banner */}
-              <div style={{ flex: "0 0 40%", background: "linear-gradient(160deg, #0d071e 0%, #1a0a2e 60%, #150d28 100%)", borderTop: "1.5px solid rgba(255,215,0,0.3)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: isMobile ? "16px 22px 14px" : "22px 48px 20px", textAlign: "center", gap: isMobile ? 7 : 9 }}>
-                {/* Badge — top of banner */}
-                <div style={{ display: "flex", alignItems: "center", gap: 5, background: "linear-gradient(135deg, #ffd700, #ffb347)", borderRadius: 50, padding: isMobile ? "4px 12px" : "5px 16px", boxShadow: "0 3px 12px rgba(0,0,0,0.4)" }}>
+              <div style={{ flex: "0 0 40%", background: "linear-gradient(160deg, #0d071e 0%, #2D1B69 60%, #150d28 100%)", borderTop: "1.5px solid rgba(255,215,0,0.3)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: isMobile ? "16px 22px 14px" : "22px 48px 20px", textAlign: "center", gap: isMobile ? 7 : 9 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 5, background: "linear-gradient(135deg, #F5A623, #ffb347)", borderRadius: 50, padding: isMobile ? "4px 12px" : "5px 16px", boxShadow: "0 3px 12px rgba(0,0,0,0.4)" }}>
                   <span style={{ fontSize: isMobile ? 11 : 13 }}>✨</span>
                   <span style={{ color: "#1a0a2e", fontWeight: 800, fontSize: isMobile ? 9 : 11, letterSpacing: "0.05em" }}>My Tiny Tales</span>
                 </div>
-                {/* Child's name — large bold title */}
                 <h1 style={{ fontFamily: "var(--font-playfair, Georgia, serif)", color: "white", fontSize: isMobile ? 28 : 42, fontWeight: 900, margin: 0, lineHeight: 1.1, letterSpacing: "-0.02em", textShadow: "0 2px 20px rgba(0,0,0,0.7)" }}>
                   {story.title}
                 </h1>
-                {/* Theme subtitle */}
                 <p style={{ color: "rgba(255,215,0,0.7)", fontFamily: "Georgia, serif", fontStyle: "italic", fontSize: isMobile ? 12 : 15, margin: 0, letterSpacing: "0.03em" }}>
                   {THEMES.find(t => t.id === theme)?.subtitle ?? story.dedication}
                 </p>
               </div>
             </div>
-          ) : (
+          ) : currentPage < totalPages ? (
+            // ── STORY SPREADS ────────────────────────────────────────────────────
             <div key={`spread-${currentPage}`} style={{ borderRadius: isMobile ? 12 : 16, overflow: "hidden", boxShadow: "0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,215,0,0.08)", animation: `${navDir === "fwd" ? "slideInFwd" : "slideInBack"} 0.25s ease both` }}>
               <BookSpread spreadIndex={currentPage} />
             </div>
+          ) : (
+            // ── CLOSING KEEPSAKE PAGE ────────────────────────────────────────────
+            <DarkFrame>
+              <p style={{ fontFamily: "Georgia, 'Times New Roman', serif", color: "rgba(255,215,0,0.82)", fontSize: isMobile ? 15 : 19, lineHeight: 1.95, fontStyle: "italic", margin: "0 0 28px" }}>
+                {THEME_CLOSING[theme]?.(childName) || `Remember, ${childName}: every great adventure begins with one brave step. The world is full of magic — and you have everything it takes to find it.`}
+              </p>
+              <div style={{ height: 1, background: "rgba(255,215,0,0.22)", maxWidth: 200, margin: "0 auto 20px" }} />
+              <p style={{ color: "rgba(255,215,0,0.6)", fontFamily: "Georgia, serif", fontSize: isMobile ? 18 : 24, letterSpacing: "0.1em", margin: "0 0 24px" }}>✦ The End ✦</p>
+              <div style={{ fontSize: isMobile ? 28 : 36, margin: "0 0 20px" }}>📖</div>
+              <p style={{ color: "rgba(255,255,255,0.28)", fontFamily: "Georgia, serif", fontSize: 12, fontStyle: "italic", margin: "0 0 16px" }}>
+                Created with love · {new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
+              </p>
+              <p style={{ color: "rgba(255,215,0,0.35)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.16em", margin: 0 }}>✦ My Tiny Tales ✦</p>
+            </DarkFrame>
           )}
 
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: isMobile ? 10 : 16, marginTop: 18 }}>
-            <button onClick={() => navigate(Math.max(-1, currentPage - 1))} disabled={currentPage === -1} style={{ padding: isMobile ? "10px 16px" : "11px 22px", borderRadius: 11, border: "1px solid rgba(255,255,255,0.18)", background: "rgba(255,255,255,0.07)", color: "white", fontSize: 14, cursor: currentPage === -1 ? "not-allowed" : "pointer", opacity: currentPage === -1 ? 0.3 : 1 }}>← Prev</button>
-            <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-              <div onClick={() => navigate(-1)} style={{ width: currentPage === -1 ? 10 : 7, height: currentPage === -1 ? 10 : 7, borderRadius: "50%", background: currentPage === -1 ? "#ffd700" : "rgba(255,255,255,0.25)", cursor: "pointer", transition: "all 0.2s" }} />
+            <button onClick={() => navigate(Math.max(-2, currentPage - 1))} disabled={currentPage === -2} style={{ padding: isMobile ? "10px 16px" : "11px 22px", borderRadius: 11, border: "1px solid rgba(255,255,255,0.18)", background: "rgba(255,255,255,0.07)", color: "white", fontSize: 14, cursor: currentPage === -2 ? "not-allowed" : "pointer", opacity: currentPage === -2 ? 0.3 : 1 }}>← Prev</button>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              {/* Dedication dot */}
+              <div onClick={() => navigate(-2)} style={{ width: currentPage === -2 ? 10 : 6, height: currentPage === -2 ? 10 : 6, borderRadius: "50%", background: currentPage === -2 ? "#ffd700" : "rgba(255,255,255,0.2)", cursor: "pointer", transition: "all 0.2s" }} />
+              {/* Cover dot */}
+              <div onClick={() => navigate(-1)} style={{ width: currentPage === -1 ? 10 : 6, height: currentPage === -1 ? 10 : 6, borderRadius: "50%", background: currentPage === -1 ? "#ffd700" : "rgba(255,255,255,0.2)", cursor: "pointer", transition: "all 0.2s" }} />
+              {/* Page dots */}
               {story.pages.map((_: any, i: number) => (
-                <div key={i} onClick={() => navigate(i)} style={{ width: currentPage === i ? 10 : 7, height: currentPage === i ? 10 : 7, borderRadius: "50%", background: currentPage === i ? "#ffd700" : "rgba(255,255,255,0.25)", cursor: "pointer", transition: "all 0.2s" }} />
+                <div key={i} onClick={() => navigate(i)} style={{ width: currentPage === i ? 10 : 6, height: currentPage === i ? 10 : 6, borderRadius: "50%", background: currentPage === i ? "#ffd700" : "rgba(255,255,255,0.2)", cursor: "pointer", transition: "all 0.2s" }} />
               ))}
+              {/* Closing dot */}
+              <div onClick={() => navigate(totalPages)} style={{ width: currentPage === totalPages ? 10 : 6, height: currentPage === totalPages ? 10 : 6, borderRadius: "50%", background: currentPage === totalPages ? "#ffd700" : "rgba(255,255,255,0.2)", cursor: "pointer", transition: "all 0.2s" }} />
             </div>
-            <button onClick={() => navigate(Math.min(totalPages - 1, currentPage + 1))} disabled={currentPage >= totalPages - 1} style={{ padding: isMobile ? "10px 16px" : "11px 22px", borderRadius: 11, border: "none", background: "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 14, fontWeight: 600, cursor: currentPage >= totalPages - 1 ? "not-allowed" : "pointer", opacity: currentPage >= totalPages - 1 ? 0.4 : 1 }}>Next →</button>
+            <button onClick={() => navigate(Math.min(totalPages, currentPage + 1))} disabled={currentPage >= totalPages} style={{ padding: isMobile ? "10px 16px" : "11px 22px", borderRadius: 11, border: "none", background: "linear-gradient(135deg, #F5A623, #ffb347)", color: "#1a0a2e", fontSize: 14, fontWeight: 600, cursor: currentPage >= totalPages ? "not-allowed" : "pointer", opacity: currentPage >= totalPages ? 0.4 : 1 }}>Next →</button>
           </div>
 
           <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 16, flexWrap: "wrap" }}>
-            <button onClick={printBook} style={{ padding: "10px 20px", borderRadius: 11, border: "none", background: "linear-gradient(135deg, #43e97b, #38f9d7)", color: "#1a2e1a", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+            <button onClick={printBook} style={{ padding: "10px 20px", borderRadius: 11, border: "none", background: "linear-gradient(135deg, #F5A623, #ffb347)", color: "#1a0a2e", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
               🖨️ Print / Save PDF
             </button>
             <button onClick={copyShareLink} style={{ padding: "10px 20px", borderRadius: 11, border: "1px solid rgba(255,255,255,0.15)", background: shareCopied ? "linear-gradient(135deg, #667eea, #764ba2)" : "rgba(255,255,255,0.1)", color: shareCopied ? "white" : "rgba(255,255,255,0.8)", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.3s" }}>

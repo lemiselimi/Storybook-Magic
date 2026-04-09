@@ -1,6 +1,6 @@
 import { fal } from "@fal-ai/client";
 
-export const maxDuration = 300; // 5 minutes — LoRA training takes ~2–3 min
+export const maxDuration = 60; // Only needs to upload ZIP + submit job
 
 export async function POST(request) {
   fal.config({ credentials: process.env.FAL_API_KEY });
@@ -28,9 +28,9 @@ export async function POST(request) {
     const zipUrl = await fal.storage.upload(zipFile);
     console.log("ZIP uploaded:", zipUrl);
 
-    // Train LoRA
-    console.log("Starting LoRA training...");
-    const result = await fal.subscribe("fal-ai/flux-lora-fast-training", {
+    // Submit LoRA training job — fire and return immediately (no blocking await)
+    console.log("Submitting LoRA training job...");
+    const { request_id } = await fal.queue.submit("fal-ai/flux-lora-fast-training", {
       input: {
         images_data_url: zipUrl,
         trigger_word: "TOK",
@@ -39,16 +39,10 @@ export async function POST(request) {
         learning_rate: 0.0004,
         multiresolution_training: true,
       },
-      logs: true,
-      onQueueUpdate: (update) => {
-        const lastLog = update.logs?.slice(-1)?.[0]?.message;
-        console.log("LoRA training:", update.status, lastLog ?? "");
-      },
     });
 
-    const loraUrl = result.data.diffusers_lora_file?.url;
-    console.log("LoRA training complete:", loraUrl);
-    return Response.json({ url: loraUrl });
+    console.log("LoRA job submitted, request_id:", request_id);
+    return Response.json({ jobId: request_id, status: "IN_QUEUE" });
   } catch (err) {
     console.error("LoRA training error:", err.message);
     return Response.json({ error: err.message }, { status: 500 });

@@ -245,17 +245,51 @@ export default function StorybookCreator() {
   };
 
   // ── LoRA training (called at step 3 → 4, after gender/age collected) ──────────
+  // Submits the job immediately, then polls /api/check-lora every 5 s until done.
+  // loraTrainingRef.current is a Promise that resolves when training completes,
+  // so generatePreview can await it before generating scenes.
   const startLoraTraining = useCallback((base64s: string[]) => {
     setLoraStatus("loading");
     const promise = (async () => {
       try {
-        const res = await fetch("/api/train-lora", {
+        // Step 1: upload ZIP + submit job (returns immediately with jobId)
+        const submitRes = await fetch("/api/train-lora", {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ photosBase64: base64s }),
         }).then(r => r.json());
-        if (res.url) {
-          setLoraUrl(res.url); loraUrlRef.current = res.url; setLoraStatus("done");
-        } else { setLoraStatus("error"); }
+
+        if (submitRes.error || !submitRes.jobId) {
+          console.error("LoRA submit failed:", submitRes.error);
+          setLoraStatus("error"); return;
+        }
+
+        const jobId = submitRes.jobId;
+        console.log("LoRA job submitted:", jobId);
+
+        // Step 2: poll until COMPLETED (every 5 s, up to ~10 min)
+        for (let i = 0; i < 120; i++) {
+          await new Promise<void>(resolve => setTimeout(resolve, 5000));
+          try {
+            const pollRes = await fetch("/api/check-lora", {
+              method: "POST", headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ jobId }),
+            }).then(r => r.json());
+
+            if (pollRes.status === "COMPLETED" && pollRes.loraUrl) {
+              setLoraUrl(pollRes.loraUrl);
+              loraUrlRef.current = pollRes.loraUrl;
+              setLoraStatus("done");
+              return;
+            }
+            if (pollRes.error || pollRes.status === "FAILED") {
+              console.error("LoRA poll error:", pollRes.error ?? pollRes.status);
+              setLoraStatus("error"); return;
+            }
+            // IN_QUEUE or IN_PROGRESS — keep polling
+          } catch { /* network blip — retry next iteration */ }
+        }
+        // Timeout after 120 polls × 5 s = 10 min
+        setLoraStatus("error");
       } catch { setLoraStatus("error"); }
     })();
     loraTrainingRef.current = promise;
@@ -580,11 +614,12 @@ export default function StorybookCreator() {
           </div>
         ) : sceneImg ? (
           <img crossOrigin="anonymous" src={sceneImg} alt={`Page ${page.pageNum}`} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
-        ) : displayPhoto ? (
-          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <img crossOrigin="anonymous" src={displayPhoto} alt="hero" style={{ maxHeight: "80%", maxWidth: "70%", objectFit: "contain", filter: "drop-shadow(0 8px 24px rgba(0,0,0,0.5))" }} />
+        ) : (
+          /* Placeholder while AI illustration is generating */
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(160deg, #1a0a2e 0%, #2d1b4e 60%, #0d071e 100%)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 36, height: 36, border: "3px solid rgba(255,215,0,0.15)", borderTop: "3px solid rgba(255,215,0,0.5)", borderRadius: "50%", animation: "spin 1.2s linear infinite" }} />
           </div>
-        ) : null}
+        )}
         {!isSharedView && loraUrl && !isRegen && (
           <button className="regen-btn" onClick={() => regenerateScene(page.pageNum - 1)} style={{ position: "absolute", bottom: 12, right: 12, background: "rgba(0,0,0,0.6)", border: "1px solid rgba(255,255,255,0.18)", borderRadius: 8, padding: "5px 10px", color: "rgba(255,255,255,0.75)", fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, backdropFilter: "blur(4px)" }}>🔄 Redo</button>
         )}
@@ -686,25 +721,33 @@ export default function StorybookCreator() {
         /* ── Print styles ── */
         @media print {
           @page { size: landscape; margin: 0; }
-          body * { visibility: hidden; }
-          #print-book-root, #print-book-root * {
-            visibility: visible;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-            color-adjust: exact;
+          body * { visibility: hidden !important; }
+          #print-book-root,
+          #print-book-root * {
+            visibility: visible !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
           }
           #print-book-root {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            overflow: visible;
+            display: block !important;
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
           }
           .print-page {
-            width: 100vw; height: 100vh;
+            width: 100vw;
+            height: 100vh;
             page-break-after: always;
             break-after: page;
             overflow: hidden;
             display: flex !important;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
+            flex-direction: row;
+            box-sizing: border-box;
+          }
+          .print-page-col {
+            display: flex !important;
+            flex-direction: column;
           }
           .print-page:last-child { page-break-after: avoid; break-after: avoid; }
         }
@@ -1101,8 +1144,8 @@ export default function StorybookCreator() {
                 const coverSrc = coverImageUrl || pageImages[0];
                 if (typeof window !== "undefined") console.log("[Cover] coverImageUrl:", coverImageUrl, "pageImages[0]:", pageImages[0], "using:", coverSrc);
                 return (
-                  <div style={{ flex: "0 0 60%", position: "relative", overflow: "hidden", background: "linear-gradient(160deg, #1a0a2e 0%, #4a2060 50%, #1a3040 100%)" }}>
-                    {coverSrc && <img crossOrigin="anonymous" src={coverSrc} alt="Book cover" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }} />}
+                  <div style={{ flex: "0 0 60%", width: "100%", position: "relative", overflow: "hidden", background: "linear-gradient(160deg, #1a0a2e 0%, #4a2060 50%, #1a3040 100%)" }}>
+                    {coverSrc && <img crossOrigin="anonymous" src={coverSrc} alt="Book cover" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top", display: "block" }} onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />}
                     <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "28%", background: "linear-gradient(to bottom, transparent, rgba(13,7,30,0.65))" }} />
                     <div style={{ position: "absolute", top: isMobile ? 12 : 16, right: isMobile ? 12 : 16 }}>
                       <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 11, background: "rgba(0,0,0,0.45)", borderRadius: 8, padding: "4px 10px", backdropFilter: "blur(4px)" }}>Tap to open →</span>
@@ -1177,12 +1220,32 @@ export default function StorybookCreator() {
       {/* ── Print-only book pages (hidden on screen, shown on print) ── */}
       {mainStep === "book" && story && (
         <div id="print-book-root">
-          {/* Print Cover page */}
-          <div className="print-page" style={{ flexDirection: "column", background: "#0d071e" }}>
-            <div style={{ flex: "0 0 60%", position: "relative", overflow: "hidden", background: "linear-gradient(160deg, #1a0a2e, #4a2060, #1a3040)" }}>
-              {coverImageUrl && <img crossOrigin="anonymous" src={coverImageUrl} alt="cover" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />}
+
+          {/* Page 1: Dedication */}
+          <div className="print-page" style={{ background: "linear-gradient(160deg, #0d071e 0%, #2D1B69 50%, #0d071e 100%)", alignItems: "center", justifyContent: "center", position: "relative" }}>
+            <div style={{ position: "absolute", inset: 40, border: "1.5px solid rgba(255,215,0,0.35)", borderRadius: 10 }} />
+            <div style={{ position: "absolute", inset: 60, border: "0.5px solid rgba(255,215,0,0.15)", borderRadius: 6 }} />
+            <div style={{ textAlign: "center", maxWidth: 600, position: "relative", zIndex: 1 }}>
+              <p style={{ color: "rgba(255,215,0,0.6)", fontSize: 13, fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase", margin: "0 0 20px", fontFamily: "Georgia, serif" }}>
+                This story was created especially for
+              </p>
+              <h1 style={{ fontFamily: "Georgia, serif", color: "white", fontSize: 72, fontWeight: 900, margin: "0 0 24px", letterSpacing: "-0.02em", lineHeight: 1.05 }}>
+                {childName || "You"}
+              </h1>
+              <div style={{ height: 1, background: "rgba(255,215,0,0.25)", maxWidth: 240, margin: "0 auto 24px" }} />
+              <p style={{ fontFamily: "Georgia, serif", color: "rgba(255,255,255,0.78)", fontSize: 20, lineHeight: 1.9, fontStyle: "italic", margin: "0 0 32px" }}>
+                "May every adventure remind you how loved, brave, and magical you are."
+              </p>
+              <p style={{ color: "rgba(255,215,0,0.4)", fontFamily: "Georgia, serif", fontSize: 13, letterSpacing: "0.16em", margin: 0 }}>✦ My Tiny Tales ✦</p>
             </div>
-            <div style={{ flex: "0 0 40%", background: "linear-gradient(160deg, #0d071e, #1a0a2e)", borderTop: "1.5px solid rgba(255,215,0,0.3)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", gap: 10, padding: "20px 80px" }}>
+          </div>
+
+          {/* Page 2: Cover */}
+          <div className="print-page print-page-col" style={{ background: "#0d071e" }}>
+            <div style={{ flex: "0 0 60%", position: "relative", overflow: "hidden", background: "linear-gradient(160deg, #1a0a2e, #4a2060, #1a3040)" }}>
+              {coverImageUrl && <img crossOrigin="anonymous" src={coverImageUrl} alt="cover" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top" }} />}
+            </div>
+            <div style={{ flex: "0 0 40%", background: "linear-gradient(160deg, #0d071e, #2D1B69, #150d28)", borderTop: "1.5px solid rgba(255,215,0,0.3)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", gap: 10, padding: "20px 80px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6, background: "linear-gradient(135deg, #ffd700, #ffb347)", borderRadius: 50, padding: "5px 16px" }}>
                 <span>✨</span><span style={{ color: "#1a0a2e", fontWeight: 800, fontSize: 12 }}>My Tiny Tales</span>
               </div>
@@ -1190,12 +1253,31 @@ export default function StorybookCreator() {
               <div style={{ color: "rgba(255,215,0,0.7)", fontStyle: "italic", fontSize: 15, fontFamily: "Georgia, serif" }}>{THEMES.find(t => t.id === theme)?.subtitle ?? story.dedication}</div>
             </div>
           </div>
-          {/* Print spreads — one per page */}
+
+          {/* Pages 3–8: Story spreads — one page per spread */}
           {story.pages.map((_: any, i: number) => (
             <div key={i} className="print-page">
               <BookSpread spreadIndex={i} />
             </div>
           ))}
+
+          {/* Page 9: Closing keepsake */}
+          <div className="print-page" style={{ background: "linear-gradient(160deg, #0d071e 0%, #2D1B69 50%, #0d071e 100%)", alignItems: "center", justifyContent: "center", position: "relative" }}>
+            <div style={{ position: "absolute", inset: 40, border: "1.5px solid rgba(255,215,0,0.35)", borderRadius: 10 }} />
+            <div style={{ position: "absolute", inset: 60, border: "0.5px solid rgba(255,215,0,0.15)", borderRadius: 6 }} />
+            <div style={{ textAlign: "center", maxWidth: 680, position: "relative", zIndex: 1 }}>
+              <p style={{ fontFamily: "Georgia, serif", color: "rgba(255,215,0,0.82)", fontSize: 22, lineHeight: 1.95, fontStyle: "italic", margin: "0 0 32px" }}>
+                {THEME_CLOSING[theme]?.(childName) || `Remember, ${childName}: every great adventure begins with one brave step. The world is full of magic — and you have everything it takes to find it.`}
+              </p>
+              <div style={{ height: 1, background: "rgba(255,215,0,0.22)", maxWidth: 200, margin: "0 auto 20px" }} />
+              <p style={{ color: "rgba(255,215,0,0.6)", fontFamily: "Georgia, serif", fontSize: 28, letterSpacing: "0.1em", margin: "0 0 24px" }}>✦ The End ✦</p>
+              <p style={{ color: "rgba(255,255,255,0.28)", fontFamily: "Georgia, serif", fontSize: 13, fontStyle: "italic", margin: "0 0 16px" }}>
+                Created with love · {new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
+              </p>
+              <p style={{ color: "rgba(255,215,0,0.35)", fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.16em", margin: 0 }}>✦ My Tiny Tales ✦</p>
+            </div>
+          </div>
+
         </div>
       )}
     </div>

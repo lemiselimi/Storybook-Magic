@@ -33,7 +33,9 @@ export async function POST(request) {
       ? "The child is a girl. Scenes can include feminine elements if appropriate to the theme."
       : "";
 
-    const prompt = `a photo of TOK, ${characterDesc}, ${illustration}, cinematic 3D-style children's book illustration, vibrant colors, soft cinematic lighting, magical storybook atmosphere, whimsical and joyful${genderDirective ? `. ${genderDirective}` : ""}`;
+    const styleAnchor = "Cinematic 3D-style illustration, warm volumetric lighting, photorealistic child, consistent art style across all scenes, soft depth of field, storybook atmosphere";
+
+    const prompt = `a photo of TOK, ${characterDesc}, ${illustration}, ${styleAnchor}, vibrant colors, whimsical and joyful${genderDirective ? `. ${genderDirective}` : ""}`;
 
     const result = await fal.subscribe("fal-ai/flux-lora", {
       input: {

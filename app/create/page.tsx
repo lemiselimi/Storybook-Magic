@@ -936,7 +936,7 @@ export default function StorybookCreator() {
                         <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: 4, height: 5, overflow: "hidden" }}>
                           <div style={{ height: "100%", borderRadius: 4, background: loraStatus === "done" ? "linear-gradient(90deg, #4caf50, #43e97b)" : "linear-gradient(90deg, #ffd700, #ff9a9e)", width: loraStatus === "done" || loraStatus === "error" ? "100%" : "5%", animation: loraStatus === "loading" ? "fwdBar 150s linear forwards" : "none", transition: "width 0.5s" }} />
                         </div>
-                        {loraStatus === "loading" && <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, margin: "5px 0 0" }}>This creates a truly personalised character — takes ~2 min</p>}
+                        {loraStatus === "loading" && <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, margin: "5px 0 0" }}>This creates a truly personalised character — please wait</p>}
                       </div>
                       {loraStatus === "loading" && <div style={{ width: 20, height: 20, border: "2.5px solid rgba(255,215,0,0.2)", borderTop: "2.5px solid #ffd700", borderRadius: "50%", animation: "spin 1s linear infinite", flexShrink: 0 }} />}
                       {loraStatus === "done"    && <div style={{ fontSize: 22, flexShrink: 0 }}>✅</div>}
@@ -1070,7 +1070,7 @@ export default function StorybookCreator() {
 
                     {/* CTAs */}
                     <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,215,0,0.2)", borderRadius: 22, padding: isMobile ? 18 : 24 }}>
-                      <p style={{ color: "rgba(255,215,0,0.9)", fontSize: 13, fontWeight: 700, textAlign: "center", margin: "0 0 4px", letterSpacing: "0.04em" }}>⚡ Ready in under 2 minutes</p>
+                      <p style={{ color: "rgba(255,215,0,0.9)", fontSize: 13, fontWeight: 700, textAlign: "center", margin: "0 0 4px", letterSpacing: "0.04em" }}>✨ Your story is being crafted with care</p>
                       <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, textAlign: "center", margin: "0 0 18px" }}>6 personalised cinematic 3D-illustrated pages starring {childName || "your child"}</p>
                       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                         <button onClick={() => handlePurchase("digital")} disabled={!!checkoutLoading} style={{ width: "100%", padding: "17px", borderRadius: 16, border: "none", background: checkoutLoading === "digital" ? "rgba(255,215,0,0.5)" : "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 17, fontWeight: 800, cursor: checkoutLoading ? "not-allowed" : "pointer" }}>
@@ -1103,7 +1103,7 @@ export default function StorybookCreator() {
           <div style={{ fontSize: 72, marginBottom: 20, animation: "float 2s ease-in-out infinite" }}>🪄</div>
           <h2 style={{ color: "white", fontSize: 22, fontWeight: 700, margin: "0 0 10px" }}>Creating your magical book...</h2>
           <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 15, margin: "0 0 8px" }}>{loadingMsg}</p>
-          <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 13, margin: "0 0 24px" }}>Painting cover + 6 scenes — about 1–2 minutes</p>
+          <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 13, margin: "0 0 24px" }}>Painting your cover and 6 unique illustrated scenes</p>
           {scenesCompleted > 0 && (
             <div style={{ maxWidth: 260, margin: "0 auto 24px" }}>
               <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: 99, height: 8, overflow: "hidden" }}>

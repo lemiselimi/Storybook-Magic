@@ -14,14 +14,14 @@ const WARM_BROWN   = "#1A1A1A";   // near-black — body text on light
 const STEPS = [
   { num: "01", icon: "📸", title: "Upload a Photo",       desc: "One clear photo is all we need. Our AI reads your child's features to create their unique cinematic 3D-style character." },
   { num: "02", icon: "✨", title: "Personalise the Story", desc: "Enter their name, age, and choose an adventure theme. AI writes a story crafted just for them." },
-  { num: "03", icon: "✨", title: "Preview Free",          desc: "See the first 2 pages of your book completely free. Love it? Unlock all 6 pages — ready in under 2 minutes." },
+  { num: "03", icon: "✨", title: "Preview Free",          desc: "See the first 2 pages of your book completely free. Love it? Unlock all 6 pages and download instantly." },
 ];
 
 const FEATURES = [
   { icon: "❤️", title: "A story tailored to your child",        desc: "Every word is written for their age, personality, and chosen adventure. No two books are ever the same." },
   { icon: "🧒", title: "Your child sees themselves as the hero — and believes it", desc: "Our AI captures their real face and places them at the centre of every scene, in cinematic detail." },
   { icon: "📖", title: "A bedtime ritual they'll ask for every night", desc: "When a child is the hero, they want to hear the story again and again. It becomes part of your family." },
-  { icon: "🎁", title: "From photo to finished book before bedtime", desc: "No waiting weeks. Upload a photo and you'll have a beautifully illustrated 6-page book in under 2 minutes." },
+  { icon: "🎁", title: "From photo to a finished book they'll treasure", desc: "No waiting weeks for a generic product. Upload a photo and you'll have a beautifully illustrated, one-of-a-kind 6-page storybook." },
 ];
 
 const OUTCOMES = [
@@ -35,28 +35,25 @@ const EXAMPLES = [
     tag: "The Big Adventure 🌋",
     title: "Lily's Magical Quest",
     page: "Page 2 of 6",
-    bg: "linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)",
-    emoji: "🗺️",
+    img: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600",
     quote: '"Once upon a time, Lily discovered a glowing map hidden beneath her pillow. It led to a world where only the bravest could go — and Lily was the bravest of all."',
     child: "Lily, age 5",
-  },
-  {
-    tag: "Dragon Tamer 🐉",
-    title: "Noah and the Lost Dragon",
-    page: "Page 3 of 6",
-    bg: "linear-gradient(135deg, #d4a0fc 0%, #8ec5fc 100%)",
-    emoji: "🐉",
-    quote: '"Deep in the Emerald Mountains, Noah found a small dragon trembling in the cold rain. Everyone else had run away — but Noah knelt down and whispered: \'Don\'t be afraid.\'"',
-    child: "Noah, age 7",
   },
   {
     tag: "To The Stars 🚀",
     title: "Zara Saves the Universe",
     page: "Page 4 of 6",
-    bg: "linear-gradient(135deg, #a1c4fd 0%, #2D1B69 100%)",
-    emoji: "🌌",
+    img: "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=600",
     quote: '"The warning alarm rang across Galaxy 7 — the stars were going dark, one by one. Mission Control had one last hope. Zara buckled her helmet and smiled. \'I\'ve got this.\'"',
     child: "Zara, age 9",
+  },
+  {
+    tag: "Dragon Tamer 🐉",
+    title: "Noah and the Lost Dragon",
+    page: "Page 3 of 6",
+    img: "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600",
+    quote: '"Deep in the Emerald Mountains, Noah found a small dragon trembling in the cold rain. Everyone else had run away — but Noah knelt down and whispered: \'Don\'t be afraid.\'"',
+    child: "Noah, age 7",
   },
 ];
 
@@ -66,7 +63,7 @@ const REVIEWS = [
   { name: "Priya K.",  role: "Grandmother of Aisha",   initials: "PK", color: "#c8b4e8", text: "I'm not very tech-savvy but this was so easy. Uploaded a photo, chose a theme, and 2 minutes later had a beautiful illustrated book. I'm ordering copies for every grandchild for Christmas!" },
 ];
 
-const DIGITAL_FEATURES = ["6 unique cinematic 3D-illustrated pages", "Personalised story tailored to their age", "PDF download (print at home)", "Shareable link for family", "Ready in under 2 minutes"];
+const DIGITAL_FEATURES = ["6 unique cinematic 3D-illustrated pages", "Personalised story tailored to their age", "PDF download (print at home)", "Shareable link for family", "Instant digital download"];
 const PRINT_FEATURES   = ["Everything in Digital", "Premium hardcover book", "Lay-flat binding", "Ships within 5–7 days", "Gift wrapping available"];
 
 // ── Illustrated review avatars ────────────────────────────────────────────────
@@ -216,7 +213,7 @@ export default function LandingPage() {
               of Their Own Story
             </h1>
             <p style={{ fontSize: isMobile ? 16 : 19, color: "rgba(255,255,255,0.72)", lineHeight: 1.7, margin: "0 0 28px", maxWidth: 520 }}>
-              A unique AI-generated book starring your child — a heartwarming story written just for them, with high-quality cinematic 3D-style illustrations, delivered in minutes.
+              A unique AI-generated book starring your child — a heartwarming story written just for them, with high-quality cinematic 3D-style illustrations that will be treasured for years.
             </p>
 
             {/* Emotional outcome statements */}
@@ -275,10 +272,10 @@ export default function LandingPage() {
       <section style={{ background: CREAM2, borderTop: "1px solid #e8dcc8", borderBottom: "1px solid #e8dcc8" }}>
         <div style={{ maxWidth: 900, margin: "0 auto", padding: isMobile ? "24px 24px" : "24px 48px", display: "flex", alignItems: "center", justifyContent: "space-around", flexWrap: "wrap", gap: 16 }}>
           {[
-            { icon: "🎉", value: "Be first", label: "One of the first families" },
-            { icon: "⚡", value: "< 2 min",  label: "Preview delivered in" },
-            { icon: "🔒", value: "Private",  label: "Photo deleted after use" },
-            { icon: "🛡️", value: "30-Day",   label: "Satisfaction guarantee" },
+            { icon: "⭐", value: "5-Star Rated",    label: "By early families" },
+            { icon: "✨", value: "Magical Results", label: "Worth the wait" },
+            { icon: "🔒", value: "Private",         label: "Photo deleted after use" },
+            { icon: "🛡️", value: "30-Day",          label: "Satisfaction guarantee" },
           ].map((t, i) => (
             <div key={i} style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <span style={{ fontSize: 22 }}>{t.icon}</span>
@@ -338,15 +335,17 @@ export default function LandingPage() {
             {/* Book spread */}
             <div key={exampleIdx} style={{ background: "white", borderRadius: 20, overflow: "hidden", boxShadow: "0 32px 80px rgba(0,0,0,0.5)", display: "flex", flexDirection: isMobile ? "column" : "row", animation: "slideEx 0.3s ease both", minHeight: isMobile ? undefined : 320 }}>
               {/* Illustration side */}
-              <div style={{ flex: isMobile ? undefined : "0 0 48%", minHeight: isMobile ? 200 : undefined, background: ex.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, padding: 32, position: "relative" }}>
-                <div style={{ fontSize: 80, filter: "drop-shadow(0 8px 20px rgba(0,0,0,0.2))", animation: "float 4s ease-in-out infinite" }}>{ex.emoji}</div>
-                <div style={{ background: "rgba(255,255,255,0.5)", backdropFilter: "blur(4px)", borderRadius: 10, padding: "4px 14px" }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: PURPLE_DARK }}>✨ AI Illustration</span>
-                </div>
-                <div style={{ position: "absolute", top: 12, left: 14, background: "rgba(0,0,0,0.18)", borderRadius: 8, padding: "3px 10px" }}>
+              <div style={{ flex: isMobile ? undefined : "0 0 48%", minHeight: isMobile ? 220 : 320, position: "relative", overflow: "hidden", backgroundColor: "#2D1B69" }}>
+                <img
+                  src={ex.img}
+                  alt={ex.title}
+                  style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", display: "block" }}
+                />
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, transparent 60%, rgba(255,248,240,0.08))" }} />
+                <div style={{ position: "absolute", top: 12, left: 14, background: "rgba(0,0,0,0.45)", borderRadius: 8, padding: "3px 10px", backdropFilter: "blur(4px)" }}>
                   <span style={{ color: "white", fontSize: 10, fontWeight: 600 }}>{ex.page}</span>
                 </div>
-                <div style={{ position: "absolute", bottom: 10, left: 0, right: 0, textAlign: "center", color: PURPLE_DARK, fontFamily: "Georgia, serif", fontSize: 12, opacity: 0.5 }}>— {exampleIdx + 1} —</div>
+                <div style={{ position: "absolute", bottom: 10, left: 0, right: 0, textAlign: "center", color: "rgba(255,255,255,0.55)", fontFamily: "Georgia, serif", fontSize: 12 }}>— {exampleIdx + 1} —</div>
               </div>
 
               {/* Spine */}
@@ -538,7 +537,7 @@ export default function LandingPage() {
             </span>
           </h2>
           <p style={{ color: "rgba(255,255,255,0.62)", fontSize: isMobile ? 15 : 17, lineHeight: 1.7, margin: "0 0 36px" }}>
-            Preview your child's personalised book for free — see the first 2 pages before you spend a penny. From photo to finished story before bedtime.
+            Preview your child's personalised book for free — see the first 2 pages before you spend a penny. No subscription, no commitment.
           </p>
           <Link href="/create" style={{ textDecoration: "none" }}>
             <button className="cta-btn" style={{ padding: isMobile ? "16px 36px" : "18px 52px", borderRadius: 50, border: "none", background: `linear-gradient(135deg, ${GOLD}, #ffb347)`, color: PURPLE_DARK, fontWeight: 700, fontSize: isMobile ? 16 : 18, cursor: "pointer", boxShadow: "0 12px 40px rgba(245,166,35,0.4)" }}>

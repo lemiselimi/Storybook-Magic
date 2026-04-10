@@ -148,6 +148,7 @@ export default function StorybookCreator() {
   const [showNewBookConfirm, setShowNewBookConfirm] = useState(false);
   const [kontextResult,    setKontextResult]    = useState<string | null>(null);
   const [kontextLoading,   setKontextLoading]   = useState(false);
+  const [kontextImageUrl,  setKontextImageUrl]  = useState("");
 
   // ── Email lead capture ────────────────────────────────────────────────────────
   const [leadEmail,    setLeadEmail]    = useState("");
@@ -1334,8 +1335,8 @@ export default function StorybookCreator() {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({
-                        photoUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800",
-                        prompt: "A young girl wearing a spacesuit floating in a colorful galaxy filled with glowing stars and star creatures, whimsical children's storybook illustration, vibrant colors, soft warm lighting, magical atmosphere",
+                        imageUrl: kontextImageUrl || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800",
+                        prompt: "Child in a magical jungle with a golden crown, cinematic 3D-style illustration, warm lighting, storybook atmosphere, no text in image",
                       }),
                     });
                     const data = await res.json();
@@ -1352,21 +1353,37 @@ export default function StorybookCreator() {
             )}
           </div>
 
+          {/* Kontext image URL input (demo only) */}
+          {isDemo && (
+            <div style={{ margin: "12px auto 0", maxWidth: 680, display: "flex", gap: 8, alignItems: "center" }}>
+              <input
+                type="url"
+                value={kontextImageUrl}
+                onChange={e => setKontextImageUrl(e.target.value)}
+                placeholder="Paste a photo URL to test with (optional)"
+                style={{ flex: 1, padding: "9px 14px", borderRadius: 10, border: "1px solid rgba(255,215,0,0.25)", background: "rgba(255,255,255,0.06)", color: "white", fontSize: 13, outline: "none" }}
+              />
+              {kontextImageUrl && (
+                <button onClick={() => setKontextImageUrl("")} style={{ padding: "9px 12px", borderRadius: 10, border: "none", background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)", fontSize: 12, cursor: "pointer" }}>✕</button>
+              )}
+            </div>
+          )}
+
           {/* Kontext test result (demo only) */}
           {isDemo && kontextResult && (
-            <div style={{ margin: "20px auto 0", maxWidth: 680, background: "rgba(255,255,255,0.06)", borderRadius: 16, padding: "20px 24px", border: "1px solid rgba(255,215,0,0.2)" }}>
-              <p style={{ color: "#ffd700", fontWeight: 700, fontSize: 14, margin: "0 0 14px" }}>🧪 Kontext Pro result — reference-image guided (no LoRA)</p>
+            <div style={{ margin: "16px auto 0", maxWidth: 680, background: "rgba(255,255,255,0.06)", borderRadius: 16, padding: "20px 24px", border: "1px solid rgba(255,215,0,0.2)" }}>
+              <p style={{ color: "#ffd700", fontWeight: 700, fontSize: 14, margin: "0 0 14px" }}>🧪 fal-ai/flux-pro/kontext — reference-image guided (no LoRA)</p>
               {kontextResult === "error" ? (
-                <p style={{ color: "#ff6b6b", fontSize: 14, margin: 0 }}>Generation failed. Check FAL_API_KEY and fal-ai/flux-kontext-pro availability.</p>
+                <p style={{ color: "#ff6b6b", fontSize: 14, margin: 0 }}>Generation failed. Check FAL_API_KEY and that fal-ai/flux-pro/kontext is available on your plan.</p>
               ) : (
                 <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "flex-start" }}>
                   <div style={{ flex: 1, minWidth: 220 }}>
-                    <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, margin: "0 0 8px" }}>Kontext Pro output</p>
+                    <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, margin: "0 0 8px" }}>Kontext output</p>
                     <img src={kontextResult} alt="Kontext result" style={{ width: "100%", borderRadius: 10, display: "block" }} />
                   </div>
                   <div style={{ flex: 1, minWidth: 220 }}>
-                    <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, margin: "0 0 8px" }}>Demo LoRA image (page 1)</p>
-                    <img src={DEMO_IMAGES[0]} alt="LoRA comparison" style={{ width: "100%", borderRadius: 10, display: "block" }} />
+                    <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, margin: "0 0 8px" }}>Reference photo used</p>
+                    <img src={kontextImageUrl || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800"} alt="Reference" style={{ width: "100%", borderRadius: 10, display: "block" }} />
                   </div>
                 </div>
               )}

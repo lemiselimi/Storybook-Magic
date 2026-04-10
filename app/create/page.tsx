@@ -146,7 +146,7 @@ export default function StorybookCreator() {
   const [isSharedView,     setIsSharedView]     = useState(false);
   const [isDemo,           setIsDemo]           = useState(false);
   const [showNewBookConfirm, setShowNewBookConfirm] = useState(false);
-  const [kontextResult,    setKontextResult]    = useState<string | null>(null);
+  const [kontextResults,   setKontextResults]   = useState<{ scene: string; url: string }[] | "error" | null>(null);
   const [kontextLoading,   setKontextLoading]   = useState(false);
   const [kontextImageUrl,  setKontextImageUrl]  = useState("");
 
@@ -1329,38 +1329,37 @@ export default function StorybookCreator() {
               <button
                 onClick={async () => {
                   setKontextLoading(true);
-                  setKontextResult(null);
+                  setKontextResults(null);
                   try {
                     const res = await fetch("/api/test-kontext", {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({
                         imageUrl: kontextImageUrl || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800",
-                        prompt: "Child in a magical jungle with a golden crown, cinematic 3D-style illustration, warm lighting, storybook atmosphere, no text in image",
                       }),
                     });
                     const data = await res.json();
-                    if (data.url) setKontextResult(data.url);
-                    else setKontextResult("error");
-                  } catch { setKontextResult("error"); }
+                    if (data.results) setKontextResults(data.results);
+                    else setKontextResults("error");
+                  } catch { setKontextResults("error"); }
                   finally { setKontextLoading(false); }
                 }}
                 disabled={kontextLoading}
                 style={{ padding: "10px 18px", borderRadius: 11, border: "1px solid rgba(255,215,0,0.4)", background: "rgba(244,196,48,0.12)", color: "#ffd700", fontSize: 13, fontWeight: 600, cursor: kontextLoading ? "not-allowed" : "pointer", opacity: kontextLoading ? 0.6 : 1 }}
               >
-                {kontextLoading ? "⏳ Testing Kontext…" : "🧪 Test Kontext"}
+                {kontextLoading ? "⏳ Generating 3 scenes…" : "🧪 Test Kontext (3 scenes)"}
               </button>
             )}
           </div>
 
           {/* Kontext image URL input (demo only) */}
           {isDemo && (
-            <div style={{ margin: "12px auto 0", maxWidth: 680, display: "flex", gap: 8, alignItems: "center" }}>
+            <div style={{ margin: "12px auto 0", maxWidth: 900, display: "flex", gap: 8, alignItems: "center" }}>
               <input
                 type="url"
                 value={kontextImageUrl}
                 onChange={e => setKontextImageUrl(e.target.value)}
-                placeholder="Paste a photo URL to test with (optional)"
+                placeholder="Paste a photo URL to test with (optional — defaults to sample portrait)"
                 style={{ flex: 1, padding: "9px 14px", borderRadius: 10, border: "1px solid rgba(255,215,0,0.25)", background: "rgba(255,255,255,0.06)", color: "white", fontSize: 13, outline: "none" }}
               />
               {kontextImageUrl && (
@@ -1369,23 +1368,38 @@ export default function StorybookCreator() {
             </div>
           )}
 
-          {/* Kontext test result (demo only) */}
-          {isDemo && kontextResult && (
-            <div style={{ margin: "16px auto 0", maxWidth: 680, background: "rgba(255,255,255,0.06)", borderRadius: 16, padding: "20px 24px", border: "1px solid rgba(255,215,0,0.2)" }}>
-              <p style={{ color: "#ffd700", fontWeight: 700, fontSize: 14, margin: "0 0 14px" }}>🧪 fal-ai/flux-pro/kontext — reference-image guided (no LoRA)</p>
-              {kontextResult === "error" ? (
+          {/* Kontext test results (demo only) */}
+          {isDemo && kontextResults && (
+            <div style={{ margin: "16px auto 0", maxWidth: 900, background: "rgba(255,255,255,0.06)", borderRadius: 16, padding: "24px", border: "1px solid rgba(255,215,0,0.2)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+                <p style={{ color: "#ffd700", fontWeight: 700, fontSize: 14, margin: 0 }}>🧪 fal-ai/flux-pro/kontext — 3-scene consistency test</p>
+                <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 12 }}>Pixar-style prompt, same reference photo</span>
+              </div>
+              {kontextResults === "error" ? (
                 <p style={{ color: "#ff6b6b", fontSize: 14, margin: 0 }}>Generation failed. Check FAL_API_KEY and that fal-ai/flux-pro/kontext is available on your plan.</p>
               ) : (
-                <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "flex-start" }}>
-                  <div style={{ flex: 1, minWidth: 220 }}>
-                    <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, margin: "0 0 8px" }}>Kontext output</p>
-                    <img src={kontextResult} alt="Kontext result" style={{ width: "100%", borderRadius: 10, display: "block" }} />
+                <>
+                  {/* Reference photo */}
+                  <div style={{ marginBottom: 20 }}>
+                    <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, margin: "0 0 8px" }}>Reference photo</p>
+                    <img
+                      src={kontextImageUrl || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800"}
+                      alt="Reference"
+                      style={{ height: 120, borderRadius: 8, display: "block", objectFit: "cover" }}
+                    />
                   </div>
-                  <div style={{ flex: 1, minWidth: 220 }}>
-                    <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, margin: "0 0 8px" }}>Reference photo used</p>
-                    <img src={kontextImageUrl || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800"} alt="Reference" style={{ width: "100%", borderRadius: 10, display: "block" }} />
+                  {/* 3 results side by side */}
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
+                    {(kontextResults as { scene: string; url: string }[]).map((r, i) => (
+                      <div key={i}>
+                        <p style={{ color: "rgba(255,255,255,0.45)", fontSize: 11, margin: "0 0 8px", lineHeight: 1.5 }}>
+                          <span style={{ color: "#ffd700", fontWeight: 700 }}>Scene {i + 1}:</span> {r.scene.slice(0, 60)}…
+                        </p>
+                        <img src={r.url} alt={`Scene ${i + 1}`} style={{ width: "100%", borderRadius: 10, display: "block" }} />
+                      </div>
+                    ))}
                   </div>
-                </div>
+                </>
               )}
             </div>
           )}

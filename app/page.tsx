@@ -33,37 +33,37 @@ const OUTCOMES = [
 const EXAMPLES = [
   {
     tag: "The Big Adventure 🌋",
-    title: "Lily's Magical Quest",
+    title: "Aria's Magical Quest",
     page: "Page 2 of 6",
+    img: "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=600",
+    quote: '"Once upon a time, Aria discovered a glowing map hidden beneath her pillow. It led to a world where only the bravest could go — and Aria was the bravest of all."',
+    child: "Aria's Magical Quest — Age 5",
+  },
+  {
+    tag: "The Big Adventure 🌋",
+    title: "Liam's Big Adventure",
+    page: "Page 3 of 6",
     img: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600",
-    quote: '"Once upon a time, Lily discovered a glowing map hidden beneath her pillow. It led to a world where only the bravest could go — and Lily was the bravest of all."',
-    child: "Lily, age 5",
+    quote: '"Deep in the Whispering Woods, Liam found a secret door carved into the oldest oak. He took a deep breath, pushed it open, and stepped into a world of pure magic."',
+    child: "Liam's Big Adventure — Age 3",
   },
   {
     tag: "To The Stars 🚀",
-    title: "Zara Saves the Universe",
+    title: "Sofia Blasts Off",
     page: "Page 4 of 6",
     img: "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=600",
-    quote: '"The warning alarm rang across Galaxy 7 — the stars were going dark, one by one. Mission Control had one last hope. Zara buckled her helmet and smiled. \'I\'ve got this.\'"',
-    child: "Zara, age 9",
-  },
-  {
-    tag: "Dragon Tamer 🐉",
-    title: "Noah and the Lost Dragon",
-    page: "Page 3 of 6",
-    img: "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600",
-    quote: '"Deep in the Emerald Mountains, Noah found a small dragon trembling in the cold rain. Everyone else had run away — but Noah knelt down and whispered: \'Don\'t be afraid.\'"',
-    child: "Noah, age 7",
+    quote: '"The warning alarm rang across Galaxy 7 — the stars were going dark, one by one. Mission Control had one last hope. Sofia buckled her helmet and smiled. \'I\'ve got this.\'"',
+    child: "Sofia Blasts Off — Age 4",
   },
 ];
 
 const REVIEWS = [
   { name: "Sarah M.",  role: "Mum of Emma, age 5",     initials: "SM", color: "#e8b4d0", text: "My daughter screamed with joy when she saw herself as the hero! We've read it together every single night for a week. The most personal gift I've ever given her — worth every penny." },
   { name: "James T.",  role: "Dad of Oliver & Finn",   initials: "JT", color: "#b4c8e8", text: "Ordered on a Tuesday afternoon. By dinner my son had a personalised storybook with HIM as the hero, fighting dragons in a magical forest. The illustrations are stunning. He's completely obsessed." },
-  { name: "Priya K.",  role: "Grandmother of Aisha",   initials: "PK", color: "#c8b4e8", text: "I'm not very tech-savvy but this was so easy. Uploaded a photo, chose a theme, and 2 minutes later had a beautiful illustrated book. I'm ordering copies for every grandchild for Christmas!" },
+  { name: "Priya K.",  role: "Grandmother of Aisha",   initials: "PK", color: "#c8b4e8", text: "I'm not very tech-savvy but this was so easy. Uploaded a photo, chose a theme, and by that evening had a beautiful illustrated book. I'm ordering copies for every grandchild for Christmas!" },
 ];
 
-const DIGITAL_FEATURES = ["6 unique cinematic 3D-illustrated pages", "Personalised story tailored to their age", "PDF download (print at home)", "Shareable link for family", "Instant digital download"];
+const DIGITAL_FEATURES = ["6 unique cinematic 3D-illustrated pages", "Personalised story tailored to their age", "Instant digital download", "Shareable link for family", "Print at home on any printer", "Print as many copies as you like", "Free print guide included"];
 const PRINT_FEATURES   = ["Everything in Digital", "Premium hardcover book", "Lay-flat binding", "Ships within 5–7 days", "Gift wrapping available"];
 
 // ── Illustrated review avatars ────────────────────────────────────────────────
@@ -236,33 +236,16 @@ export default function LandingPage() {
                 See Example Books
               </button>
             </div>
-            <p style={{ color: "rgba(255,255,255,0.38)", fontSize: 13, marginTop: 18 }}>Be one of the first families to try it · No subscription</p>
           </div>
 
           {/* Book mockup */}
           {!isMobile && (
             <div style={{ flexShrink: 0, animation: "float 4s ease-in-out infinite", animationDelay: "0.5s" }}>
-              <div style={{ transform: "perspective(800px) rotateY(-8deg) rotateX(2deg)", transformStyle: "preserve-3d" }}>
-                <div style={{ display: "flex", boxShadow: "0 40px 80px rgba(0,0,0,0.6), -8px 0 20px rgba(0,0,0,0.3)", borderRadius: 4, overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)" }}>
-                  <div style={{ width: 210, height: 280, background: "linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, padding: 20 }}>
-                    <div style={{ fontSize: 56, filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.2))" }}>🌟</div>
-                    <div style={{ background: "rgba(255,255,255,0.4)", borderRadius: 8, padding: "4px 12px" }}>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: PURPLE_DARK }}>✨ AI Illustration</span>
-                    </div>
-                    <div style={{ fontSize: 11, color: PURPLE_DARK, opacity: 0.6, fontStyle: "italic" }}>— 1 —</div>
-                  </div>
-                  <div style={{ width: 8, background: "linear-gradient(to right, #c4a882, #e8dcc8, #c4a882)", flexShrink: 0 }} />
-                  <div style={{ width: 190, height: 280, background: CREAM, padding: "28px 22px", display: "flex", flexDirection: "column", justifyContent: "center", gap: 10 }}>
-                    <div style={{ fontFamily: "Georgia, serif", fontSize: 12, color: "#5a3d2b", lineHeight: 1.7, fontStyle: "italic" }}>
-                      "Once upon a time, <strong>Emma</strong> discovered a magical map that glowed with golden light..."
-                    </div>
-                    <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 7 }}>
-                      {[88, 72, 80, 60].map((w, i) => <div key={i} style={{ height: 6, borderRadius: 3, background: "#e8dcc8", width: `${w}%` }} />)}
-                    </div>
-                    <div style={{ textAlign: "center", color: "#c4a882", fontFamily: "Georgia, serif", fontSize: 11, marginTop: 8 }}>— 2 —</div>
-                  </div>
-                </div>
-              </div>
+              <img
+                src="https://images.unsplash.com/photo-1512820790803-83ca734da794?w=600"
+                alt="Example storybook"
+                style={{ width: 320, height: 420, objectFit: "cover", borderRadius: 16, boxShadow: "0 40px 80px rgba(0,0,0,0.55), 0 8px 24px rgba(0,0,0,0.3)", transform: "rotate(-2deg)" }}
+              />
             </div>
           )}
         </div>
@@ -459,17 +442,17 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Print + Digital */}
-            <div className="pricing-card" style={{ background: `linear-gradient(145deg, ${PURPLE_MID}, #3d1f6e)`, borderRadius: 24, padding: "36px 32px", boxShadow: "0 16px 48px rgba(0,0,0,0.35)", border: "1px solid rgba(245,166,35,0.2)", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}>
+            {/* Print + Digital — Coming Soon */}
+            <div className="pricing-card" style={{ background: `linear-gradient(145deg, ${PURPLE_MID}, #3d1f6e)`, borderRadius: 24, padding: "36px 32px", boxShadow: "0 16px 48px rgba(0,0,0,0.35)", border: "1px solid rgba(245,166,35,0.2)", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden", opacity: 0.65, pointerEvents: "none" }}>
               <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 4, background: `linear-gradient(90deg, ${GOLD}, #ffb347)` }} />
-              <div style={{ position: "absolute", top: 18, right: 20, background: `linear-gradient(135deg, ${GOLD}, #ffb347)`, color: PURPLE_DARK, fontSize: 11, fontWeight: 800, padding: "4px 12px", borderRadius: 50 }}>MOST POPULAR</div>
+              <div style={{ position: "absolute", top: 18, right: 20, background: `linear-gradient(135deg, ${GOLD}, #ffb347)`, color: PURPLE_DARK, fontSize: 11, fontWeight: 800, padding: "4px 12px", borderRadius: 50 }}>🚀 Coming Soon</div>
               <div style={{ marginBottom: 24 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: GOLD, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Print + Digital</div>
                 <div style={{ display: "flex", alignItems: "flex-start", gap: 4 }}>
                   <span style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: 48, fontWeight: 700, color: "white", lineHeight: 1 }}>$37</span>
                   <span style={{ fontSize: 20, color: "white", marginTop: 8, fontWeight: 700 }}>.99</span>
                 </div>
-                <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, margin: "8px 0 0" }}>One-time · Ships in 5–7 days</p>
+                <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, margin: "8px 0 0" }}>Premium hardcover — launching soon</p>
               </div>
               <ul style={{ listStyle: "none", padding: 0, margin: "0 0 28px", display: "flex", flexDirection: "column", gap: 12, flex: 1 }}>
                 {PRINT_FEATURES.map((f, i) => (
@@ -479,20 +462,10 @@ export default function LandingPage() {
                   </li>
                 ))}
               </ul>
-              <Link href="/create" style={{ textDecoration: "none" }}>
-                <button className="cta-btn" style={{ width: "100%", padding: "14px", borderRadius: 50, border: "none", background: `linear-gradient(135deg, ${GOLD}, #ffb347)`, color: PURPLE_DARK, fontWeight: 700, fontSize: 15, cursor: "pointer", boxShadow: "0 6px 24px rgba(245,166,35,0.35)" }}>Preview Free, Then Buy →</button>
-              </Link>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 12, flexWrap: "wrap" }}>
-                <span style={{ fontSize: 11 }}>🔒</span>
-                <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 11 }}>Secure Checkout</span>
-                <span style={{ color: "rgba(255,255,255,0.18)", fontSize: 11 }}>·</span>
-                <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 11 }}>Stripe</span>
-                <span style={{ color: "rgba(255,255,255,0.18)", fontSize: 11 }}>·</span>
-                <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 11 }}>SSL Encrypted</span>
-              </div>
+              <button style={{ width: "100%", padding: "14px", borderRadius: 50, border: "none", background: `linear-gradient(135deg, ${GOLD}, #ffb347)`, color: PURPLE_DARK, fontWeight: 700, fontSize: 15, cursor: "not-allowed" }}>Launching Soon</button>
             </div>
           </div>
-          <p style={{ textAlign: "center", color: "rgba(255,255,255,0.35)", fontSize: 13, marginTop: 24 }}>🛡️ 30-day satisfaction guarantee. If you're not delighted, we'll make it right.</p>
+          <p style={{ textAlign: "center", color: "rgba(255,255,255,0.35)", fontSize: 13, marginTop: 24 }}>🛡️ 30-day happiness promise. We're committed to making sure you love your book.</p>
         </div>
       </section>
 
@@ -556,7 +529,7 @@ export default function LandingPage() {
             <span style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontWeight: 700, fontSize: 18, color: "white" }}>My Tiny Tales</span>
           </div>
           <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
-            {[["Privacy Policy", "/privacy"], ["Terms of Service", "/terms"], ["Contact Us", "/contact"], ["FAQ", "/faq"]].map(([label, href]) => (
+            {[["Privacy Policy", "/privacy"], ["Terms of Service", "/terms"], ["Contact Us", "/contact"], ["FAQ", "/faq"], ["Print Guide", "/print-guide"]].map(([label, href]) => (
               <a key={label} href={href} style={{ color: "rgba(255,255,255,0.38)", fontSize: 13, textDecoration: "none" }}>{label}</a>
             ))}
           </div>

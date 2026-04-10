@@ -45,7 +45,7 @@ export default function ContactPage() {
         {/* Quick links */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 40 }}>
           {[
-            { icon: "📖", title: "Refunds & Orders", desc: "30-day guarantee — we'll make it right", link: "/faq#refund" },
+            { icon: "📖", title: "Refunds & Orders", desc: "30-day happiness promise — we'll work it out", link: "/faq#refund" },
             { icon: "🔒", title: "Privacy & Data", desc: "Questions about your child's data", link: "/privacy" },
           ].map((c) => (
             <Link key={c.title} href={c.link} style={{ textDecoration: "none", background: "white", borderRadius: 14, padding: "18px 20px", border: "1px solid #ede8dc", display: "flex", gap: 12 }}>

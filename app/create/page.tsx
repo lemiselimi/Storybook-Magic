@@ -52,6 +52,28 @@ const PAGE_BACKGROUNDS = [
 const TOTAL_STEPS     = 5;
 const PAYMENTS_ENABLED = !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 
+const DEMO_STORY = {
+  title: "Aria Saves the Universe",
+  dedication: "For Aria, the bravest explorer in the cosmos",
+  pages: [
+    { pageNum: 1, text: "Once upon a time, Aria gazed up at the night sky and noticed something strange — the stars were going out, one by one.", illustration: "A young girl standing in her backyard at night, looking up at a dimming starry sky with wonder and determination" },
+    { pageNum: 2, text: "'Mission Control needs our best astronaut!' Aria buckled her helmet, pressed the launch button, and WHOOOOSH — she blasted off!", illustration: "A brave young girl in a spacesuit launching into space aboard a gleaming silver rocket, leaving a trail of golden light" },
+    { pageNum: 3, text: "In the heart of Galaxy 7, Aria discovered tiny star creatures whose home had gone cold and dark.", illustration: "A girl floating in deep space surrounded by small glowing star creatures looking sad, a dark galaxy behind them" },
+    { pageNum: 4, text: "Aria had an idea! She shared her warmth with each little star — and one by one, they began to glow again.", illustration: "A girl in a spacesuit reaching out to touch star creatures that light up and sparkle with joy one by one" },
+    { pageNum: 5, text: "The creatures cheered! Together they reignited every star in the galaxy, filling the sky with dazzling, magical light.", illustration: "A girl and star creatures celebrating as the entire galaxy lights up in brilliant colours around them" },
+    { pageNum: 6, text: "Aria floated home beneath a million shining stars. 'Best adventure ever,' she whispered, smiling all the way.", illustration: "A girl in a spacesuit floating peacefully back toward Earth through a spectacular starry galaxy full of warm golden light" },
+  ],
+};
+const DEMO_IMAGES: string[] = [
+  "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=800",
+  "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800",
+  "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=800",
+  "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=800",
+  "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800",
+  "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=800",
+];
+const DEMO_COVER = "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=800";
+
 const encodeShare = (data: object) => btoa(unescape(encodeURIComponent(JSON.stringify(data))));
 const decodeShare = (s: string)    => JSON.parse(decodeURIComponent(escape(atob(s))));
 const rawFalUrl   = (proxyUrl: string) => {
@@ -77,6 +99,7 @@ export default function StorybookCreator() {
   const [photosBase64, setPhotosBase64] = useState<string[]>([]); // compressed base64 for upload
   const [photosReady,  setPhotosReady]  = useState(false);        // true when >= 3 photos
   const [dragOver,     setDragOver]     = useState(false);
+  const [photoLimitMsg, setPhotoLimitMsg] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // ── Appearance ───────────────────────────────────────────────────────────────
@@ -121,6 +144,8 @@ export default function StorybookCreator() {
   const [shareCopied,      setShareCopied]      = useState(false);
   const [isMobile,         setIsMobile]         = useState(false);
   const [isSharedView,     setIsSharedView]     = useState(false);
+  const [isDemo,           setIsDemo]           = useState(false);
+  const [showNewBookConfirm, setShowNewBookConfirm] = useState(false);
 
   // ── Email lead capture ────────────────────────────────────────────────────────
   const [leadEmail,    setLeadEmail]    = useState("");
@@ -138,6 +163,21 @@ export default function StorybookCreator() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     window.history.replaceState({}, "", "/create");
+
+    // Demo mode: ?demo=true — loads a mock book instantly, no API calls
+    if (params.get("demo") === "true") {
+      setChildName("Aria");
+      setChildAge(5);
+      setChildGender("girl");
+      setTheme("space");
+      setStory(DEMO_STORY);
+      setPageImages(DEMO_IMAGES);
+      setCoverImageUrl(DEMO_COVER);
+      setCurrentPage(-2);
+      setMainStep("book");
+      setIsDemo(true);
+      return;
+    }
 
     const share = params.get("share");
     if (share) {
@@ -199,16 +239,21 @@ export default function StorybookCreator() {
 
   const addPhoto = useCallback((file: File) => {
     if (!file || !file.type.startsWith("image/")) return;
+    // Hard cap at 3 — show message if already full
     setPhotosBase64(prev => {
-      if (prev.length >= 5) return prev; // hard cap at 5
+      if (prev.length >= 3) {
+        setPhotoLimitMsg(true);
+        setTimeout(() => setPhotoLimitMsg(false), 3000);
+        return prev;
+      }
       return prev; // will be updated after compress
     });
     const objectUrl = URL.createObjectURL(file);
-    setPhotos(prev => { if (prev.length >= 5) return prev; return [...prev, objectUrl]; });
+    setPhotos(prev => { if (prev.length >= 3) return prev; return [...prev, objectUrl]; });
     compressImage(file)
       .then(b64 => {
         setPhotosBase64(prev => {
-          if (prev.length >= 5) return prev;
+          if (prev.length >= 3) return prev;
           const next = [...prev, b64];
           setPhotosReady(next.length >= 3);
           gtagEvent("photo_uploaded");
@@ -220,7 +265,7 @@ export default function StorybookCreator() {
         reader.onload = (e) => {
           const b64 = (e.target?.result as string).split(",")[1];
           setPhotosBase64(prev => {
-            if (prev.length >= 5) return prev;
+            if (prev.length >= 3) return prev;
             const next = [...prev, b64];
             setPhotosReady(next.length >= 3);
             return next;
@@ -332,6 +377,12 @@ export default function StorybookCreator() {
         loraTrainingRef.current ?? Promise.resolve(),
       ]);
 
+      if (storyRes?.error === "limit_reached") {
+        setPreviewMsg("Preview limit reached — please purchase to continue.");
+        setPreviewStatus("done");
+        setPreviewStory({ title: "", dedication: "", pages: [], _limitReached: true });
+        return;
+      }
       const storyData = storyRes?.pages ? storyRes : getFallbackStory(childName);
       setPreviewStory(storyData);
       setPreviewMsg("Starting illustrations... 🖌️");
@@ -562,7 +613,7 @@ export default function StorybookCreator() {
     setPreviewStatus("idle"); setPreviewDone(0); previewStarted.current = false;
     setPageImages(Array(6).fill(null)); setScenesCompleted(0);
     setChildGender("boy"); setChildName(""); setChildAge(5); setTheme("adventure");
-    setIsSharedView(false); setRegeneratingPage(null); setFalError(null);
+    setIsSharedView(false); setRegeneratingPage(null); setFalError(null); setIsDemo(false); setShowNewBookConfirm(false);
   };
 
   const totalPages   = story?.pages?.length ?? 6;
@@ -572,7 +623,7 @@ export default function StorybookCreator() {
   const BookTextPage = ({ page }: { page: any }) => {
     const chapterNum = CHAPTER_NAMES[(page.pageNum - 1)] || String(page.pageNum);
     return (
-      <div style={{ flex: 1, background: "linear-gradient(160deg, #1a0a2e 0%, #2d1b4e 100%)", display: "flex", flexDirection: "column", justifyContent: "space-between", padding: isMobile ? "24px 22px 20px" : "44px 42px 36px", position: "relative", overflow: "hidden" }}>
+      <div className="book-text-page" style={{ flex: 1, background: "linear-gradient(160deg, #1a0a2e 0%, #2d1b4e 100%)", display: "flex", flexDirection: "column", justifyContent: "space-between", padding: isMobile ? "24px 22px 20px" : "44px 42px 36px", position: "relative", overflow: "hidden" }}>
         {/* Subtle radial glow */}
         <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "radial-gradient(ellipse at 30% 25%, rgba(107,63,160,0.18) 0%, transparent 65%)", pointerEvents: "none" }} />
 
@@ -740,19 +791,29 @@ export default function StorybookCreator() {
           .print-page {
             width: 100vw;
             height: 100vh;
+            max-height: 100vh;
             page-break-after: always;
             break-after: page;
             page-break-inside: avoid;
             break-inside: avoid;
             overflow: hidden;
+            margin: 0 !important;
+            padding: 0 !important;
             display: flex !important;
             flex-direction: row;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
           .print-page-col {
             display: flex !important;
             flex-direction: column;
           }
           .print-page:last-child { page-break-after: avoid; break-after: avoid; }
+          .book-text-page {
+            padding-left: 48px !important;
+            padding-right: 24px !important;
+            padding-top: 80px !important;
+          }
         }
         @media not print {
           #print-book-root { display: none !important; }
@@ -781,16 +842,16 @@ export default function StorybookCreator() {
             {/* ── STEP 1: Upload ── */}
             {onboardingStep === 1 && (
               <div>
-                <Mascot msg="More photos = better resemblance! ✨ Upload 3–5 clear photos of your child for the best likeness." />
+                <Mascot msg="Upload 3 clear photos of your child for the best likeness. Face clearly visible, good lighting, different angles." />
 
                 {/* Photo grid */}
                 <div
                   onDrop={handleDrop}
                   onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
                   onDragLeave={() => setDragOver(false)}
-                  style={{ background: dragOver ? "rgba(255,215,0,0.04)" : "rgba(255,255,255,0.03)", border: `2px dashed ${dragOver ? "#ffd700" : "rgba(255,255,255,0.15)"}`, borderRadius: 22, padding: "20px", transition: "all 0.2s" }}
+                  style={{ background: dragOver ? "rgba(255,215,0,0.04)" : "rgba(255,255,255,0.03)", border: `2px dashed ${dragOver ? "#ffd700" : photos.length === 3 ? "rgba(76,175,80,0.4)" : "rgba(255,255,255,0.15)"}`, borderRadius: 22, padding: "20px", transition: "all 0.2s" }}
                 >
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: photos.length < 5 ? 12 : 0 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: photos.length < 3 ? 12 : 0 }}>
                     {photos.map((src, i) => (
                       <div key={i} style={{ position: "relative", aspectRatio: "1", borderRadius: 14, overflow: "hidden", border: "2px solid rgba(76,175,80,0.5)" }}>
                         <img src={src} alt={`Photo ${i + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -798,7 +859,7 @@ export default function StorybookCreator() {
                         {i === 0 && <div style={{ position: "absolute", bottom: 4, left: 4, background: "rgba(76,175,80,0.9)", borderRadius: 6, padding: "2px 6px", fontSize: 9, fontWeight: 700, color: "white" }}>MAIN</div>}
                       </div>
                     ))}
-                    {photos.length < 5 && (
+                    {photos.length < 3 && (
                       <div onClick={() => fileRef.current?.click()} style={{ aspectRatio: "1", borderRadius: 14, border: "2px dashed rgba(255,255,255,0.2)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", gap: 6, background: "rgba(255,255,255,0.03)", transition: "all 0.15s" }}>
                         <span style={{ fontSize: 28, opacity: 0.5 }}>+</span>
                         <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, textAlign: "center" }}>{photos.length === 0 ? "Add photo" : "Add more"}</span>
@@ -809,21 +870,35 @@ export default function StorybookCreator() {
                   {photos.length === 0 && (
                     <div style={{ textAlign: "center", padding: "24px 0 8px" }}>
                       <div style={{ fontSize: 52, marginBottom: 10 }}>📸</div>
-                      <p style={{ color: "white", fontSize: 17, fontWeight: 700, margin: "0 0 4px" }}>Upload 3–5 photos</p>
+                      <p style={{ color: "white", fontSize: 17, fontWeight: 700, margin: "0 0 4px" }}>Upload exactly 3 photos</p>
                       <p style={{ color: "rgba(255,255,255,0.38)", fontSize: 13, margin: 0 }}>Tap + or drag & drop photos here</p>
                     </div>
                   )}
+
+                  {/* "All done" state — shown when 3 photos uploaded */}
+                  {photos.length === 3 && (
+                    <div style={{ textAlign: "center", padding: "10px 0 4px", color: "#4caf50", fontWeight: 700, fontSize: 14 }}>
+                      ✓ Perfect! 3 photos uploaded
+                    </div>
+                  )}
                 </div>
+
+                {/* Photo limit toast */}
+                {photoLimitMsg && (
+                  <div style={{ background: "rgba(255,215,0,0.12)", border: "1px solid rgba(255,215,0,0.3)", borderRadius: 10, padding: "9px 14px", marginTop: 10, color: "#ffd700", fontSize: 13, textAlign: "center", animation: "fadeUp 0.2s ease both" }}>
+                    3 photos is all we need for the best likeness!
+                  </div>
+                )}
 
                 <input ref={fileRef} type="file" accept="image/*" multiple style={{ display: "none" }} onChange={(e) => { Array.from(e.target.files ?? []).forEach(f => addPhoto(f)); e.target.value = ""; }} />
 
                 {/* Progress indicator */}
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 12 }}>
-                  {[1, 2, 3, 4, 5].map(n => (
-                    <div key={n} style={{ flex: 1, height: 5, borderRadius: 3, background: n <= photos.length ? (n <= 2 ? "#ff9a9e" : "#4caf50") : "rgba(255,255,255,0.12)", transition: "background 0.3s" }} />
+                  {[1, 2, 3].map(n => (
+                    <div key={n} style={{ flex: 1, height: 5, borderRadius: 3, background: n <= photos.length ? "#4caf50" : "rgba(255,255,255,0.12)", transition: "background 0.3s" }} />
                   ))}
-                  <span style={{ color: photos.length >= 3 ? "#4caf50" : "rgba(255,255,255,0.4)", fontSize: 12, fontWeight: 700, whiteSpace: "nowrap" }}>
-                    {photos.length}/5 {photos.length >= 3 ? "✓ Ready!" : `(need ${3 - photos.length} more)`}
+                  <span style={{ color: photos.length === 3 ? "#4caf50" : "rgba(255,255,255,0.4)", fontSize: 12, fontWeight: 700, whiteSpace: "nowrap" }}>
+                    {photos.length}/3 {photos.length === 3 ? "✓ Ready!" : `(need ${3 - photos.length} more)`}
                   </span>
                 </div>
 
@@ -842,11 +917,15 @@ export default function StorybookCreator() {
                   ))}
                 </div>
 
-                {photosReady && (
+                {photos.length === 3 ? (
                   <button onClick={() => goToStep(2)} style={{ width: "100%", marginTop: 20, padding: "17px", borderRadius: 16, border: "none", background: "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 17, fontWeight: 700, cursor: "pointer", animation: "fadeUp 0.35s ease both" }}>
                     Continue →
                   </button>
-                )}
+                ) : photos.length > 0 ? (
+                  <div style={{ marginTop: 20, padding: "14px", borderRadius: 16, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", textAlign: "center", color: "rgba(255,255,255,0.4)", fontSize: 14 }}>
+                    Please upload 3 photos to continue
+                  </div>
+                ) : null}
               </div>
             )}
 
@@ -967,28 +1046,32 @@ export default function StorybookCreator() {
             {/* ── STEP 5: Preview ── */}
             {onboardingStep === 5 && (
               <div>
-                {/* Full-screen loading — shown until ALL 6 scenes done */}
+                {/* Full-screen loading — shown until ALL scenes done */}
                 {previewStatus !== "done" && (
-                  <div style={{ textAlign: "center", padding: isMobile ? "48px 20px" : "64px 32px", background: "rgba(255,255,255,0.04)", borderRadius: 24, border: "1px solid rgba(255,255,255,0.08)" }}>
+                  <div style={{ textAlign: "center", padding: isMobile ? "56px 20px" : "72px 32px", background: "rgba(255,255,255,0.04)", borderRadius: 24, border: "1px solid rgba(255,255,255,0.08)" }}>
                     <div style={{ fontSize: 64, marginBottom: 18, animation: "float 2s ease-in-out infinite" }}>🪄</div>
-                    <h2 style={{ color: "white", fontSize: isMobile ? 20 : 24, fontWeight: 700, margin: "0 0 10px" }}>Creating your story...</h2>
-                    <p style={{ color: "rgba(255,215,0,0.85)", fontSize: 15, fontWeight: 600, margin: "0 0 6px", minHeight: 24 }}>{previewMsg}</p>
-                    <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 13, margin: "0 0 24px" }}>Painting cover + 6 pages with cinematic 3D-style art</p>
-
-                    {/* Progress bar */}
-                    <div style={{ maxWidth: 280, margin: "0 auto 10px", background: "rgba(255,255,255,0.1)", borderRadius: 99, height: 10, overflow: "hidden" }}>
-                      <div style={{ height: "100%", borderRadius: 99, background: "linear-gradient(90deg, #ffd700, #ff9a9e)", width: previewDone === 0 ? "5%" : `${(previewDone / 7) * 100}%`, transition: "width 0.6s ease", animation: previewDone === 0 && previewStatus === "loading" ? "fwdBar 60s linear forwards" : "none" }} />
-                    </div>
-                    <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, margin: "0 0 24px" }}>{previewDone} of 7 illustrations complete</p>
-
+                    <h2 style={{ color: "white", fontSize: isMobile ? 20 : 24, fontWeight: 700, margin: "0 0 12px" }}>Creating your story...</h2>
+                    <p style={{ color: "rgba(255,215,0,0.85)", fontSize: 15, fontWeight: 600, margin: "0 0 32px", minHeight: 24 }}>{previewMsg}</p>
                     <div style={{ display: "flex", justifyContent: "center", gap: 8 }}>
                       {[0, 1, 2].map(i => <div key={i} style={{ width: 9, height: 9, borderRadius: "50%", background: "#ffd700", animation: "pulseDot 1s ease-in-out infinite", animationDelay: `${i * 0.2}s` }} />)}
                     </div>
                   </div>
                 )}
 
+                {/* Rate limit reached */}
+                {previewStatus === "done" && previewStory?._limitReached && (
+                  <div style={{ textAlign: "center", padding: isMobile ? "40px 20px" : "56px 32px", background: "rgba(255,255,255,0.04)", borderRadius: 24, border: "1px solid rgba(255,100,100,0.2)" }}>
+                    <div style={{ fontSize: 52, marginBottom: 16 }}>🔒</div>
+                    <h2 style={{ color: "white", fontSize: isMobile ? 20 : 24, fontWeight: 700, margin: "0 0 10px" }}>Free preview limit reached</h2>
+                    <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 15, margin: "0 0 24px" }}>You've used 3 free previews in 24 hours. Purchase once to unlock unlimited generations.</p>
+                    <button onClick={() => handlePurchase("digital")} style={{ padding: "15px 36px", borderRadius: 16, border: "none", background: "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 16, fontWeight: 800, cursor: "pointer" }}>
+                      Unlock My Book — $17.99 →
+                    </button>
+                  </div>
+                )}
+
                 {/* Revealed preview — fades in once ALL 7 done */}
-                {previewStatus === "done" && previewStory && (
+                {previewStatus === "done" && previewStory && !previewStory._limitReached && (
                   <div style={{ animation: "fadeIn 0.7s ease both" }}>
                     <Mascot msg={`Here's a sneak peek of ${childName || "your child"}'s story! 🎉`} />
 
@@ -1123,6 +1206,7 @@ export default function StorybookCreator() {
         <div style={{ width: "100%", maxWidth: isMobile ? "100%" : 880, animation: "fadeUp 0.5s ease both" }}>
           {falError    && <div style={{ background: "rgba(255,100,100,0.09)", border: "1px solid rgba(255,100,100,0.25)", borderRadius: 10, padding: "9px 14px", marginBottom: 12, color: "#ffaaaa", fontSize: 13, textAlign: "center" }}>⚠️ {falError}</div>}
           {isSharedView && <div style={{ background: "rgba(255,215,0,0.07)", border: "1px solid rgba(255,215,0,0.2)", borderRadius: 10, padding: "8px 14px", marginBottom: 12, color: "rgba(255,215,0,0.8)", fontSize: 13, textAlign: "center" }}>📖 Viewing a shared storybook</div>}
+          {isDemo && <div style={{ background: "rgba(255,215,0,0.12)", border: "1px solid rgba(255,215,0,0.35)", borderRadius: 10, padding: "8px 14px", marginBottom: 12, color: "#ffd700", fontSize: 13, textAlign: "center", fontWeight: 600 }}>⚡ Demo Mode — no credits used · <a href="/create" style={{ color: "#ffd700", textDecoration: "underline", cursor: "pointer" }} onClick={e => { e.preventDefault(); resetAll(); }}>Create your own</a></div>}
 
           {(() => {
             // Capitalise first letter of child's name for display
@@ -1135,16 +1219,13 @@ export default function StorybookCreator() {
             // ── BOOK COVER — illustration top, title banner bottom ────────────
             <div style={{ borderRadius: isMobile ? 16 : 20, overflow: "hidden", boxShadow: "0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,215,0,0.12)", animation: "fadeUp 0.4s ease both", display: "flex", flexDirection: "column", minHeight: isMobile ? 420 : 560 }}>
               {/* Illustration: explicit pixel height so browser allocates space before image loads */}
-              <div style={{ width: "100%", height: 320, position: "relative", overflow: "hidden", display: "block", backgroundColor: "#2D1B69" }}>
-                {(coverImageUrl || pageImages[0]) && (
-                  <img
-                    src={coverImageUrl || pageImages[0]!}
-                    crossOrigin="anonymous"
-                    alt="Book cover"
-                    style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top", display: "block" }}
-                    onError={e => { e.currentTarget.style.display = "none"; }}
-                  />
-                )}
+              <div style={{ width: "100%", height: isMobile ? 240 : 320, position: "relative", overflow: "hidden", display: "block", backgroundColor: "#2D1B69" }}>
+                <img
+                  src={pageImages[0] || undefined}
+                  alt="Book cover"
+                  style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top", display: "block" }}
+                  onError={e => { e.currentTarget.style.display = "none"; }}
+                />
                 <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "30%", background: "linear-gradient(to bottom, transparent, rgba(13,7,30,0.75))" }} />
               </div>
               {/* Title banner */}
@@ -1240,8 +1321,23 @@ export default function StorybookCreator() {
             <button onClick={copyShareLink} style={{ padding: "10px 20px", borderRadius: 11, border: "1px solid rgba(255,255,255,0.15)", background: shareCopied ? "linear-gradient(135deg, #667eea, #764ba2)" : "rgba(255,255,255,0.1)", color: shareCopied ? "white" : "rgba(255,255,255,0.8)", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.3s" }}>
               {shareCopied ? "✓ Link Copied!" : "🔗 Share Book"}
             </button>
-            <button onClick={resetAll} style={{ padding: "10px 18px", borderRadius: 11, border: "1px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.6)", fontSize: 13, cursor: "pointer" }}>+ New Book</button>
+            <button onClick={() => setShowNewBookConfirm(true)} style={{ padding: "10px 18px", borderRadius: 11, border: "1px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.6)", fontSize: 13, cursor: "pointer" }}>+ New Book</button>
           </div>
+
+          {/* New Book confirmation modal */}
+          {showNewBookConfirm && (
+            <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }} onClick={() => setShowNewBookConfirm(false)}>
+              <div style={{ background: "linear-gradient(160deg, #1a0a2e, #2d1b4e)", borderRadius: 20, padding: "32px 28px", maxWidth: 380, width: "100%", border: "1px solid rgba(255,215,0,0.2)", boxShadow: "0 32px 80px rgba(0,0,0,0.6)", textAlign: "center" }} onClick={e => e.stopPropagation()}>
+                <div style={{ fontSize: 40, marginBottom: 14 }}>📖</div>
+                <h3 style={{ color: "white", fontWeight: 700, fontSize: 18, margin: "0 0 10px" }}>Start a new book?</h3>
+                <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 14, margin: "0 0 24px", lineHeight: 1.6 }}>Your current book will be lost.</p>
+                <div style={{ display: "flex", gap: 10 }}>
+                  <button onClick={() => setShowNewBookConfirm(false)} style={{ flex: 1, padding: "12px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.18)", background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.7)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
+                  <button onClick={resetAll} style={{ flex: 1, padding: "12px", borderRadius: 12, border: "none", background: "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Yes, start over</button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

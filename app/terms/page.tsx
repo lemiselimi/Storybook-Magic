@@ -42,7 +42,7 @@ You retain ownership of any photos you upload. By uploading a photo you grant us
           },
           {
             title: "4. Payments & Refunds",
-            body: `Payments are processed securely by Stripe. Prices are displayed in USD and are inclusive of any applicable fees. We offer a 30-day satisfaction guarantee: if you are not satisfied with your book, contact us at hello@mytinytales.studio within 30 days of purchase and we will either re-generate the book or provide a full refund.
+            body: `Payments are processed securely by Stripe. Prices are displayed in USD and are inclusive of any applicable fees. We offer a 30-day happiness promise — we are committed to making sure you love your book. We handle all concerns on a case-by-case basis and are committed to your satisfaction. Please contact us at hello@mytinytales.studio within 30 days of purchase.
 
 Digital books are delivered immediately upon payment. Print books are produced and shipped within 5–7 business days; shipping times vary by location. We are not responsible for delays caused by shipping carriers.`,
           },
@@ -52,7 +52,7 @@ Digital books are delivered immediately upon payment. Print books are produced a
           },
           {
             title: "6. Disclaimers",
-            body: `The Service is provided "as is". AI-generated content may occasionally contain errors or unexpected results. We do not guarantee that generated images will meet every expectation, but we will work with you to produce a result you are happy with under our satisfaction guarantee.`,
+            body: `The Service is provided "as is". AI-generated content may occasionally contain errors or unexpected results. We do not guarantee that generated images will meet every expectation, but we handle all concerns on a case-by-case basis and are committed to your satisfaction.`,
           },
           {
             title: "7. Limitation of Liability",

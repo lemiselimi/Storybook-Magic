@@ -25,7 +25,7 @@ const FAQS = [
   },
   {
     q: "How do I get a refund?",
-    a: "We offer a 30-day satisfaction guarantee. If you're not delighted with your book for any reason, email us at hello@mytinytales.studio within 30 days of your purchase and we'll make it right — either a regenerated book or a full refund, your choice.",
+    a: "We offer a 30-day happiness promise. We handle all concerns on a case-by-case basis and are committed to your satisfaction. Email us at hello@mytinytales.studio within 30 days of your purchase and we'll work with you to make sure you love your book.",
   },
   {
     q: "Can I customise the story theme?",

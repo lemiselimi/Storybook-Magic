@@ -35,12 +35,14 @@ export async function POST(request) {
 
     const styleAnchor = "Cinematic 3D-style illustration, warm volumetric lighting, photorealistic child, consistent art style across all scenes, soft depth of field, storybook atmosphere";
 
-    const prompt = `a photo of TOK, ${characterDesc}, ${illustration}, ${styleAnchor}, vibrant colors, whimsical and joyful${genderDirective ? `. ${genderDirective}` : ""}`;
+    const safetyDirectives = "The child must be fully clothed at all times, wearing age-appropriate adventure clothing suited to the story theme. No bare chest, no shirtless scenes. Background must contain only animals, nature, and magical storybook elements. No real human crowds, no realistic background people, no real-world urban settings.";
+
+    const prompt = `a photo of TOK, ${characterDesc}, ${illustration}, ${styleAnchor}, vibrant colors, whimsical and joyful. ${safetyDirectives}${genderDirective ? `. ${genderDirective}` : ""}`;
 
     const result = await fal.subscribe("fal-ai/flux-lora", {
       input: {
         prompt,
-        negative_prompt: "realistic photo, dark, scary, blurry, low quality, adult, teenager, text, watermark, deformed, ugly, multiple people, violence, wrong age",
+        negative_prompt: "realistic photo, dark, scary, blurry, low quality, adult, teenager, text, words, letters, numbers, signs, labels, speech bubbles, thought bubbles, written characters, watermark, deformed, ugly, multiple people, violence, wrong age, nude, shirtless, bare chest, crowd, real people, urban background",
         loras: [{ path: loraUrl, scale: 1.0 }],
         num_inference_steps: 28,
         guidance_scale: 3.5,

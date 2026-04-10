@@ -146,6 +146,8 @@ export default function StorybookCreator() {
   const [isSharedView,     setIsSharedView]     = useState(false);
   const [isDemo,           setIsDemo]           = useState(false);
   const [showNewBookConfirm, setShowNewBookConfirm] = useState(false);
+  const [kontextResult,    setKontextResult]    = useState<string | null>(null);
+  const [kontextLoading,   setKontextLoading]   = useState(false);
 
   // ── Email lead capture ────────────────────────────────────────────────────────
   const [leadEmail,    setLeadEmail]    = useState("");
@@ -1322,7 +1324,54 @@ export default function StorybookCreator() {
               {shareCopied ? "✓ Link Copied!" : "🔗 Share Book"}
             </button>
             <button onClick={() => setShowNewBookConfirm(true)} style={{ padding: "10px 18px", borderRadius: 11, border: "1px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.6)", fontSize: 13, cursor: "pointer" }}>+ New Book</button>
+            {isDemo && (
+              <button
+                onClick={async () => {
+                  setKontextLoading(true);
+                  setKontextResult(null);
+                  try {
+                    const res = await fetch("/api/test-kontext", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        photoUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800",
+                        prompt: "A young girl wearing a spacesuit floating in a colorful galaxy filled with glowing stars and star creatures, whimsical children's storybook illustration, vibrant colors, soft warm lighting, magical atmosphere",
+                      }),
+                    });
+                    const data = await res.json();
+                    if (data.url) setKontextResult(data.url);
+                    else setKontextResult("error");
+                  } catch { setKontextResult("error"); }
+                  finally { setKontextLoading(false); }
+                }}
+                disabled={kontextLoading}
+                style={{ padding: "10px 18px", borderRadius: 11, border: "1px solid rgba(255,215,0,0.4)", background: "rgba(244,196,48,0.12)", color: "#ffd700", fontSize: 13, fontWeight: 600, cursor: kontextLoading ? "not-allowed" : "pointer", opacity: kontextLoading ? 0.6 : 1 }}
+              >
+                {kontextLoading ? "⏳ Testing Kontext…" : "🧪 Test Kontext"}
+              </button>
+            )}
           </div>
+
+          {/* Kontext test result (demo only) */}
+          {isDemo && kontextResult && (
+            <div style={{ margin: "20px auto 0", maxWidth: 680, background: "rgba(255,255,255,0.06)", borderRadius: 16, padding: "20px 24px", border: "1px solid rgba(255,215,0,0.2)" }}>
+              <p style={{ color: "#ffd700", fontWeight: 700, fontSize: 14, margin: "0 0 14px" }}>🧪 Kontext Pro result — reference-image guided (no LoRA)</p>
+              {kontextResult === "error" ? (
+                <p style={{ color: "#ff6b6b", fontSize: 14, margin: 0 }}>Generation failed. Check FAL_API_KEY and fal-ai/flux-kontext-pro availability.</p>
+              ) : (
+                <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "flex-start" }}>
+                  <div style={{ flex: 1, minWidth: 220 }}>
+                    <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, margin: "0 0 8px" }}>Kontext Pro output</p>
+                    <img src={kontextResult} alt="Kontext result" style={{ width: "100%", borderRadius: 10, display: "block" }} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 220 }}>
+                    <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, margin: "0 0 8px" }}>Demo LoRA image (page 1)</p>
+                    <img src={DEMO_IMAGES[0]} alt="LoRA comparison" style={{ width: "100%", borderRadius: 10, display: "block" }} />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* New Book confirmation modal */}
           {showNewBookConfirm && (

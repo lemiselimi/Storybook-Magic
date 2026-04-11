@@ -52,38 +52,40 @@ const PAGE_BACKGROUNDS = [
 const TOTAL_STEPS     = 5;
 
 const CLOTHING = " No logos, no brand names, no text, no character prints, no emblems of any kind on the clothing.";
+const FACE_INSTRUCTION = "Use the face from the reference image only. Generate a completely new body, new adventure outfit appropriate for the scene, and a new natural pose. The child should look like they belong in the scene, not pasted in. ";
 const SCENE_FRAME = "The child stands as a small but clear hero figure in the scene, taking up about 1/3 of the frame, surrounded by the magical world. Wide cinematic shot showing the full environment. Warm volumetric lighting, soft depth of field, Pixar-inspired 3D render quality, professional children's book illustration. No text, no words, no logos, no branded clothing.";
 
 const COVER_PROMPT =
-  "Transform this photo into a cinematic 3D-style children's book illustration. " +
+  FACE_INSTRUCTION +
+  "Cinematic 3D-style children's book illustration. " +
   "Show the child's face clearly in a 3/4 portrait view, looking forward with wonder and excitement. " +
   "Magical glowing doorway or portal glowing in the background. " +
   "Warm dramatic lighting illuminating their face from the front. " +
   "Pixar-inspired quality, vibrant colours. No text anywhere." + CLOTHING;
 
 const SCENE_PROMPTS = [
-  "Keep this child's exact face and likeness. " +
+  FACE_INSTRUCTION + "Keep this child's exact face and likeness. " +
   "A breathtaking magical garden at golden hour with an ancient glowing stone archway portal swirling with golden sparkles and magical light. " +
   "Fireflies float around. Lush green garden with flowers in background. " +
   SCENE_FRAME,
 
-  "Keep this child's exact face and likeness. " +
+  FACE_INSTRUCTION + "Keep this child's exact face and likeness. " +
   "An enchanted forest wonderland with enormous glowing trees, bioluminescent mushrooms, singing flowers with happy faces, and soft magical light filtering through the canopy. Fireflies everywhere. " +
   SCENE_FRAME,
 
-  "Keep this child's exact face and likeness. " +
+  FACE_INSTRUCTION + "Keep this child's exact face and likeness. " +
   "A twilight sky filled with falling stars and shooting comets. Pine trees silhouetted below. One large glowing star falling from the sky toward the child. " +
   SCENE_FRAME,
 
-  "Keep this child's exact face and likeness. " +
+  FACE_INSTRUCTION + "Keep this child's exact face and likeness. " +
   "A whimsical forest clearing with giant friendly colourful mushrooms, a large mossy rock, and a tiny glowing creature trapped underneath. Magical forest light filtering through trees. " +
   SCENE_FRAME,
 
-  "Keep this child's exact face and likeness. " +
+  FACE_INSTRUCTION + "Keep this child's exact face and likeness. " +
   "A magical forest clearing at night, the child holding up a large radiant rainbow crystal that sends beams of coloured light in all directions, illuminating the dark forest around them. " +
   SCENE_FRAME,
 
-  "Keep this child's exact face and likeness. " +
+  FACE_INSTRUCTION + "Keep this child's exact face and likeness. " +
   "A magical forest filled with joyful glowing creatures — rabbits, deer, fireflies — all celebrating together. Warm golden magical light floods the scene. Stars visible above through the tree canopy. " +
   SCENE_FRAME,
 ];

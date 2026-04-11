@@ -3,7 +3,7 @@ import { fal } from "@fal-ai/client";
 export const maxDuration = 60;
 
 async function callKontext(prompt, imageUrl) {
-  const result = await fal.subscribe("fal-ai/flux-pro/kontext", {
+  const result = await fal.subscribe("fal-ai/flux-pro/kontext/max", {
     input: { prompt, image_url: imageUrl },
   });
   return result.data.images[0].url;

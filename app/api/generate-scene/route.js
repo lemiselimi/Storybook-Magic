@@ -5,11 +5,11 @@ export const maxDuration = 60;
 export async function POST(request) {
   fal.config({ credentials: process.env.FAL_API_KEY });
   try {
-    const { loraUrl, illustration, childName, gender, childAge, hairColor, eyeColor, isCover } = await request.json();
+    const { imageUrl, illustration, childName, gender, childAge, hairColor, eyeColor, isCover } = await request.json();
 
-    if (!loraUrl) return Response.json({ error: "loraUrl required" }, { status: 400 });
+    if (!imageUrl) return Response.json({ error: "imageUrl required" }, { status: 400 });
 
-    console.log("Generate scene called:", illustration?.substring(0, 80));
+    console.log("Generate scene (Kontext) called:", illustration?.substring(0, 80));
 
     const genderWord = gender === "girl" ? "girl" : gender === "boy" ? "boy" : "child";
 
@@ -33,22 +33,24 @@ export async function POST(request) {
       ? "The child is a girl. Scenes can include feminine elements if appropriate to the theme."
       : "";
 
-    const styleAnchor = "Cinematic 3D-style illustration, warm volumetric lighting, photorealistic child, consistent art style across all scenes, soft depth of field, storybook atmosphere";
-
     const safetyDirectives = "The child must be fully clothed at all times, wearing age-appropriate adventure clothing suited to the story theme. No bare chest, no shirtless scenes. Background must contain only animals, nature, and magical storybook elements. No real human crowds, no realistic background people, no real-world urban settings.";
 
-    const prompt = `a photo of TOK, ${characterDesc}, ${illustration}, ${styleAnchor}, vibrant colors, whimsical and joyful. ${safetyDirectives}${genderDirective ? `. ${genderDirective}` : ""}`;
+    const prompt = (
+      `Transform this photo into a cinematic 3D-style children's book illustration. ` +
+      `Keep the child's exact face, features and likeness. ` +
+      `The child is ${characterDesc}. ` +
+      `Scene: ${illustration}. ` +
+      `Style: warm volumetric lighting, soft depth of field, magical storybook atmosphere, Pixar-inspired 3D render quality. ` +
+      `${safetyDirectives}` +
+      (genderDirective ? ` ${genderDirective}` : "") +
+      ` No text, no words, no letters anywhere in the image.`
+    );
 
-    const result = await fal.subscribe("fal-ai/flux-lora", {
+    const result = await fal.subscribe("fal-ai/flux-pro/kontext", {
       input: {
         prompt,
-        negative_prompt: "realistic photo, dark, scary, blurry, low quality, adult, teenager, text, words, letters, numbers, signs, labels, speech bubbles, thought bubbles, written characters, watermark, deformed, ugly, multiple people, violence, wrong age, nude, shirtless, bare chest, crowd, real people, urban background",
-        loras: [{ path: loraUrl, scale: 1.0 }],
-        num_inference_steps: 28,
-        guidance_scale: 3.5,
-        num_images: 1,
+        image_url: imageUrl,
         image_size: isCover ? "portrait_4_3" : "landscape_4_3",
-        enable_safety_checker: true,
       },
     });
 

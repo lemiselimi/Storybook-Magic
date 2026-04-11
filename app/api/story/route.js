@@ -2,10 +2,10 @@ import Anthropic from "@anthropic-ai/sdk";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-// In-memory rate limiting: 3 story generations per IP per 24 h
+// In-memory rate limiting: 5 story generations per IP per 24 h
 // (resets on cold start; acceptable without a KV store)
 const rateLimitMap = new Map(); // ip -> { count, resetAt }
-const RATE_LIMIT  = 3;
+const RATE_LIMIT  = 5;
 const RATE_WINDOW = 24 * 60 * 60 * 1000;
 
 function checkRateLimit(ip) {
@@ -25,7 +25,7 @@ export async function POST(request) {
     const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
     if (!checkRateLimit(ip)) {
       return Response.json(
-        { error: "limit_reached", message: "You've reached the maximum of 3 free previews in 24 hours. Purchase your book to continue." },
+        { error: "limit_reached", message: "You've reached the maximum of 5 free previews in 24 hours. Purchase your book to continue." },
         { status: 429 }
       );
     }

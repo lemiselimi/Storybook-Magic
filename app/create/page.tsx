@@ -95,22 +95,16 @@ export default function StorybookCreator() {
   const [mainStep, setMainStep] = useState<"onboarding" | "generating" | "book">("onboarding");
 
   // ── Photos (multi-upload) ────────────────────────────────────────────────────
-  const [photos,       setPhotos]       = useState<string[]>([]); // object URLs for display
-  const [photosBase64, setPhotosBase64] = useState<string[]>([]); // compressed base64 for upload
-  const [photosReady,  setPhotosReady]  = useState(false);        // true when >= 3 photos
-  const [dragOver,     setDragOver]     = useState(false);
-  const [photoLimitMsg, setPhotoLimitMsg] = useState(false);
+  const [photo,       setPhoto]       = useState<string | null>(null);  // object URL for display
+  const [photoBase64, setPhotoBase64] = useState<string | null>(null);  // compressed base64
+  const [photoUrl,    setPhotoUrl]    = useState<string | null>(null);  // uploaded fal storage URL
+  const [dragOver,    setDragOver]    = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // ── Appearance ───────────────────────────────────────────────────────────────
   const [hairColor, setHairColor] = useState("brown");
   const [eyeColor,  setEyeColor]  = useState("brown");
 
-  // ── LoRA training ─────────────────────────────────────────────────────────────
-  const [loraStatus, setLoraStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
-  const [loraUrl,    setLoraUrl]    = useState<string | null>(null);
-  const loraUrlRef      = useRef<string | null>(null);
-  const loraTrainingRef = useRef<Promise<void> | null>(null);
 
   // ── Form ─────────────────────────────────────────────────────────────────────
   const [childName,   setChildName]   = useState("");
@@ -211,8 +205,8 @@ export default function StorybookCreator() {
           setChildName(data.childName || ""); setChildAge(data.childAge ?? 5);
           setChildGender(data.childGender || "boy"); setTheme(data.theme || "adventure");
           setHairColor(data.hairColor || "brown"); setEyeColor(data.eyeColor || "brown");
-          if (data.loraUrl) {
-            setLoraUrl(data.loraUrl); loraUrlRef.current = data.loraUrl; setLoraStatus("done");
+          if (data.photoUrl) {
+            setPhotoUrl(data.photoUrl);
           }
           if (data.coverFalUrl) setCoverImageUrl(`/api/proxy?url=${encodeURIComponent(data.coverFalUrl)}`);
           setTimeout(() => generateFullBook(data), 50);
@@ -242,106 +236,35 @@ export default function StorybookCreator() {
 
   const addPhoto = useCallback((file: File) => {
     if (!file || !file.type.startsWith("image/")) return;
-    // Hard cap at 3 — show message if already full
-    setPhotosBase64(prev => {
-      if (prev.length >= 3) {
-        setPhotoLimitMsg(true);
-        setTimeout(() => setPhotoLimitMsg(false), 3000);
-        return prev;
-      }
-      return prev; // will be updated after compress
-    });
     const objectUrl = URL.createObjectURL(file);
-    setPhotos(prev => { if (prev.length >= 3) return prev; return [...prev, objectUrl]; });
+    setPhoto(objectUrl);
     compressImage(file)
       .then(b64 => {
-        setPhotosBase64(prev => {
-          if (prev.length >= 3) return prev;
-          const next = [...prev, b64];
-          setPhotosReady(next.length >= 3);
-          gtagEvent("photo_uploaded");
-          return next;
-        });
+        setPhotoBase64(b64);
+        gtagEvent("photo_uploaded");
       })
       .catch(() => {
         const reader = new FileReader();
         reader.onload = (e) => {
-          const b64 = (e.target?.result as string).split(",")[1];
-          setPhotosBase64(prev => {
-            if (prev.length >= 3) return prev;
-            const next = [...prev, b64];
-            setPhotosReady(next.length >= 3);
-            return next;
-          });
+          setPhotoBase64((e.target?.result as string).split(",")[1]);
         };
         reader.readAsDataURL(file);
       });
   }, []);
 
-  const removePhoto = (idx: number) => {
-    setPhotos(prev => prev.filter((_, i) => i !== idx));
-    setPhotosBase64(prev => {
-      const next = prev.filter((_, i) => i !== idx);
-      setPhotosReady(next.length >= 3);
-      return next;
-    });
+  const removePhoto = () => {
+    setPhoto(null);
+    setPhotoBase64(null);
+    setPhotoUrl(null);
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault(); setDragOver(false);
-    Array.from(e.dataTransfer.files).forEach(f => addPhoto(f));
+    const file = e.dataTransfer.files[0];
+    if (file) addPhoto(file);
   };
 
-  // ── LoRA training (called at step 3 → 4, after gender/age collected) ──────────
-  // Submits the job immediately, then polls /api/check-lora every 5 s until done.
-  // loraTrainingRef.current is a Promise that resolves when training completes,
-  // so generatePreview can await it before generating scenes.
-  const startLoraTraining = useCallback((base64s: string[]) => {
-    setLoraStatus("loading");
-    const promise = (async () => {
-      try {
-        // Step 1: upload ZIP + submit job (returns immediately with jobId)
-        const submitRes = await fetch("/api/train-lora", {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ photosBase64: base64s }),
-        }).then(r => r.json());
 
-        if (submitRes.error || !submitRes.jobId) {
-          console.error("LoRA submit failed:", submitRes.error);
-          setLoraStatus("error"); return;
-        }
-
-        const jobId = submitRes.jobId;
-        console.log("LoRA job submitted:", jobId);
-
-        // Step 2: poll until COMPLETED (every 5 s, up to ~10 min)
-        for (let i = 0; i < 120; i++) {
-          await new Promise<void>(resolve => setTimeout(resolve, 5000));
-          try {
-            const pollRes = await fetch("/api/check-lora", {
-              method: "POST", headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ jobId }),
-            }).then(r => r.json());
-
-            if (pollRes.status === "COMPLETED" && pollRes.loraUrl) {
-              setLoraUrl(pollRes.loraUrl);
-              loraUrlRef.current = pollRes.loraUrl;
-              setLoraStatus("done");
-              return;
-            }
-            if (pollRes.error || pollRes.status === "FAILED") {
-              console.error("LoRA poll error:", pollRes.error ?? pollRes.status);
-              setLoraStatus("error"); return;
-            }
-            // IN_QUEUE or IN_PROGRESS — keep polling
-          } catch { /* network blip — retry next iteration */ }
-        }
-        // Timeout after 120 polls × 5 s = 10 min
-        setLoraStatus("error");
-      } catch { setLoraStatus("error"); }
-    })();
-    loraTrainingRef.current = promise;
-  }, []);
 
   // ── Fallback story ────────────────────────────────────────────────────────────
   const getFallbackStory = (name: string) => ({
@@ -357,10 +280,9 @@ export default function StorybookCreator() {
     ],
   });
 
-  // ── Preview: generate cover + ALL 6 scenes (7 total), show loading until done ─
   const generatePreview = useCallback(async () => {
     setPreviewStatus("loading");
-    setPreviewMsg("Writing your story... ✍️");
+    setPreviewMsg("Writing your story...");
     setPreviewDone(0);
     setPreviewImages(Array(6).fill(null));
     setPreviewCoverUrl(null);
@@ -369,7 +291,14 @@ export default function StorybookCreator() {
     const coverIllustration = `epic storybook cover, ${childName || "the child"} as the hero in a dramatic iconic pose, ${selectedTheme?.title} adventure theme, magical and vibrant atmosphere, bold storybook cover art composition`;
 
     try {
-      const [storyRes] = await Promise.all([
+      // Upload photo + fetch story in parallel
+      const [uploadRes, storyRes] = await Promise.all([
+        photoBase64
+          ? fetch("/api/upload-photo", {
+              method: "POST", headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ photoBase64 }),
+            }).then(r => r.json())
+          : Promise.resolve(null),
         fetch("/api/story", {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -377,7 +306,6 @@ export default function StorybookCreator() {
             theme: `${selectedTheme?.title} - ${selectedTheme?.subtitle}: ${selectedTheme?.desc}`,
           }),
         }).then(r => r.json()),
-        loraTrainingRef.current ?? Promise.resolve(),
       ]);
 
       if (storyRes?.error === "limit_reached") {
@@ -388,27 +316,29 @@ export default function StorybookCreator() {
       }
       const storyData = storyRes?.pages ? storyRes : getFallbackStory(childName);
       setPreviewStory(storyData);
-      setPreviewMsg("Starting illustrations... 🖌️");
 
-      const falUrl = loraUrlRef.current;
-      if (falUrl && storyData.pages) {
+      const imageUrl = uploadRes?.url ?? null;
+      if (imageUrl) setPhotoUrl(imageUrl);
+
+      setPreviewMsg("Illustrating your scenes...");
+
+      if (imageUrl && storyData.pages) {
         let done = 0;
         const total = 7; // 1 cover + 6 pages
 
-        // Generate cover + all 6 page scenes in parallel
         await Promise.allSettled([
           // Cover image (portrait orientation)
           (async () => {
             try {
               const res = await fetch("/api/generate-scene", {
                 method: "POST", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ loraUrl: falUrl, illustration: coverIllustration, childName, gender: childGender, childAge, hairColor, eyeColor, isCover: true }),
+                body: JSON.stringify({ imageUrl, illustration: coverIllustration, childName, gender: childGender, childAge, hairColor, eyeColor, isCover: true }),
               }).then(r => r.json());
               if (res.url) {
                 setPreviewCoverUrl(`/api/proxy?url=${encodeURIComponent(res.url)}`);
                 done++;
                 setPreviewDone(done);
-                setPreviewMsg(done < total ? `Illustrated ${done} of ${total}... ✨` : "All illustrations ready! 🎉");
+                setPreviewMsg(done < total ? `${done} of ${total} scenes ready...` : "All illustrations ready!");
               }
             } catch {}
           })(),
@@ -417,13 +347,13 @@ export default function StorybookCreator() {
             try {
               const res = await fetch("/api/generate-scene", {
                 method: "POST", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ loraUrl: falUrl, illustration: page.illustration, childName, gender: childGender, childAge, hairColor, eyeColor }),
+                body: JSON.stringify({ imageUrl, illustration: page.illustration, childName, gender: childGender, childAge, hairColor, eyeColor }),
               }).then(r => r.json());
               if (res.url) {
                 setPreviewImages(prev => { const n = [...prev]; n[idx] = `/api/proxy?url=${encodeURIComponent(res.url)}`; return n; });
                 done++;
                 setPreviewDone(done);
-                setPreviewMsg(done < total ? `Illustrated ${done} of ${total}... ✨` : "All illustrations ready! 🎉");
+                setPreviewMsg(done < total ? `${done} of ${total} scenes ready...` : "All illustrations ready!");
               }
             } catch {}
           }),
@@ -434,7 +364,7 @@ export default function StorybookCreator() {
     setPreviewStatus("done");
     gtagEvent("book_generated", { theme, childAge });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [theme, childName, childAge, childGender, hairColor, eyeColor]);
+  }, [theme, childName, childAge, childGender, hairColor, eyeColor, photoBase64]);
 
   useEffect(() => {
     if (onboardingStep === 5 && !previewStarted.current) {
@@ -454,10 +384,7 @@ export default function StorybookCreator() {
     const _savedStory    = savedData?.story         ?? previewStory;
     const _savedFalUrls  = savedData?.previewFalUrls as (string | null)[] | undefined;
     const _savedCoverUrl = savedData?.coverFalUrl   as string | undefined;
-    const _loraUrl       = savedData?.loraUrl ?? loraUrlRef.current;
-
-    // Restore LoRA URL
-    if (_loraUrl) { setLoraUrl(_loraUrl); loraUrlRef.current = _loraUrl; setLoraStatus("done"); }
+    const _imageUrl      = savedData?.photoUrl ?? photoUrl;
 
     // Restore cover if it came back from Stripe session
     if (_savedCoverUrl) setCoverImageUrl(`/api/proxy?url=${encodeURIComponent(_savedCoverUrl)}`);
@@ -483,7 +410,6 @@ export default function StorybookCreator() {
 
     try {
       let storyData = _savedStory;
-      let falUrl    = _loraUrl;
 
       if (!storyData) {
         const sel = THEMES.find(t => t.id === _theme);
@@ -497,17 +423,17 @@ export default function StorybookCreator() {
 
       setStory(storyData);
 
-      if (falUrl && storyData?.pages) {
+      if (_imageUrl && storyData?.pages) {
         const sel = THEMES.find(t => t.id === _theme);
         const coverIllustration = `epic storybook cover, ${_name} as the hero in a dramatic iconic pose, ${sel?.title} adventure theme, magical and vibrant atmosphere, bold storybook cover art composition`;
-        setLoadingMsg("Painting cover & all scenes... 🎨 (~1 min)");
+        setLoadingMsg("Painting cover & all scenes... (~1 min)");
         await Promise.allSettled([
           // Cover
           (async () => {
             try {
               const res = await fetch("/api/generate-scene", {
                 method: "POST", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ loraUrl: falUrl, illustration: coverIllustration, childName: _name, gender: _gender, childAge: _age, hairColor: _hair, eyeColor: _eye, isCover: true }),
+                body: JSON.stringify({ imageUrl: _imageUrl, illustration: coverIllustration, childName: _name, gender: _gender, childAge: _age, hairColor: _hair, eyeColor: _eye, isCover: true }),
               }).then(r => r.json());
               if (res.url) { setCoverImageUrl(`/api/proxy?url=${encodeURIComponent(res.url)}`); setScenesCompleted(p => p + 1); }
             } catch { setScenesCompleted(p => p + 1); }
@@ -517,7 +443,7 @@ export default function StorybookCreator() {
             try {
               const res = await fetch("/api/generate-scene", {
                 method: "POST", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ loraUrl: falUrl, illustration: page.illustration, childName: _name, gender: _gender, childAge: _age, hairColor: _hair, eyeColor: _eye }),
+                body: JSON.stringify({ imageUrl: _imageUrl, illustration: page.illustration, childName: _name, gender: _gender, childAge: _age, hairColor: _hair, eyeColor: _eye }),
               }).then(r => r.json());
               if (res.url) { setPageImages(prev => { const n = [...prev]; n[idx] = `/api/proxy?url=${encodeURIComponent(res.url)}`; return n; }); setScenesCompleted(p => p + 1); }
             } catch { setScenesCompleted(p => p + 1); }
@@ -542,7 +468,7 @@ export default function StorybookCreator() {
       sessionStorage.setItem(ref, JSON.stringify({
         childName, childAge, childGender, theme, hairColor, eyeColor,
         story: previewStory,
-        loraUrl: loraUrlRef.current,
+        photoUrl: photoUrl,
         coverFalUrl: previewCoverUrl ? rawFalUrl(previewCoverUrl) : null,
         previewFalUrls: previewImages.map(u => u ? rawFalUrl(u) : null),
         plan,
@@ -569,13 +495,13 @@ export default function StorybookCreator() {
 
   // ── Regen / Share / PDF ───────────────────────────────────────────────────────
   const regenerateScene = async (pageIdx: number) => {
-    if (!loraUrl || regeneratingPage !== null) return;
+    if (!photoUrl || regeneratingPage !== null) return;
     setRegeneratingPage(pageIdx);
     try {
       const page = story.pages[pageIdx];
       const res = await fetch("/api/generate-scene", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ loraUrl, illustration: page.illustration, childName, gender: childGender, childAge, hairColor, eyeColor }),
+        body: JSON.stringify({ imageUrl: photoUrl, illustration: page.illustration, childName, gender: childGender, childAge, hairColor, eyeColor }),
       }).then(r => r.json());
       if (res.url) setPageImages(prev => { const n = [...prev]; n[pageIdx] = `/api/proxy?url=${encodeURIComponent(res.url)}`; return n; });
     } catch (err) { console.error("Regenerate failed:", err); }
@@ -607,9 +533,7 @@ export default function StorybookCreator() {
 
   const resetAll = () => {
     setMainStep("onboarding"); setOnboardingStep(1); setStepDir("fwd");
-    setPhotos([]); setPhotosBase64([]); setPhotosReady(false);
-    setLoraUrl(null); setLoraStatus("idle");
-    loraUrlRef.current = null; loraTrainingRef.current = null;
+    setPhoto(null); setPhotoBase64(null); setPhotoUrl(null);
     setHairColor("brown"); setEyeColor("brown");
     setStory(null); setPreviewStory(null); setPreviewImages(Array(6).fill(null));
     setPreviewCoverUrl(null); setCoverImageUrl(null);
@@ -620,7 +544,7 @@ export default function StorybookCreator() {
   };
 
   const totalPages   = story?.pages?.length ?? 6;
-  const displayPhoto = photos[0] ?? null;
+  const displayPhoto = photo;
 
   // ── BookPage / BookSpread — premium printed book layout ──────────────────────
   const BookTextPage = ({ page }: { page: any }) => {
@@ -674,7 +598,7 @@ export default function StorybookCreator() {
             <div style={{ width: 36, height: 36, border: "3px solid rgba(255,215,0,0.15)", borderTop: "3px solid rgba(255,215,0,0.5)", borderRadius: "50%", animation: "spin 1.2s linear infinite" }} />
           </div>
         )}
-        {!isSharedView && loraUrl && !isRegen && (
+        {!isSharedView && photoUrl && !isRegen && (
           <button className="regen-btn" onClick={() => regenerateScene(page.pageNum - 1)} style={{ position: "absolute", bottom: 12, right: 12, background: "rgba(0,0,0,0.6)", border: "1px solid rgba(255,255,255,0.18)", borderRadius: 8, padding: "5px 10px", color: "rgba(255,255,255,0.75)", fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, backdropFilter: "blur(4px)" }}>🔄 Redo</button>
         )}
       </div>
@@ -845,74 +769,49 @@ export default function StorybookCreator() {
             {/* ── STEP 1: Upload ── */}
             {onboardingStep === 1 && (
               <div>
-                <Mascot msg="Upload 3 clear photos of your child for the best likeness. Face clearly visible, good lighting, different angles." />
+                <Mascot msg="Upload 1 clear photo of your child. Face clearly visible, good lighting." />
 
-                {/* Photo grid */}
+                {/* Photo slot */}
                 <div
                   onDrop={handleDrop}
                   onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
                   onDragLeave={() => setDragOver(false)}
-                  style={{ background: dragOver ? "rgba(255,215,0,0.04)" : "rgba(255,255,255,0.03)", border: `2px dashed ${dragOver ? "#ffd700" : photos.length === 3 ? "rgba(76,175,80,0.4)" : "rgba(255,255,255,0.15)"}`, borderRadius: 22, padding: "20px", transition: "all 0.2s" }}
+                  style={{ background: dragOver ? "rgba(255,215,0,0.04)" : "rgba(255,255,255,0.03)", border: `2px dashed ${dragOver ? "#ffd700" : photo ? "rgba(76,175,80,0.4)" : "rgba(255,255,255,0.15)"}`, borderRadius: 22, padding: "20px", transition: "all 0.2s", textAlign: "center" }}
                 >
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: photos.length < 3 ? 12 : 0 }}>
-                    {photos.map((src, i) => (
-                      <div key={i} style={{ position: "relative", aspectRatio: "1", borderRadius: 14, overflow: "hidden", border: "2px solid rgba(76,175,80,0.5)" }}>
-                        <img src={src} alt={`Photo ${i + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                        <button onClick={() => removePhoto(i)} style={{ position: "absolute", top: 4, right: 4, width: 24, height: 24, borderRadius: "50%", background: "rgba(0,0,0,0.7)", border: "none", color: "white", fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>×</button>
-                        {i === 0 && <div style={{ position: "absolute", bottom: 4, left: 4, background: "rgba(76,175,80,0.9)", borderRadius: 6, padding: "2px 6px", fontSize: 9, fontWeight: 700, color: "white" }}>MAIN</div>}
-                      </div>
-                    ))}
-                    {photos.length < 3 && (
-                      <div onClick={() => fileRef.current?.click()} style={{ aspectRatio: "1", borderRadius: 14, border: "2px dashed rgba(255,255,255,0.2)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", gap: 6, background: "rgba(255,255,255,0.03)", transition: "all 0.15s" }}>
-                        <span style={{ fontSize: 28, opacity: 0.5 }}>+</span>
-                        <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, textAlign: "center" }}>{photos.length === 0 ? "Add photo" : "Add more"}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {photos.length === 0 && (
-                    <div style={{ textAlign: "center", padding: "24px 0 8px" }}>
-                      <div style={{ fontSize: 52, marginBottom: 10 }}>📸</div>
-                      <p style={{ color: "white", fontSize: 17, fontWeight: 700, margin: "0 0 4px" }}>Upload exactly 3 photos</p>
-                      <p style={{ color: "rgba(255,255,255,0.38)", fontSize: 13, margin: 0 }}>Tap + or drag & drop photos here</p>
+                  {photo ? (
+                    <div style={{ position: "relative", width: 160, height: 160, borderRadius: 16, overflow: "hidden", border: "2px solid rgba(76,175,80,0.5)", margin: "0 auto 10px" }}>
+                      <img src={photo} alt="Your photo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      <button onClick={removePhoto} style={{ position: "absolute", top: 4, right: 4, width: 24, height: 24, borderRadius: "50%", background: "rgba(0,0,0,0.7)", border: "none", color: "white", fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>×</button>
                     </div>
+                  ) : (
+                    <>
+                      <div onClick={() => fileRef.current?.click()} style={{ width: 120, height: 120, borderRadius: 16, border: "2px dashed rgba(255,255,255,0.2)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", gap: 6, background: "rgba(255,255,255,0.03)", margin: "0 auto 16px" }}>
+                        <span style={{ fontSize: 36, opacity: 0.5 }}>+</span>
+                        <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 11 }}>Add photo</span>
+                      </div>
+                      <div style={{ fontSize: 48, marginBottom: 8 }}>📸</div>
+                      <p style={{ color: "white", fontSize: 17, fontWeight: 700, margin: "0 0 4px" }}>Upload 1 photo of your child</p>
+                      <p style={{ color: "rgba(255,255,255,0.38)", fontSize: 13, margin: 0 }}>Tap + or drag & drop here</p>
+                    </>
                   )}
 
-                  {/* "All done" state — shown when 3 photos uploaded */}
-                  {photos.length === 3 && (
-                    <div style={{ textAlign: "center", padding: "10px 0 4px", color: "#4caf50", fontWeight: 700, fontSize: 14 }}>
-                      ✓ Perfect! 3 photos uploaded
+                  {photo && (
+                    <div style={{ color: "#4caf50", fontWeight: 700, fontSize: 14 }}>
+                      ✓ Perfect! Photo ready
                     </div>
                   )}
                 </div>
 
-                {/* Photo limit toast */}
-                {photoLimitMsg && (
-                  <div style={{ background: "rgba(255,215,0,0.12)", border: "1px solid rgba(255,215,0,0.3)", borderRadius: 10, padding: "9px 14px", marginTop: 10, color: "#ffd700", fontSize: 13, textAlign: "center", animation: "fadeUp 0.2s ease both" }}>
-                    3 photos is all we need for the best likeness!
-                  </div>
-                )}
-
-                <input ref={fileRef} type="file" accept="image/*" multiple style={{ display: "none" }} onChange={(e) => { Array.from(e.target.files ?? []).forEach(f => addPhoto(f)); e.target.value = ""; }} />
-
-                {/* Progress indicator */}
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 12 }}>
-                  {[1, 2, 3].map(n => (
-                    <div key={n} style={{ flex: 1, height: 5, borderRadius: 3, background: n <= photos.length ? "#4caf50" : "rgba(255,255,255,0.12)", transition: "background 0.3s" }} />
-                  ))}
-                  <span style={{ color: photos.length === 3 ? "#4caf50" : "rgba(255,255,255,0.4)", fontSize: 12, fontWeight: 700, whiteSpace: "nowrap" }}>
-                    {photos.length}/3 {photos.length === 3 ? "✓ Ready!" : `(need ${3 - photos.length} more)`}
-                  </span>
-                </div>
+                <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => { const f = e.target.files?.[0]; if (f) addPhoto(f); e.target.value = ""; }} />
 
                 {/* Privacy reassurance */}
                 <div style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(76,175,80,0.08)", border: "1px solid rgba(76,175,80,0.2)", borderRadius: 12, padding: "10px 14px", marginTop: 12 }}>
                   <span style={{ fontSize: 16, flexShrink: 0 }}>🔒</span>
-                  <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, margin: 0, lineHeight: 1.5 }}>Photos are <strong style={{ color: "#4caf50" }}>private & secure</strong> — used only to personalise your book, then permanently deleted.</p>
+                  <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, margin: 0, lineHeight: 1.5 }}>Your photo is <strong style={{ color: "#4caf50" }}>private & secure</strong> — used only to personalise your book, then permanently deleted.</p>
                 </div>
 
                 <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap", justifyContent: "center" }}>
-                  {[{ icon: "😊", text: "Face clearly visible" }, { icon: "☀️", text: "Good lighting" }, { icon: "🔄", text: "Different angles" }].map(tip => (
+                  {[{ icon: "😊", text: "Face clearly visible" }, { icon: "☀️", text: "Good lighting" }, { icon: "🎨", text: "Clear & sharp" }].map(tip => (
                     <div key={tip.icon} style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 12, padding: "7px 13px" }}>
                       <span style={{ fontSize: 16 }}>{tip.icon}</span>
                       <span style={{ color: "rgba(255,255,255,0.55)", fontSize: 12 }}>{tip.text}</span>
@@ -920,14 +819,10 @@ export default function StorybookCreator() {
                   ))}
                 </div>
 
-                {photos.length === 3 ? (
+                {photo ? (
                   <button onClick={() => goToStep(2)} style={{ width: "100%", marginTop: 20, padding: "17px", borderRadius: 16, border: "none", background: "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 17, fontWeight: 700, cursor: "pointer", animation: "fadeUp 0.35s ease both" }}>
                     Continue →
                   </button>
-                ) : photos.length > 0 ? (
-                  <div style={{ marginTop: 20, padding: "14px", borderRadius: 16, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", textAlign: "center", color: "rgba(255,255,255,0.4)", fontSize: 14 }}>
-                    Please upload 3 photos to continue
-                  </div>
                 ) : null}
               </div>
             )}
@@ -987,7 +882,7 @@ export default function StorybookCreator() {
                 </div>
                 <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
                   <button onClick={() => goToStep(2)} style={{ padding: "14px 20px", borderRadius: 14, border: "1px solid rgba(255,255,255,0.12)", background: "transparent", color: "rgba(255,255,255,0.5)", fontSize: 14, cursor: "pointer" }}>← Back</button>
-                  <button onClick={() => { if (photosBase64.length > 0 && loraStatus === "idle") startLoraTraining(photosBase64); goToStep(4); }} disabled={!childName.trim()} style={{ flex: 1, padding: "15px", borderRadius: 14, border: "none", background: childName.trim() ? "linear-gradient(135deg, #ffd700, #ff9a9e)" : "rgba(255,255,255,0.08)", color: childName.trim() ? "#1a0a2e" : "rgba(255,255,255,0.3)", fontSize: 16, fontWeight: 700, cursor: childName.trim() ? "pointer" : "not-allowed", transition: "all 0.2s" }}>
+                  <button onClick={() => goToStep(4)} disabled={!childName.trim()} style={{ flex: 1, padding: "15px", borderRadius: 14, border: "none", background: childName.trim() ? "linear-gradient(135deg, #ffd700, #ff9a9e)" : "rgba(255,255,255,0.08)", color: childName.trim() ? "#1a0a2e" : "rgba(255,255,255,0.3)", fontSize: 16, fontWeight: 700, cursor: childName.trim() ? "pointer" : "not-allowed", transition: "all 0.2s" }}>
                     {childName.trim() ? `Pick ${childName}'s adventure →` : "Enter a name to continue →"}
                   </button>
                 </div>
@@ -998,33 +893,6 @@ export default function StorybookCreator() {
             {onboardingStep === 4 && (
               <div>
                 <Mascot msg={`Great! Now pick the perfect adventure for ${childName || "your little hero"}...`} />
-
-                {/* LoRA training progress indicator */}
-                {loraStatus !== "idle" && (
-                  <div style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${loraStatus === "done" ? "rgba(76,175,80,0.35)" : loraStatus === "error" ? "rgba(255,80,80,0.3)" : "rgba(255,215,0,0.2)"}`, borderRadius: 18, padding: "18px 20px", marginBottom: 18 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                      {/* Photo thumbnails */}
-                      <div style={{ display: "flex", flexShrink: 0 }}>
-                        {photos.slice(0, 3).map((src, i) => (
-                          <div key={i} style={{ position: "relative", width: 38, height: 38, borderRadius: "50%", overflow: "hidden", border: "2px solid rgba(255,215,0,0.3)", marginLeft: i > 0 ? -10 : 0 }}>
-                            <img src={src} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                          </div>
-                        ))}
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ color: "white", fontWeight: 600, fontSize: 13, margin: "0 0 6px" }}>
-                          {loraStatus === "done" ? "✨ Learning complete — ready to illustrate!" : loraStatus === "error" ? "⚠️ Training issue — proceeding anyway" : "🧠 Learning your child's unique look..."}
-                        </p>
-                        <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: 4, height: 5, overflow: "hidden" }}>
-                          <div style={{ height: "100%", borderRadius: 4, background: loraStatus === "done" ? "linear-gradient(90deg, #4caf50, #43e97b)" : "linear-gradient(90deg, #ffd700, #ff9a9e)", width: loraStatus === "done" || loraStatus === "error" ? "100%" : "5%", animation: loraStatus === "loading" ? "fwdBar 150s linear forwards" : "none", transition: "width 0.5s" }} />
-                        </div>
-                        {loraStatus === "loading" && <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, margin: "5px 0 0" }}>This creates a truly personalised character — please wait</p>}
-                      </div>
-                      {loraStatus === "loading" && <div style={{ width: 20, height: 20, border: "2.5px solid rgba(255,215,0,0.2)", borderTop: "2.5px solid #ffd700", borderRadius: "50%", animation: "spin 1s linear infinite", flexShrink: 0 }} />}
-                      {loraStatus === "done"    && <div style={{ fontSize: 22, flexShrink: 0 }}>✅</div>}
-                    </div>
-                  </div>
-                )}
 
                 <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: 14 }}>
                   {THEMES.map((t) => (
@@ -1066,7 +934,7 @@ export default function StorybookCreator() {
                   <div style={{ textAlign: "center", padding: isMobile ? "40px 20px" : "56px 32px", background: "rgba(255,255,255,0.04)", borderRadius: 24, border: "1px solid rgba(255,100,100,0.2)" }}>
                     <div style={{ fontSize: 52, marginBottom: 16 }}>🔒</div>
                     <h2 style={{ color: "white", fontSize: isMobile ? 20 : 24, fontWeight: 700, margin: "0 0 10px" }}>Free preview limit reached</h2>
-                    <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 15, margin: "0 0 24px" }}>You've used 3 free previews in 24 hours. Purchase once to unlock unlimited generations.</p>
+                    <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 15, margin: "0 0 24px" }}>You've used 5 free previews in 24 hours. Purchase once to unlock unlimited generations.</p>
                     <button onClick={() => handlePurchase("digital")} style={{ padding: "15px 36px", borderRadius: 16, border: "none", background: "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 16, fontWeight: 800, cursor: "pointer" }}>
                       Unlock My Book — $17.99 →
                     </button>

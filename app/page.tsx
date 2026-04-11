@@ -32,28 +32,28 @@ const OUTCOMES = [
 
 const EXAMPLES = [
   {
-    tag: "The Big Adventure 🌋",
-    title: "Aria's Magical Quest",
-    page: "Page 2 of 6",
-    img: "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=600",
-    quote: '"Once upon a time, Aria discovered a glowing map hidden beneath her pillow. It led to a world where only the bravest could go — and Aria was the bravest of all."',
-    child: "Aria's Magical Quest — Age 5",
-  },
-  {
-    tag: "The Big Adventure 🌋",
-    title: "Liam's Big Adventure",
-    page: "Page 3 of 6",
-    img: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600",
-    quote: '"Deep in the Whispering Woods, Liam found a secret door carved into the oldest oak. He took a deep breath, pushed it open, and stepped into a world of pure magic."',
-    child: "Liam's Big Adventure — Age 3",
-  },
-  {
     tag: "To The Stars 🚀",
-    title: "Sofia Blasts Off",
-    page: "Page 4 of 6",
-    img: "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=600",
-    quote: '"The warning alarm rang across Galaxy 7 — the stars were going dark, one by one. Mission Control had one last hope. Sofia buckled her helmet and smiled. \'I\'ve got this.\'"',
-    child: "Sofia Blasts Off — Age 4",
+    title: "Reaching for the Stars",
+    caption: "Reaching for the stars — every scene tells your child's story",
+    img: "/examples/example-1.jpg",
+    quote: '"Once upon a time, Aria gazed up at the night sky and noticed something strange — the stars were going out, one by one. She knew only she could save them."',
+    child: "Aria's Story — Age 5",
+  },
+  {
+    tag: "The Big Adventure 🌋",
+    title: "Discovery and Adventure",
+    caption: "Discovery and adventure — your child as the brave explorer",
+    img: "/examples/example-2.jpg",
+    quote: '"Deep in the Whispering Woods, Liam found a secret door carved into the oldest oak. He took a deep breath, pushed it open, and stepped into a world of pure magic."',
+    child: "Liam's Adventure — Age 4",
+  },
+  {
+    tag: "Dragon Tamer 🐉",
+    title: "Magic Around Every Corner",
+    caption: "Magic around every corner — cinematic illustrations just for them",
+    img: "/examples/example-3.jpg",
+    quote: '"The tiny dragon looked up at Sofia with the saddest eyes she had ever seen. She reached out her hand and whispered, \'Don\'t be afraid. I\'m here.\'"',
+    child: "Sofia's Story — Age 6",
   },
 ];
 
@@ -310,7 +310,7 @@ export default function LandingPage() {
           <div style={{ textAlign: "center", marginBottom: isMobile ? 40 : 56 }}>
             <p style={{ color: GOLD, fontWeight: 700, fontSize: 13, letterSpacing: 2, textTransform: "uppercase", margin: "0 0 12px" }}>Real Examples</p>
             <h2 style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: isMobile ? 28 : 40, fontWeight: 700, color: "white", margin: "0 0 14px", lineHeight: 1.2 }}>See What Your Book Looks Like</h2>
-            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 15, margin: 0 }}>Swipe through 3 real example book pages. Every story is unique to your child.</p>
+            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 15, margin: 0 }}>Real pages from a real My Tiny Tales book. Every illustration features your child's actual face — not a cartoon, not a filter.</p>
           </div>
 
           {/* Carousel */}
@@ -322,13 +322,8 @@ export default function LandingPage() {
                 <img
                   src={ex.img}
                   alt={ex.title}
-                  style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", display: "block" }}
+                  style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", display: "block", borderRadius: 12, boxShadow: "0 8px 32px rgba(0,0,0,0.35)" }}
                 />
-                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, transparent 60%, rgba(255,248,240,0.08))" }} />
-                <div style={{ position: "absolute", top: 12, left: 14, background: "rgba(0,0,0,0.45)", borderRadius: 8, padding: "3px 10px", backdropFilter: "blur(4px)" }}>
-                  <span style={{ color: "white", fontSize: 10, fontWeight: 600 }}>{ex.page}</span>
-                </div>
-                <div style={{ position: "absolute", bottom: 10, left: 0, right: 0, textAlign: "center", color: "rgba(255,255,255,0.55)", fontFamily: "Georgia, serif", fontSize: 12 }}>— {exampleIdx + 1} —</div>
               </div>
 
               {/* Spine */}
@@ -340,6 +335,7 @@ export default function LandingPage() {
                   <span style={{ background: `rgba(79,53,163,0.1)`, border: `1px solid rgba(79,53,163,0.2)`, borderRadius: 50, padding: "3px 12px", fontSize: 11, fontWeight: 700, color: PURPLE_ACCENT }}>{ex.tag}</span>
                 </div>
                 <h3 style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: isMobile ? 18 : 22, fontWeight: 700, color: PURPLE_DARK, margin: 0, lineHeight: 1.3 }}>{ex.title}</h3>
+                <p style={{ color: "#6b5447", fontSize: 12, margin: 0 }}>{ex.caption}</p>
                 <p style={{ fontFamily: "Georgia, serif", fontSize: isMobile ? 14 : 16, lineHeight: 1.85, color: "#3d2b1f", margin: 0, fontStyle: "italic" }}>{ex.quote}</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   {[85, 70, 60].map((w, i) => <div key={i} style={{ height: 8, borderRadius: 4, background: "#e8dcc8", width: `${w}%` }} />)}

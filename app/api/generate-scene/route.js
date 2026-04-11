@@ -4,7 +4,14 @@ export const maxDuration = 60;
 
 async function callKontext(prompt, imageUrl) {
   const result = await fal.subscribe("fal-ai/flux-pro/kontext/max", {
-    input: { prompt, image_url: imageUrl },
+    input: {
+      prompt,
+      image_url: imageUrl,
+      num_inference_steps: 50,
+      guidance_scale: 7.5,
+      output_format: "jpeg",
+      image_size: "landscape_4_3",
+    },
   });
   return result.data.images[0].url;
 }

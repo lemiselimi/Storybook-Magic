@@ -51,7 +51,8 @@ const PAGE_BACKGROUNDS = [
 
 const TOTAL_STEPS     = 5;
 
-const STYLE_SUFFIX = " Style: warm volumetric lighting, soft depth of field, Pixar-inspired 3D render quality, professional children's book illustration. No text, no words, no letters anywhere. Child fully clothed in adventure-appropriate clothing.";
+const CLOTHING = " The child wears a simple solid-coloured outfit appropriate for adventure — no logos, no brand names, no characters printed on clothing, no text on clothing. Keep clothing consistent and simple.";
+const STYLE_SUFFIX = " Style: warm volumetric lighting, soft depth of field, Pixar-inspired 3D render quality, professional children's book illustration. No text, no words, no letters anywhere. Child fully clothed in adventure-appropriate clothing." + CLOTHING;
 
 const COVER_PROMPT =
   "Transform this child into a cinematic 3D-style children's book illustration hero. " +
@@ -369,11 +370,14 @@ export default function StorybookCreator() {
               }).then(r => r.json());
               if (res.url) {
                 setPreviewCoverUrl(`/api/proxy?url=${encodeURIComponent(res.url)}`);
-                done++;
-                setPreviewDone(done);
-                setPreviewMsg(done < total ? `${done} of ${total} scenes ready...` : "All illustrations ready!");
               }
-            } catch {}
+              done++;
+              setPreviewDone(done);
+              setPreviewMsg(done < total ? `${done} of ${total} scenes ready...` : "All illustrations ready!");
+            } catch {
+              done++;
+              setPreviewDone(done);
+            }
           })(),
           // 6 page scenes with fixed Kontext prompts
           ...SCENE_PROMPTS.map(async (prompt, idx) => {
@@ -382,13 +386,19 @@ export default function StorybookCreator() {
                 method: "POST", headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ imageUrl, prompt }),
               }).then(r => r.json());
-              if (res.url) {
-                setPreviewImages(prev => { const n = [...prev]; n[idx] = `/api/proxy?url=${encodeURIComponent(res.url)}`; return n; });
-                done++;
-                setPreviewDone(done);
-                setPreviewMsg(done < total ? `${done} of ${total} scenes ready...` : "All illustrations ready!");
-              }
-            } catch {}
+              setPreviewImages(prev => {
+                const n = [...prev];
+                n[idx] = res.url ? `/api/proxy?url=${encodeURIComponent(res.url)}` : "__failed__";
+                return n;
+              });
+              done++;
+              setPreviewDone(done);
+              setPreviewMsg(done < total ? `${done} of ${total} scenes ready...` : "All illustrations ready!");
+            } catch {
+              setPreviewImages(prev => { const n = [...prev]; n[idx] = "__failed__"; return n; });
+              done++;
+              setPreviewDone(done);
+            }
           }),
         ]);
       }
@@ -466,7 +476,8 @@ export default function StorybookCreator() {
                 method: "POST", headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ imageUrl: _imageUrl, prompt: COVER_PROMPT }),
               }).then(r => r.json());
-              if (res.url) { setCoverImageUrl(`/api/proxy?url=${encodeURIComponent(res.url)}`); setScenesCompleted(p => p + 1); }
+              if (res.url) setCoverImageUrl(`/api/proxy?url=${encodeURIComponent(res.url)}`);
+              setScenesCompleted(p => p + 1);
             } catch { setScenesCompleted(p => p + 1); }
           })(),
           // 6 scenes
@@ -476,8 +487,16 @@ export default function StorybookCreator() {
                 method: "POST", headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ imageUrl: _imageUrl, prompt }),
               }).then(r => r.json());
-              if (res.url) { setPageImages(prev => { const n = [...prev]; n[idx] = `/api/proxy?url=${encodeURIComponent(res.url)}`; return n; }); setScenesCompleted(p => p + 1); }
-            } catch { setScenesCompleted(p => p + 1); }
+              setPageImages(prev => {
+                const n = [...prev];
+                n[idx] = res.url ? `/api/proxy?url=${encodeURIComponent(res.url)}` : "__failed__";
+                return n;
+              });
+              setScenesCompleted(p => p + 1);
+            } catch {
+              setPageImages(prev => { const n = [...prev]; n[idx] = "__failed__"; return n; });
+              setScenesCompleted(p => p + 1);
+            }
           }),
         ]);
       }
@@ -581,7 +600,7 @@ export default function StorybookCreator() {
   const BookTextPage = ({ page }: { page: any }) => {
     const chapterNum = CHAPTER_NAMES[(page.pageNum - 1)] || String(page.pageNum);
     return (
-      <div className="book-text-page" style={{ flex: 1, background: "linear-gradient(160deg, #1a0a2e 0%, #2d1b4e 100%)", display: "flex", flexDirection: "column", justifyContent: "space-between", padding: isMobile ? "24px 22px 20px" : "44px 42px 36px", position: "relative", overflow: "hidden" }}>
+      <div className="book-text-page" style={{ flex: 1, background: "linear-gradient(160deg, #1a0a2e 0%, #2d1b4e 100%)", display: "flex", flexDirection: "column", justifyContent: "space-between", padding: isMobile ? "24px 24px 20px" : "44px 42px 36px", position: "relative", overflow: "hidden" }}>
         {/* Subtle radial glow */}
         <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "radial-gradient(ellipse at 30% 25%, rgba(107,63,160,0.18) 0%, transparent 65%)", pointerEvents: "none" }} />
 
@@ -615,11 +634,16 @@ export default function StorybookCreator() {
     const sceneImg = pageImages[page.pageNum - 1];
     const isRegen  = regeneratingPage === page.pageNum - 1;
     return (
-      <div className="scene-wrap" style={{ flex: 1, position: "relative", background: "#0d0718", overflow: "hidden", minHeight: isMobile ? 260 : undefined }}>
+      <div className="scene-wrap" style={{ flex: 1, position: "relative", background: "#0d0718", overflow: "hidden", minHeight: isMobile ? 260 : undefined, width: isMobile ? "100%" : undefined }}>
         {isRegen ? (
           <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12 }}>
             <div style={{ width: 40, height: 40, border: "3px solid rgba(255,215,0,0.2)", borderTop: "3px solid #ffd700", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
             <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 13 }}>Repainting...</span>
+          </div>
+        ) : sceneImg === "__failed__" ? (
+          /* Purple placeholder — generation failed after retry */
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(160deg, #2D1B69 0%, #1a0a2e 100%)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <span style={{ fontSize: 44, opacity: 0.7 }}>✨</span>
           </div>
         ) : sceneImg ? (
           <img crossOrigin="anonymous" src={sceneImg} alt={`Page ${page.pageNum}`} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />

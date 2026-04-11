@@ -51,37 +51,46 @@ const PAGE_BACKGROUNDS = [
 
 const TOTAL_STEPS     = 5;
 
-const CLOTHING = " The child wears a simple solid-coloured outfit appropriate for adventure — no logos, no brand names, no characters printed on clothing, no text on clothing. Keep clothing consistent and simple.";
-const STYLE_SUFFIX = " Style: warm volumetric lighting, soft depth of field, Pixar-inspired 3D render quality, professional children's book illustration. No text, no words, no letters anywhere. Child fully clothed in adventure-appropriate clothing." + CLOTHING;
+const CLOTHING = " The child wears a simple plain solid-coloured top with no logos, no brand names, no text, no character prints, no emblems of any kind on the clothing.";
+const STYLE_SUFFIX = " Style: warm volumetric lighting, soft depth of field, Pixar-inspired 3D render quality, professional children's book illustration. No text, no words, no letters anywhere in the image." + CLOTHING;
+const CHILD_LEAD = "Keep this child's exact face and likeness. Show them as the clear central hero of the scene, prominently in the foreground. ";
 
 const COVER_PROMPT =
-  "Transform this child into a cinematic 3D-style children's book illustration hero. " +
-  "Close-up portrait with a magical storybook world glowing behind them, warm dramatic lighting, " +
-  "Pixar-inspired quality, vibrant colours." + STYLE_SUFFIX;
+  "Transform this photo into a cinematic 3D-style children's book illustration. " +
+  "Show the child's face clearly in a 3/4 portrait view, looking forward with wonder and excitement. " +
+  "Magical glowing doorway or portal glowing in the background. " +
+  "Warm dramatic lighting illuminating their face from the front. " +
+  "Pixar-inspired quality, vibrant colours. No text anywhere." + CLOTHING;
 
 const SCENE_PROMPTS = [
-  "Transform this child into a cinematic 3D-style children's book illustration hero. " +
-  "Place them standing in front of a magical glowing golden doorway in a lush beautiful garden, " +
+  CHILD_LEAD +
+  "Transform this photo into a cinematic 3D-style children's book illustration. " +
+  "Place the child standing in front of a magical glowing golden doorway in a lush beautiful garden, " +
   "looking curious and brave, warm golden light streaming through." + STYLE_SUFFIX,
 
-  "Transform this child into a cinematic 3D-style children's book illustration hero. " +
-  "Place them in a magical enchanted forest at dusk, glowing fireflies swirling around them, " +
+  CHILD_LEAD +
+  "Transform this photo into a cinematic 3D-style children's book illustration. " +
+  "Place the child in a magical enchanted forest at dusk, glowing fireflies swirling around them, " +
   "friendly woodland creatures nearby, wonder and amazement on their face." + STYLE_SUFFIX,
 
-  "Transform this child into a cinematic 3D-style children's book illustration hero. " +
-  "Place them under a twilight sky reaching up with one hand toward a falling shooting star, " +
+  CHILD_LEAD +
+  "Transform this photo into a cinematic 3D-style children's book illustration. " +
+  "Place the child under a twilight sky reaching up with one hand toward a falling shooting star, " +
   "determination in their eyes, magical stardust trail above them." + STYLE_SUFFIX,
 
-  "Transform this child into a cinematic 3D-style children's book illustration hero. " +
-  "Place them climbing a winding rainbow mountain path, brave and focused, " +
+  CHILD_LEAD +
+  "Transform this photo into a cinematic 3D-style children's book illustration. " +
+  "Place the child climbing a winding rainbow mountain path, brave and focused, " +
   "magical glowing scenery and clouds all around them." + STYLE_SUFFIX,
 
-  "Transform this child into a cinematic 3D-style children's book illustration hero. " +
-  "Place them holding up a glowing magic crystal in both hands, " +
+  CHILD_LEAD +
+  "Transform this photo into a cinematic 3D-style children's book illustration. " +
+  "Place the child holding up a glowing magic crystal in both hands, " +
   "radiant light bursting outward in all directions, triumphant expression." + STYLE_SUFFIX,
 
-  "Transform this child into a cinematic 3D-style children's book illustration hero. " +
-  "Place them in a magical forest clearing at night, surrounded by glowing stars falling gently, " +
+  CHILD_LEAD +
+  "Transform this photo into a cinematic 3D-style children's book illustration. " +
+  "Place the child in a magical forest clearing at night, surrounded by glowing stars falling gently, " +
   "friendly glowing forest creatures around them, peaceful and joyful." + STYLE_SUFFIX,
 ];
 
@@ -360,47 +369,50 @@ export default function StorybookCreator() {
         let done = 0;
         const total = 7; // 1 cover + 6 pages
 
-        await Promise.allSettled([
-          // Cover
-          (async () => {
-            try {
-              const res = await fetch("/api/generate-scene", {
-                method: "POST", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ imageUrl, prompt: COVER_PROMPT }),
-              }).then(r => r.json());
-              if (res.url) {
-                setPreviewCoverUrl(`/api/proxy?url=${encodeURIComponent(res.url)}`);
-              }
-              done++;
-              setPreviewDone(done);
-              setPreviewMsg(done < total ? `${done} of ${total} scenes ready...` : "All illustrations ready!");
-            } catch {
-              done++;
-              setPreviewDone(done);
+        const callScene = async (prompt: string) => {
+          const res = await fetch("/api/generate-scene", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ imageUrl, prompt }),
+          }).then(r => r.json());
+          return res;
+        };
+
+        // Cover first
+        try {
+          const res = await callScene(COVER_PROMPT);
+          if (res.url) setPreviewCoverUrl(`/api/proxy?url=${encodeURIComponent(res.url)}`);
+        } catch {}
+        done++;
+        setPreviewDone(done);
+        setPreviewMsg(`${done} of ${total} scenes ready...`);
+
+        // 6 page scenes — sequential with 500ms gap, one client-side retry each
+        for (let idx = 0; idx < SCENE_PROMPTS.length; idx++) {
+          await new Promise<void>(resolve => setTimeout(resolve, 500));
+          let url: string | null = null;
+          try {
+            const res = await callScene(SCENE_PROMPTS[idx]);
+            url = res.url ?? null;
+            if (!url) {
+              // one client-side retry
+              const retry = await callScene(SCENE_PROMPTS[idx]);
+              url = retry.url ?? null;
             }
-          })(),
-          // 6 page scenes with fixed Kontext prompts
-          ...SCENE_PROMPTS.map(async (prompt, idx) => {
+          } catch {
             try {
-              const res = await fetch("/api/generate-scene", {
-                method: "POST", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ imageUrl, prompt }),
-              }).then(r => r.json());
-              setPreviewImages(prev => {
-                const n = [...prev];
-                n[idx] = res.url ? `/api/proxy?url=${encodeURIComponent(res.url)}` : "__failed__";
-                return n;
-              });
-              done++;
-              setPreviewDone(done);
-              setPreviewMsg(done < total ? `${done} of ${total} scenes ready...` : "All illustrations ready!");
-            } catch {
-              setPreviewImages(prev => { const n = [...prev]; n[idx] = "__failed__"; return n; });
-              done++;
-              setPreviewDone(done);
-            }
-          }),
-        ]);
+              const retry = await callScene(SCENE_PROMPTS[idx]);
+              url = retry.url ?? null;
+            } catch {}
+          }
+          setPreviewImages(prev => {
+            const n = [...prev];
+            n[idx] = url ? `/api/proxy?url=${encodeURIComponent(url)}` : "__failed__";
+            return n;
+          });
+          done++;
+          setPreviewDone(done);
+          setPreviewMsg(done < total ? `${done} of ${total} scenes ready...` : "All illustrations ready!");
+        }
       }
     } catch { setPreviewStory(getFallbackStory(childName)); }
 
@@ -467,38 +479,47 @@ export default function StorybookCreator() {
       setStory(storyData);
 
       if (_imageUrl && storyData?.pages) {
-        setLoadingMsg("Painting your illustrations... (~1 min)");
-        await Promise.allSettled([
-          // Cover
-          (async () => {
-            try {
-              const res = await fetch("/api/generate-scene", {
-                method: "POST", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ imageUrl: _imageUrl, prompt: COVER_PROMPT }),
-              }).then(r => r.json());
-              if (res.url) setCoverImageUrl(`/api/proxy?url=${encodeURIComponent(res.url)}`);
-              setScenesCompleted(p => p + 1);
-            } catch { setScenesCompleted(p => p + 1); }
-          })(),
-          // 6 scenes
-          ...SCENE_PROMPTS.map(async (prompt, idx) => {
-            try {
-              const res = await fetch("/api/generate-scene", {
-                method: "POST", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ imageUrl: _imageUrl, prompt }),
-              }).then(r => r.json());
-              setPageImages(prev => {
-                const n = [...prev];
-                n[idx] = res.url ? `/api/proxy?url=${encodeURIComponent(res.url)}` : "__failed__";
-                return n;
-              });
-              setScenesCompleted(p => p + 1);
-            } catch {
-              setPageImages(prev => { const n = [...prev]; n[idx] = "__failed__"; return n; });
-              setScenesCompleted(p => p + 1);
+        setLoadingMsg("Painting your illustrations... (~2 min)");
+
+        const callScene2 = async (prompt: string) => {
+          const res = await fetch("/api/generate-scene", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ imageUrl: _imageUrl, prompt }),
+          }).then(r => r.json());
+          return res;
+        };
+
+        // Cover first
+        try {
+          const res = await callScene2(COVER_PROMPT);
+          if (res.url) setCoverImageUrl(`/api/proxy?url=${encodeURIComponent(res.url)}`);
+        } catch {}
+        setScenesCompleted(p => p + 1);
+
+        // 6 page scenes — sequential with 500ms gap, one client-side retry each
+        for (let idx = 0; idx < SCENE_PROMPTS.length; idx++) {
+          await new Promise<void>(resolve => setTimeout(resolve, 500));
+          let url: string | null = null;
+          try {
+            const res = await callScene2(SCENE_PROMPTS[idx]);
+            url = res.url ?? null;
+            if (!url) {
+              const retry = await callScene2(SCENE_PROMPTS[idx]);
+              url = retry.url ?? null;
             }
-          }),
-        ]);
+          } catch {
+            try {
+              const retry = await callScene2(SCENE_PROMPTS[idx]);
+              url = retry.url ?? null;
+            } catch {}
+          }
+          setPageImages(prev => {
+            const n = [...prev];
+            n[idx] = url ? `/api/proxy?url=${encodeURIComponent(url)}` : "__failed__";
+            return n;
+          });
+          setScenesCompleted(p => p + 1);
+        }
       }
 
       setCurrentPage(-2); setMainStep("book");
@@ -1180,7 +1201,7 @@ export default function StorybookCreator() {
             // ── BOOK COVER — illustration top, title banner bottom ────────────
             <div style={{ borderRadius: isMobile ? 16 : 20, overflow: "hidden", boxShadow: "0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,215,0,0.12)", animation: "fadeUp 0.4s ease both", display: "flex", flexDirection: "column", minHeight: isMobile ? 420 : 560 }}>
               {/* Illustration: explicit pixel height so browser allocates space before image loads */}
-              <div style={{ width: "100%", height: isMobile ? 240 : 320, position: "relative", overflow: "hidden", display: "block", backgroundColor: "#2D1B69" }}>
+              <div style={{ width: "100%", height: isMobile ? 280 : 390, position: "relative", overflow: "hidden", display: "block", backgroundColor: "#2D1B69" }}>
                 <img
                   src={pageImages[0] || undefined}
                   alt="Book cover"
@@ -1190,15 +1211,15 @@ export default function StorybookCreator() {
                 <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "30%", background: "linear-gradient(to bottom, transparent, rgba(13,7,30,0.75))" }} />
               </div>
               {/* Title banner */}
-              <div style={{ background: "linear-gradient(160deg, #0d071e 0%, #2D1B69 60%, #150d28 100%)", borderTop: "1.5px solid rgba(255,215,0,0.3)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: isMobile ? "20px 22px 22px" : "28px 48px 28px", textAlign: "center", gap: 10 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 5, background: "linear-gradient(135deg, #F5A623, #ffb347)", borderRadius: 50, padding: "5px 16px", boxShadow: "0 3px 12px rgba(0,0,0,0.4)" }}>
-                  <span style={{ fontSize: 12 }}>✨</span>
-                  <span style={{ color: "#1a0a2e", fontWeight: 800, fontSize: 11, letterSpacing: "0.05em" }}>My Tiny Tales</span>
+              <div style={{ background: "linear-gradient(160deg, #0d071e 0%, #2D1B69 60%, #150d28 100%)", borderTop: "1.5px solid rgba(255,215,0,0.3)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: isMobile ? "14px 22px 16px" : "20px 40px 20px", textAlign: "center", gap: 7 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 4, background: "linear-gradient(135deg, #F5A623, #ffb347)", borderRadius: 50, padding: "4px 12px", boxShadow: "0 2px 8px rgba(0,0,0,0.35)" }}>
+                  <span style={{ fontSize: 10 }}>✨</span>
+                  <span style={{ color: "#1a0a2e", fontWeight: 800, fontSize: 10, letterSpacing: "0.05em" }}>My Tiny Tales</span>
                 </div>
-                <h1 style={{ fontFamily: "var(--font-playfair, Georgia, serif)", color: "white", fontSize: "clamp(22px, 5vw, 42px)", fontWeight: 900, margin: 0, lineHeight: 1.15, letterSpacing: "-0.01em", textShadow: "0 2px 20px rgba(0,0,0,0.7)", wordBreak: "break-word" }}>
+                <h1 style={{ fontFamily: "var(--font-playfair, Georgia, serif)", color: "rgba(255,255,255,0.75)", fontSize: "clamp(1.2rem, 3vw, 1.8rem)", fontWeight: 700, margin: 0, lineHeight: 1.2, letterSpacing: "0.01em", textShadow: "0 2px 12px rgba(0,0,0,0.5)", wordBreak: "break-word" }}>
                   {story.title}
                 </h1>
-                <p style={{ color: "rgba(255,215,0,0.7)", fontFamily: "Georgia, serif", fontStyle: "italic", fontSize: isMobile ? 13 : 15, margin: 0, letterSpacing: "0.03em" }}>
+                <p style={{ color: "rgba(255,215,0,0.7)", fontFamily: "Georgia, serif", fontStyle: "italic", fontSize: "0.75rem", margin: 0, letterSpacing: "0.03em" }}>
                   {THEMES.find(t => t.id === theme)?.subtitle ?? story.dedication}
                 </p>
               </div>

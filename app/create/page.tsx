@@ -50,6 +50,40 @@ const PAGE_BACKGROUNDS = [
 ];
 
 const TOTAL_STEPS     = 5;
+
+const STYLE_SUFFIX = " Style: warm volumetric lighting, soft depth of field, Pixar-inspired 3D render quality, professional children's book illustration. No text, no words, no letters anywhere. Child fully clothed in adventure-appropriate clothing.";
+
+const COVER_PROMPT =
+  "Transform this child into a cinematic 3D-style children's book illustration hero. " +
+  "Close-up portrait with a magical storybook world glowing behind them, warm dramatic lighting, " +
+  "Pixar-inspired quality, vibrant colours." + STYLE_SUFFIX;
+
+const SCENE_PROMPTS = [
+  "Transform this child into a cinematic 3D-style children's book illustration hero. " +
+  "Place them standing in front of a magical glowing golden doorway in a lush beautiful garden, " +
+  "looking curious and brave, warm golden light streaming through." + STYLE_SUFFIX,
+
+  "Transform this child into a cinematic 3D-style children's book illustration hero. " +
+  "Place them in a magical enchanted forest at dusk, glowing fireflies swirling around them, " +
+  "friendly woodland creatures nearby, wonder and amazement on their face." + STYLE_SUFFIX,
+
+  "Transform this child into a cinematic 3D-style children's book illustration hero. " +
+  "Place them under a twilight sky reaching up with one hand toward a falling shooting star, " +
+  "determination in their eyes, magical stardust trail above them." + STYLE_SUFFIX,
+
+  "Transform this child into a cinematic 3D-style children's book illustration hero. " +
+  "Place them climbing a winding rainbow mountain path, brave and focused, " +
+  "magical glowing scenery and clouds all around them." + STYLE_SUFFIX,
+
+  "Transform this child into a cinematic 3D-style children's book illustration hero. " +
+  "Place them holding up a glowing magic crystal in both hands, " +
+  "radiant light bursting outward in all directions, triumphant expression." + STYLE_SUFFIX,
+
+  "Transform this child into a cinematic 3D-style children's book illustration hero. " +
+  "Place them in a magical forest clearing at night, surrounded by glowing stars falling gently, " +
+  "friendly glowing forest creatures around them, peaceful and joyful." + STYLE_SUFFIX,
+];
+
 const PAYMENTS_ENABLED = !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 
 const DEMO_STORY = {
@@ -288,7 +322,6 @@ export default function StorybookCreator() {
     setPreviewCoverUrl(null);
 
     const selectedTheme = THEMES.find(t => t.id === theme);
-    const coverIllustration = `epic storybook cover, ${childName || "the child"} as the hero in a dramatic iconic pose, ${selectedTheme?.title} adventure theme, magical and vibrant atmosphere, bold storybook cover art composition`;
 
     try {
       // Upload photo + fetch story in parallel
@@ -327,12 +360,12 @@ export default function StorybookCreator() {
         const total = 7; // 1 cover + 6 pages
 
         await Promise.allSettled([
-          // Cover image (portrait orientation)
+          // Cover
           (async () => {
             try {
               const res = await fetch("/api/generate-scene", {
                 method: "POST", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ imageUrl, illustration: coverIllustration, childName, gender: childGender, childAge, hairColor, eyeColor, isCover: true }),
+                body: JSON.stringify({ imageUrl, prompt: COVER_PROMPT }),
               }).then(r => r.json());
               if (res.url) {
                 setPreviewCoverUrl(`/api/proxy?url=${encodeURIComponent(res.url)}`);
@@ -342,12 +375,12 @@ export default function StorybookCreator() {
               }
             } catch {}
           })(),
-          // Page scenes
-          ...storyData.pages.map(async (page: any, idx: number) => {
+          // 6 page scenes with fixed Kontext prompts
+          ...SCENE_PROMPTS.map(async (prompt, idx) => {
             try {
               const res = await fetch("/api/generate-scene", {
                 method: "POST", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ imageUrl, illustration: page.illustration, childName, gender: childGender, childAge, hairColor, eyeColor }),
+                body: JSON.stringify({ imageUrl, prompt }),
               }).then(r => r.json());
               if (res.url) {
                 setPreviewImages(prev => { const n = [...prev]; n[idx] = `/api/proxy?url=${encodeURIComponent(res.url)}`; return n; });
@@ -424,26 +457,24 @@ export default function StorybookCreator() {
       setStory(storyData);
 
       if (_imageUrl && storyData?.pages) {
-        const sel = THEMES.find(t => t.id === _theme);
-        const coverIllustration = `epic storybook cover, ${_name} as the hero in a dramatic iconic pose, ${sel?.title} adventure theme, magical and vibrant atmosphere, bold storybook cover art composition`;
-        setLoadingMsg("Painting cover & all scenes... (~1 min)");
+        setLoadingMsg("Painting your illustrations... (~1 min)");
         await Promise.allSettled([
           // Cover
           (async () => {
             try {
               const res = await fetch("/api/generate-scene", {
                 method: "POST", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ imageUrl: _imageUrl, illustration: coverIllustration, childName: _name, gender: _gender, childAge: _age, hairColor: _hair, eyeColor: _eye, isCover: true }),
+                body: JSON.stringify({ imageUrl: _imageUrl, prompt: COVER_PROMPT }),
               }).then(r => r.json());
               if (res.url) { setCoverImageUrl(`/api/proxy?url=${encodeURIComponent(res.url)}`); setScenesCompleted(p => p + 1); }
             } catch { setScenesCompleted(p => p + 1); }
           })(),
-          // Pages
-          ...storyData.pages.map(async (page: any, idx: number) => {
+          // 6 scenes
+          ...SCENE_PROMPTS.map(async (prompt, idx) => {
             try {
               const res = await fetch("/api/generate-scene", {
                 method: "POST", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ imageUrl: _imageUrl, illustration: page.illustration, childName: _name, gender: _gender, childAge: _age, hairColor: _hair, eyeColor: _eye }),
+                body: JSON.stringify({ imageUrl: _imageUrl, prompt }),
               }).then(r => r.json());
               if (res.url) { setPageImages(prev => { const n = [...prev]; n[idx] = `/api/proxy?url=${encodeURIComponent(res.url)}`; return n; }); setScenesCompleted(p => p + 1); }
             } catch { setScenesCompleted(p => p + 1); }
@@ -498,10 +529,10 @@ export default function StorybookCreator() {
     if (!photoUrl || regeneratingPage !== null) return;
     setRegeneratingPage(pageIdx);
     try {
-      const page = story.pages[pageIdx];
+      const prompt = SCENE_PROMPTS[pageIdx] ?? SCENE_PROMPTS[0];
       const res = await fetch("/api/generate-scene", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageUrl: photoUrl, illustration: page.illustration, childName, gender: childGender, childAge, hairColor, eyeColor }),
+        body: JSON.stringify({ imageUrl: photoUrl, prompt }),
       }).then(r => r.json());
       if (res.url) setPageImages(prev => { const n = [...prev]; n[pageIdx] = `/api/proxy?url=${encodeURIComponent(res.url)}`; return n; });
     } catch (err) { console.error("Regenerate failed:", err); }
@@ -615,9 +646,9 @@ export default function StorybookCreator() {
       </div>
     );
     return (
-      <div style={{ display: "flex", width: "100%", height: 500 }}>
+      <div className="print-spread" style={{ display: "flex", width: "100%", height: 500 }}>
         <BookTextPage page={page} />
-        <div style={{ width: 10, flexShrink: 0, background: "linear-gradient(to right, #0a0518 0%, #1a0a2e 40%, #0d0818 100%)", boxShadow: "inset -4px 0 8px rgba(0,0,0,0.4), inset 4px 0 8px rgba(0,0,0,0.4)" }} />
+        <div className="book-spine" style={{ width: 10, flexShrink: 0, background: "linear-gradient(to right, #0a0518 0%, #1a0a2e 40%, #0d0818 100%)", boxShadow: "inset -4px 0 8px rgba(0,0,0,0.4), inset 4px 0 8px rgba(0,0,0,0.4)" }} />
         <BookIllustrationPage page={page} />
       </div>
     );
@@ -697,8 +728,8 @@ export default function StorybookCreator() {
         .theme-card:hover{transform:translateY(-4px);box-shadow:0 8px 28px rgba(0,0,0,0.3)!important;}
 
         /* ── Print styles ── */
+        @page { size: landscape; margin: 0; }
         @media print {
-          @page { size: landscape; margin: 0; padding: 0; }
           * { margin: 0 !important; padding: 0 !important; box-sizing: border-box !important; }
           html, body { width: 100vw; height: 100vh; overflow: hidden; }
           body * { visibility: hidden !important; }
@@ -716,31 +747,66 @@ export default function StorybookCreator() {
             width: 100vw;
           }
           .print-page {
-            width: 100vw;
-            height: 100vh;
-            max-height: 100vh;
+            width: 100vw !important;
+            height: 100vh !important;
+            max-height: 100vh !important;
             page-break-after: always;
             break-after: page;
             page-break-inside: avoid;
             break-inside: avoid;
-            overflow: hidden;
+            overflow: hidden !important;
             margin: 0 !important;
             padding: 0 !important;
             display: flex !important;
-            flex-direction: row;
+            flex-direction: row !important;
+            border-radius: 0 !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
           .print-page-col {
-            display: flex !important;
-            flex-direction: column;
+            flex-direction: column !important;
           }
           .print-page:last-child { page-break-after: avoid; break-after: avoid; }
-          .book-text-page {
-            padding-left: 48px !important;
-            padding-right: 24px !important;
-            padding-top: 80px !important;
+
+          /* Story spreads: fill full page, 45% text / 55% image */
+          .print-spread {
+            width: 100% !important;
+            height: 100% !important;
+            display: flex !important;
+            flex-direction: row !important;
+            border-radius: 0 !important;
+            overflow: hidden !important;
           }
+          .print-spread .book-spine { display: none !important; }
+          .print-spread .book-text-page {
+            flex: 0 0 45% !important;
+            width: 45% !important;
+            height: 100% !important;
+            padding: 64px 44px 44px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            background: #2D1B69 !important;
+            border-radius: 0 !important;
+            overflow: hidden !important;
+          }
+          .print-spread .scene-wrap {
+            flex: 0 0 55% !important;
+            width: 55% !important;
+            height: 100% !important;
+            border-radius: 0 !important;
+            overflow: hidden !important;
+            position: relative !important;
+          }
+          .print-spread .scene-wrap img {
+            position: absolute !important;
+            inset: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+          }
+          /* Hide regen button in print */
+          .regen-btn { display: none !important; }
         }
         @media not print {
           #print-book-root { display: none !important; }

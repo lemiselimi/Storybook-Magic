@@ -53,15 +53,15 @@ const TOTAL_STEPS     = 5;
 
 // LoRA uses trigger word TOK — all prompts must start with "a photo of TOK"
 const CLOTHING = " No logos, no brand names, no text, no character prints, no emblems of any kind on the clothing.";
-const SCENE_QUALITY = "dynamic action pose full of energy and movement, Pixar-inspired 3D render quality, warm volumetric lighting, soft depth of field, professional children's book illustration, wide cinematic framing, child as hero figure, no text, no words, no logos, no branded clothing.";
+const SCENE_QUALITY = "dynamic action pose full of energy and movement, Disney Pixar 3D animated film style, smooth rounded stylized character design, large expressive eyes, vivid saturated colours, painterly magical atmosphere, cinematic warm volumetric lighting, soft depth of field, wide cinematic framing, child as hero figure, no text, no words, no logos, no branded clothing.";
 const SAFETY = "The child must be fully clothed at all times in age-appropriate adventure outfit. No bare chest, no shirtless scenes. Background contains only nature, animals, and magical storybook elements.";
 
 const COVER_PROMPT =
-  "a photo of TOK, close-up 3/4 portrait caught mid-laugh with sparkling eyes and a huge joyful smile, " +
+  "a photo of TOK, close-up 3/4 portrait caught mid-laugh with large sparkling expressive eyes and a huge joyful smile, " +
   "leaning slightly forward with energy and excitement, " +
   "magical glowing portal swirling with golden light in the background, " +
   "warm dramatic rim lighting, face fully illuminated, " +
-  "Pixar-inspired quality, vibrant colours, no text anywhere." + CLOTHING;
+  "Disney Pixar 3D animated film style, smooth stylized character design, vivid saturated colours, no text anywhere." + CLOTHING;
 
 const SCENE_PROMPTS = [
   // Scene 1 — discovery: leaning forward reaching toward the portal

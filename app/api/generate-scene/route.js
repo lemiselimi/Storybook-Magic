@@ -5,7 +5,8 @@ export const maxDuration = 60;
 const NEGATIVE_PROMPT =
   "standing still, stiff pose, static, symmetrical, arms at sides, neutral expression, " +
   "centered portrait, rigid, formal pose, passport photo, school photo, stock photo pose, " +
-  "lifeless, boring composition, text, watermark, words, letters, logos, branded clothing, " +
+  "lifeless, boring composition, photorealistic, hyperrealistic, live action, real photograph, " +
+  "text, watermark, words, letters, logos, branded clothing, " +
   "nude, bare chest, shirtless, adult, teenager, ugly, deformed, blurry, low quality, " +
   "multiple people, crowd, real people in background, urban background, scary, dark, violent";
 

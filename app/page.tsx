@@ -32,28 +32,28 @@ const OUTCOMES = [
 
 const EXAMPLES = [
   {
-    tag: "To The Stars 🚀",
-    title: "Reaching for the Stars",
-    caption: "Reaching for the stars — every scene tells your child's story",
+    tag: "Loki's Big Adventure 🌟",
+    title: "A Real Hero",
+    caption: "Your child as the hero — brave, kind, and unforgettable",
     img: "/examples/example-1.jpg",
-    quote: '"Once upon a time, Aria gazed up at the night sky and noticed something strange — the stars were going out, one by one. She knew only she could save them."',
-    child: "Aria's Story — Age 5",
+    quote: '"Loki was a real hero! He learned that being brave and kind saves the day. What an amazing adventure!"',
+    child: "Loki's Story — Age 4",
   },
   {
-    tag: "The Big Adventure 🌋",
-    title: "Discovery and Adventure",
-    caption: "Discovery and adventure — your child as the brave explorer",
+    tag: "Loki's Big Adventure 💪",
+    title: "He Did Not Give Up",
+    caption: "Every page packed with heart — your child's real face in every scene",
     img: "/examples/example-2.jpg",
-    quote: '"Deep in the Whispering Woods, Liam found a secret door carved into the oldest oak. He took a deep breath, pushed it open, and stepped into a world of pure magic."',
-    child: "Liam's Adventure — Age 4",
+    quote: '"Loki pushed and pushed the rock! His muscles got stronger with each try. He did not give up!"',
+    child: "Loki's Story — Age 4",
   },
   {
-    tag: "Dragon Tamer 🐉",
-    title: "Magic Around Every Corner",
-    caption: "Magic around every corner — cinematic illustrations just for them",
+    tag: "Loki's Big Adventure 🌲",
+    title: "Into the Magical Forest",
+    caption: "Cinematic Disney-style illustrations made just for them",
     img: "/examples/example-3.jpg",
-    quote: '"The tiny dragon looked up at Sofia with the saddest eyes she had ever seen. She reached out her hand and whispered, \'Don\'t be afraid. I\'m here.\'"',
-    child: "Sofia's Story — Age 6",
+    quote: '"Wow! A magical forest appeared! Tall trees and glowing lights were everywhere. Loki walked forward, brave and curious."',
+    child: "Loki's Story — Age 4",
   },
 ];
 

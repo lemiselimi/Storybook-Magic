@@ -1,5 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 
+export const maxDuration = 60;
+
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 // In-memory rate limiting: 5 story generations per IP per 24 h
@@ -31,7 +33,11 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { childName, childAge, gender, theme, hairColor, eyeColor } = body;
+    const { childName: rawName, childAge, gender, theme: rawTheme, hairColor, eyeColor } = body;
+
+    // Sanitize user inputs before interpolating into prompts
+    const childName = String(rawName || "").replace(/["\n\\]/g, " ").trim().slice(0, 60);
+    const theme     = String(rawTheme || "").replace(/["\n\\]/g, " ").trim().slice(0, 200);
 
     console.log("Story API called with:", { childName, childAge, gender, theme, hairColor, eyeColor });
 

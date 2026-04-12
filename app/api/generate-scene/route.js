@@ -2,15 +2,15 @@ import { fal } from "@fal-ai/client";
 
 export const maxDuration = 60;
 
-async function callKontext(prompt, imageUrl) {
-  const result = await fal.subscribe("fal-ai/flux-pro/kontext/max", {
+async function callLoRA(prompt, loraUrl) {
+  const result = await fal.subscribe("fal-ai/flux-lora", {
     input: {
       prompt,
-      image_url: imageUrl,
-      num_inference_steps: 50,
-      guidance_scale: 7.5,
-      output_format: "jpeg",
+      loras: [{ path: loraUrl, scale: 1.0 }],
+      num_inference_steps: 28,
+      guidance_scale: 3.5,
       image_size: "landscape_4_3",
+      enable_safety_checker: true,
     },
   });
   return result.data.images[0].url;
@@ -19,22 +19,22 @@ async function callKontext(prompt, imageUrl) {
 export async function POST(request) {
   fal.config({ credentials: process.env.FAL_API_KEY });
   try {
-    const { imageUrl, prompt } = await request.json();
+    const { loraUrl, prompt } = await request.json();
 
-    if (!imageUrl) return Response.json({ error: "imageUrl required" }, { status: 400 });
-    if (!prompt)   return Response.json({ error: "prompt required" },   { status: 400 });
+    if (!loraUrl) return Response.json({ error: "loraUrl required" }, { status: 400 });
+    if (!prompt)  return Response.json({ error: "prompt required" },   { status: 400 });
 
-    console.log("Generate scene (Kontext):", prompt.substring(0, 80));
+    console.log("Generate scene (LoRA):", prompt.substring(0, 80));
 
     let url;
     try {
-      url = await callKontext(prompt, imageUrl);
+      url = await callLoRA(prompt, loraUrl);
     } catch (firstErr) {
-      console.warn("Kontext attempt 1 failed:", firstErr.message, "— retrying");
+      console.warn("LoRA attempt 1 failed:", firstErr.message, "— retrying");
       try {
-        url = await callKontext(prompt, imageUrl);
+        url = await callLoRA(prompt, loraUrl);
       } catch (retryErr) {
-        console.error("Kontext retry failed:", retryErr.message);
+        console.error("LoRA retry failed:", retryErr.message);
         return Response.json({ error: retryErr.message, failed: true }, { status: 500 });
       }
     }

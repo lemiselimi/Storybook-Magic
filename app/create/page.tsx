@@ -51,43 +51,42 @@ const PAGE_BACKGROUNDS = [
 
 const TOTAL_STEPS     = 5;
 
+// LoRA uses trigger word TOK — all prompts must start with "a photo of TOK"
 const CLOTHING = " No logos, no brand names, no text, no character prints, no emblems of any kind on the clothing.";
-const FACE_INSTRUCTION = "Use the face from the reference image only. Generate a completely new body, new adventure outfit appropriate for the scene, and a new natural pose. The child should look like they belong in the scene, not pasted in. ";
-const SCENE_FRAME = "The child stands as a small but clear hero figure in the scene, taking up about 1/3 of the frame, surrounded by the magical world. Wide cinematic shot showing the full environment. Warm volumetric lighting, soft depth of field, Pixar-inspired 3D render quality, professional children's book illustration. No text, no words, no logos, no branded clothing.";
+const SCENE_QUALITY = "wide cinematic shot, child as small hero figure taking about 1/3 of frame surrounded by magical world, Pixar-inspired 3D render quality, warm volumetric lighting, soft depth of field, professional children's book illustration, no text, no words, no logos, no branded clothing.";
+const SAFETY = "The child must be fully clothed at all times in age-appropriate adventure clothing. No bare chest, no shirtless scenes. Background contains only nature, animals, and magical storybook elements.";
 
 const COVER_PROMPT =
-  FACE_INSTRUCTION +
-  "Cinematic 3D-style children's book illustration. " +
-  "Show the child's face clearly in a 3/4 portrait view, looking forward with wonder and excitement. " +
-  "Magical glowing doorway or portal glowing in the background. " +
-  "Warm dramatic lighting illuminating their face from the front. " +
-  "Pixar-inspired quality, vibrant colours. No text anywhere." + CLOTHING;
+  "a photo of TOK, 3/4 portrait view facing forward with wonder and excitement, " +
+  "cinematic 3D-style children's book cover illustration, " +
+  "magical glowing doorway or portal in the background, " +
+  "warm dramatic lighting illuminating face from the front, " +
+  "Pixar-inspired quality, vibrant colours, no text anywhere." + CLOTHING;
 
 const SCENE_PROMPTS = [
-  FACE_INSTRUCTION + "Keep this child's exact face and likeness. " +
-  "A breathtaking magical garden at golden hour with an ancient glowing stone archway portal swirling with golden sparkles and magical light. " +
-  "Fireflies float around. Lush green garden with flowers in background. " +
-  SCENE_FRAME,
+  "a photo of TOK, brave young adventurer standing before a breathtaking magical garden at golden hour, " +
+  "ancient glowing stone archway portal swirling with golden sparkles and magical light, fireflies floating around, lush green garden with flowers in background. " +
+  SCENE_QUALITY + " " + SAFETY,
 
-  FACE_INSTRUCTION + "Keep this child's exact face and likeness. " +
-  "An enchanted forest wonderland with enormous glowing trees, bioluminescent mushrooms, singing flowers with happy faces, and soft magical light filtering through the canopy. Fireflies everywhere. " +
-  SCENE_FRAME,
+  "a photo of TOK, young explorer in an enchanted forest wonderland, enormous glowing trees, " +
+  "bioluminescent mushrooms, singing flowers with happy faces, soft magical light filtering through the canopy, fireflies everywhere. " +
+  SCENE_QUALITY + " " + SAFETY,
 
-  FACE_INSTRUCTION + "Keep this child's exact face and likeness. " +
-  "A twilight sky filled with falling stars and shooting comets. Pine trees silhouetted below. One large glowing star falling from the sky toward the child. " +
-  SCENE_FRAME,
+  "a photo of TOK, child standing in a twilight field looking up at falling stars and shooting comets, " +
+  "pine trees silhouetted below, one large glowing star descending from the sky. " +
+  SCENE_QUALITY + " " + SAFETY,
 
-  FACE_INSTRUCTION + "Keep this child's exact face and likeness. " +
-  "A whimsical forest clearing with giant friendly colourful mushrooms, a large mossy rock, and a tiny glowing creature trapped underneath. Magical forest light filtering through trees. " +
-  SCENE_FRAME,
+  "a photo of TOK, child in a whimsical forest clearing with giant friendly colourful mushrooms, " +
+  "a large mossy rock, a tiny glowing creature trapped underneath, magical forest light filtering through trees. " +
+  SCENE_QUALITY + " " + SAFETY,
 
-  FACE_INSTRUCTION + "Keep this child's exact face and likeness. " +
-  "A magical forest clearing at night, the child holding up a large radiant rainbow crystal that sends beams of coloured light in all directions, illuminating the dark forest around them. " +
-  SCENE_FRAME,
+  "a photo of TOK, child in a magical forest clearing at night holding up a large radiant rainbow crystal, " +
+  "beams of coloured light shooting in all directions, illuminating the dark forest around them. " +
+  SCENE_QUALITY + " " + SAFETY,
 
-  FACE_INSTRUCTION + "Keep this child's exact face and likeness. " +
-  "A magical forest filled with joyful glowing creatures — rabbits, deer, fireflies — all celebrating together. Warm golden magical light floods the scene. Stars visible above through the tree canopy. " +
-  SCENE_FRAME,
+  "a photo of TOK, child celebrating in a magical forest with joyful glowing creatures, " +
+  "rabbits, deer and fireflies dancing together, warm golden magical light flooding the scene, stars visible through the tree canopy above. " +
+  SCENE_QUALITY + " " + SAFETY,
 ];
 
 const PAYMENTS_ENABLED = !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
@@ -134,10 +133,11 @@ export default function StorybookCreator() {
   const [stepDir,  setStepDir]  = useState<"fwd" | "back">("fwd");
   const [mainStep, setMainStep] = useState<"onboarding" | "generating" | "book">("onboarding");
 
-  // ── Photos (multi-upload) ────────────────────────────────────────────────────
+  // ── Photo ────────────────────────────────────────────────────────────────────
   const [photo,       setPhoto]       = useState<string | null>(null);  // object URL for display
   const [photoBase64, setPhotoBase64] = useState<string | null>(null);  // compressed base64
   const [photoUrl,    setPhotoUrl]    = useState<string | null>(null);  // uploaded fal storage URL
+  const [loraUrl,     setLoraUrl]     = useState<string | null>(null);  // trained LoRA weights URL
   const [dragOver,    setDragOver]    = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -326,6 +326,7 @@ export default function StorybookCreator() {
     setPreviewDone(0);
     setPreviewImages(Array(6).fill(null));
     setPreviewCoverUrl(null);
+    setLoraUrl(null);
 
     const selectedTheme = THEMES.find(t => t.id === theme);
 
@@ -359,16 +360,52 @@ export default function StorybookCreator() {
       const imageUrl = uploadRes?.url ?? null;
       if (imageUrl) setPhotoUrl(imageUrl);
 
+      // ── LoRA training ─────────────────────────────────────────────────────────
+      let trainedLoraUrl: string | null = null;
+      if (imageUrl) {
+        setPreviewMsg("Generating face variations & training your character... (2-3 min)");
+
+        // Submit training job (generates 3 Kontext variations internally, then trains LoRA)
+        const trainRes = await fetch("/api/train-lora", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ imageUrl }),
+        }).then(r => r.json());
+
+        if (trainRes.jobId) {
+          // Poll until complete (max 5 min, 5s intervals)
+          let attempts = 0;
+          while (!trainedLoraUrl && attempts < 60) {
+            await new Promise<void>(resolve => setTimeout(resolve, 5000));
+            attempts++;
+            try {
+              const checkRes = await fetch("/api/check-lora", {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ jobId: trainRes.jobId }),
+              }).then(r => r.json());
+              if (checkRes.status === "COMPLETED" && checkRes.loraUrl) {
+                trainedLoraUrl = checkRes.loraUrl;
+              } else if (checkRes.status === "FAILED") {
+                break;
+              }
+            } catch {}
+            if (!trainedLoraUrl) {
+              setPreviewMsg(`Training your character... (${Math.round(attempts * 5)}s)`);
+            }
+          }
+          if (trainedLoraUrl) setLoraUrl(trainedLoraUrl);
+        }
+      }
+
       setPreviewMsg("Illustrating your scenes...");
 
-      if (imageUrl && storyData.pages) {
+      if (trainedLoraUrl && storyData.pages) {
         let done = 0;
         const total = 7; // 1 cover + 6 pages
 
         const callScene = async (prompt: string) => {
           const res = await fetch("/api/generate-scene", {
             method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ imageUrl, prompt }),
+            body: JSON.stringify({ loraUrl: trainedLoraUrl, prompt }),
           }).then(r => r.json());
           return res;
         };
@@ -390,7 +427,6 @@ export default function StorybookCreator() {
             const res = await callScene(SCENE_PROMPTS[idx]);
             url = res.url ?? null;
             if (!url) {
-              // one client-side retry
               const retry = await callScene(SCENE_PROMPTS[idx]);
               url = retry.url ?? null;
             }
@@ -436,6 +472,7 @@ export default function StorybookCreator() {
     const _savedFalUrls  = savedData?.previewFalUrls as (string | null)[] | undefined;
     const _savedCoverUrl = savedData?.coverFalUrl   as string | undefined;
     const _imageUrl      = savedData?.photoUrl ?? photoUrl;
+    const _loraUrl       = savedData?.loraUrl  ?? loraUrl;
 
     // Restore cover if it came back from Stripe session
     if (_savedCoverUrl) setCoverImageUrl(`/api/proxy?url=${encodeURIComponent(_savedCoverUrl)}`);
@@ -474,13 +511,43 @@ export default function StorybookCreator() {
 
       setStory(storyData);
 
-      if (_imageUrl && storyData?.pages) {
+      // Re-train LoRA if we have a photo but no loraUrl (e.g. post-purchase re-gen)
+      let activeLoraUrl = _loraUrl;
+      if (_imageUrl && !activeLoraUrl && storyData?.pages) {
+        setLoadingMsg("Preparing your character... (~2-3 min)");
+        const trainRes = await fetch("/api/train-lora", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ imageUrl: _imageUrl }),
+        }).then(r => r.json());
+        if (trainRes.jobId) {
+          let attempts = 0;
+          while (!activeLoraUrl && attempts < 60) {
+            await new Promise<void>(resolve => setTimeout(resolve, 5000));
+            attempts++;
+            try {
+              const checkRes = await fetch("/api/check-lora", {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ jobId: trainRes.jobId }),
+              }).then(r => r.json());
+              if (checkRes.status === "COMPLETED" && checkRes.loraUrl) {
+                activeLoraUrl = checkRes.loraUrl;
+                setLoraUrl(activeLoraUrl);
+              } else if (checkRes.status === "FAILED") {
+                break;
+              }
+            } catch {}
+            if (!activeLoraUrl) setLoadingMsg(`Training character... (${Math.round(attempts * 5)}s)`);
+          }
+        }
+      }
+
+      if (activeLoraUrl && storyData?.pages) {
         setLoadingMsg("Painting your illustrations... (~2 min)");
 
         const callScene2 = async (prompt: string) => {
           const res = await fetch("/api/generate-scene", {
             method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ imageUrl: _imageUrl, prompt }),
+            body: JSON.stringify({ loraUrl: activeLoraUrl, prompt }),
           }).then(r => r.json());
           return res;
         };
@@ -536,6 +603,7 @@ export default function StorybookCreator() {
         childName, childAge, childGender, theme, hairColor, eyeColor,
         story: previewStory,
         photoUrl: photoUrl,
+        loraUrl: loraUrl,
         coverFalUrl: previewCoverUrl ? rawFalUrl(previewCoverUrl) : null,
         previewFalUrls: previewImages.map(u => u ? rawFalUrl(u) : null),
         plan,
@@ -562,13 +630,13 @@ export default function StorybookCreator() {
 
   // ── Regen / Share / PDF ───────────────────────────────────────────────────────
   const regenerateScene = async (pageIdx: number) => {
-    if (!photoUrl || regeneratingPage !== null) return;
+    if (!loraUrl || regeneratingPage !== null) return;
     setRegeneratingPage(pageIdx);
     try {
       const prompt = SCENE_PROMPTS[pageIdx] ?? SCENE_PROMPTS[0];
       const res = await fetch("/api/generate-scene", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageUrl: photoUrl, prompt }),
+        body: JSON.stringify({ loraUrl, prompt }),
       }).then(r => r.json());
       if (res.url) setPageImages(prev => { const n = [...prev]; n[pageIdx] = `/api/proxy?url=${encodeURIComponent(res.url)}`; return n; });
     } catch (err) { console.error("Regenerate failed:", err); }
@@ -600,7 +668,7 @@ export default function StorybookCreator() {
 
   const resetAll = () => {
     setMainStep("onboarding"); setOnboardingStep(1); setStepDir("fwd");
-    setPhoto(null); setPhotoBase64(null); setPhotoUrl(null);
+    setPhoto(null); setPhotoBase64(null); setPhotoUrl(null); setLoraUrl(null);
     setHairColor("brown"); setEyeColor("brown");
     setStory(null); setPreviewStory(null); setPreviewImages(Array(6).fill(null));
     setPreviewCoverUrl(null); setCoverImageUrl(null);
@@ -670,7 +738,7 @@ export default function StorybookCreator() {
             <div style={{ width: 36, height: 36, border: "3px solid rgba(255,215,0,0.15)", borderTop: "3px solid rgba(255,215,0,0.5)", borderRadius: "50%", animation: "spin 1.2s linear infinite" }} />
           </div>
         )}
-        {!isSharedView && photoUrl && !isRegen && (
+        {!isSharedView && loraUrl && !isRegen && (
           <button className="regen-btn" onClick={() => regenerateScene(page.pageNum - 1)} style={{ position: "absolute", bottom: 12, right: 12, background: "rgba(0,0,0,0.6)", border: "1px solid rgba(255,255,255,0.18)", borderRadius: 8, padding: "5px 10px", color: "rgba(255,255,255,0.75)", fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, backdropFilter: "blur(4px)" }}>🔄 Redo</button>
         )}
       </div>
@@ -876,7 +944,7 @@ export default function StorybookCreator() {
             {/* ── STEP 1: Upload ── */}
             {onboardingStep === 1 && (
               <div>
-                <Mascot msg="Upload 1 clear photo of your child. Face clearly visible, good lighting." />
+                <Mascot msg="Upload 1 clear front-facing photo. No sunglasses, good lighting, face clearly visible." />
 
                 {/* Photo slot */}
                 <div
@@ -918,7 +986,7 @@ export default function StorybookCreator() {
                 </div>
 
                 <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap", justifyContent: "center" }}>
-                  {[{ icon: "😊", text: "Face clearly visible" }, { icon: "☀️", text: "Good lighting" }, { icon: "🎨", text: "Clear & sharp" }].map(tip => (
+                  {[{ icon: "😊", text: "Front-facing" }, { icon: "☀️", text: "Good lighting" }, { icon: "🕶️", text: "No sunglasses" }].map(tip => (
                     <div key={tip.icon} style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 12, padding: "7px 13px" }}>
                       <span style={{ fontSize: 16 }}>{tip.icon}</span>
                       <span style={{ color: "rgba(255,255,255,0.55)", fontSize: 12 }}>{tip.text}</span>

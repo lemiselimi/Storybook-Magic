@@ -1,5 +1,7 @@
 import { Resend } from "resend";
 
+const esc = (s) => String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+
 export async function POST(request) {
   try {
     const body = await request.json();
@@ -46,12 +48,12 @@ export async function POST(request) {
           from: "My Tiny Tales Contact <onboarding@resend.dev>",
           to: "hello@mytinytales.studio",
           replyTo: email,
-          subject: `Contact form: ${subject || "New message"} — from ${name || email}`,
+          subject: `Contact form: ${esc(subject) || "New message"} — from ${esc(name) || esc(email)}`,
           html: `
-            <p><strong>From:</strong> ${name || "—"} (${email})</p>
-            <p><strong>Subject:</strong> ${subject || "—"}</p>
+            <p><strong>From:</strong> ${esc(name) || "—"} (${esc(email)})</p>
+            <p><strong>Subject:</strong> ${esc(subject) || "—"}</p>
             <p><strong>Message:</strong></p>
-            <p style="white-space:pre-wrap;">${message || "—"}</p>
+            <p style="white-space:pre-wrap;">${esc(message) || "—"}</p>
           `,
         });
 
@@ -67,7 +69,7 @@ export async function POST(request) {
                 <h2 style="color:white;margin:8px 0 0;">Thanks for reaching out!</h2>
               </div>
               <div style="padding:28px;">
-                <p style="color:#3d2b1f;">Hi ${name || "there"},</p>
+                <p style="color:#3d2b1f;">Hi ${esc(name) || "there"},</p>
                 <p style="color:#3d2b1f;">We've received your message and will reply within one business day.</p>
                 <p style="color:#8a6d5a;font-size:13px;">— The My Tiny Tales team</p>
               </div>

@@ -1,64 +1,37 @@
 import { fal } from "@fal-ai/client";
 
-export const maxDuration = 90; // 3 parallel Kontext calls ~30s + zip/upload ~10s + job submit ~5s
-
-const VARIATION_PROMPTS = [
-  "Keep exact face and likeness. Front facing portrait, neutral expression, plain white background, soft studio lighting. Face clearly visible.",
-  "Keep exact face and likeness. Slight 3/4 angle portrait, neutral expression, plain background, natural lighting. Face clearly visible.",
-  "Keep exact face and likeness. Slight side angle, neutral expression, plain background, soft lighting. Face clearly visible.",
-];
-
-async function generateVariation(prompt, imageUrl) {
-  const result = await fal.subscribe("fal-ai/flux-pro/kontext", {
-    input: {
-      prompt,
-      image_url: imageUrl,
-      num_inference_steps: 28,
-      guidance_scale: 3.5,
-      output_format: "jpeg",
-      image_size: "portrait_4_3",
-    },
-  });
-  return result.data.images[0].url;
-}
+export const maxDuration = 60; // Just zip + upload + submit — no AI calls
 
 export async function POST(request) {
   fal.config({ credentials: process.env.FAL_API_KEY });
   try {
-    const { imageUrl } = await request.json();
-    if (!imageUrl) return Response.json({ error: "imageUrl required" }, { status: 400 });
+    const { photosBase64 } = await request.json();
 
-    console.log("Generating 3 face variations via Kontext...");
+    if (!photosBase64 || photosBase64.length < 1) {
+      return Response.json({ error: "At least 1 photo required" }, { status: 400 });
+    }
+    if (photosBase64.length > 2) {
+      return Response.json({ error: "Maximum 2 photos allowed" }, { status: 400 });
+    }
 
-    // Generate 3 angle variations in parallel
-    const variationUrls = await Promise.all(
-      VARIATION_PROMPTS.map(prompt => generateVariation(prompt, imageUrl))
-    );
-    console.log("Variations generated:", variationUrls.length);
+    console.log(`LoRA training: ${photosBase64.length} photo(s) received`);
 
-    // Download all 3 variation images
-    const imageBuffers = await Promise.all(
-      variationUrls.map(async (url, i) => {
-        const res = await fetch(url);
-        const buf = Buffer.from(await res.arrayBuffer());
-        return { buf, name: `face_variation_${i + 1}.jpg` };
-      })
-    );
-
-    // Build ZIP archive
+    // Build ZIP archive from raw uploaded photos
     const JSZip = (await import("jszip")).default;
     const zip = new JSZip();
-    imageBuffers.forEach(({ buf, name }) => zip.file(name, buf));
+    photosBase64.forEach((b64, i) => {
+      zip.file(`image_${i + 1}.jpg`, Buffer.from(b64, "base64"));
+    });
     const zipBuffer = await zip.generateAsync({ type: "nodebuffer" });
 
     // Upload ZIP to fal storage
     const zipBlob = new Blob([zipBuffer], { type: "application/zip" });
     const zipFile = new File([zipBlob], "training_images.zip", { type: "application/zip" });
-    console.log("Uploading training ZIP to fal storage...");
+    console.log("Uploading ZIP to fal storage...");
     const zipUrl = await fal.storage.upload(zipFile);
     console.log("ZIP uploaded:", zipUrl);
 
-    // Submit LoRA training job (non-blocking — returns immediately with jobId)
+    // Submit LoRA training job (fire and return — polling via check-lora)
     console.log("Submitting LoRA training job...");
     const { request_id } = await fal.queue.submit("fal-ai/flux-lora-fast-training", {
       input: {

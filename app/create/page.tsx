@@ -133,12 +133,11 @@ export default function StorybookCreator() {
   const [stepDir,  setStepDir]  = useState<"fwd" | "back">("fwd");
   const [mainStep, setMainStep] = useState<"onboarding" | "generating" | "book">("onboarding");
 
-  // ── Photo ────────────────────────────────────────────────────────────────────
-  const [photo,       setPhoto]       = useState<string | null>(null);  // object URL for display
-  const [photoBase64, setPhotoBase64] = useState<string | null>(null);  // compressed base64
-  const [photoUrl,    setPhotoUrl]    = useState<string | null>(null);  // uploaded fal storage URL
-  const [loraUrl,     setLoraUrl]     = useState<string | null>(null);  // trained LoRA weights URL
-  const [dragOver,    setDragOver]    = useState(false);
+  // ── Photos (1–2) ─────────────────────────────────────────────────────────────
+  const [photos,       setPhotos]       = useState<string[]>([]);   // object URLs for display
+  const [photosBase64, setPhotosBase64] = useState<string[]>([]);   // compressed base64
+  const [loraUrl,      setLoraUrl]      = useState<string | null>(null); // trained LoRA weights URL
+  const [dragOver,     setDragOver]     = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // ── Appearance ───────────────────────────────────────────────────────────────
@@ -245,9 +244,7 @@ export default function StorybookCreator() {
           setChildName(data.childName || ""); setChildAge(data.childAge ?? 5);
           setChildGender(data.childGender || "boy"); setTheme(data.theme || "adventure");
           setHairColor(data.hairColor || "brown"); setEyeColor(data.eyeColor || "brown");
-          if (data.photoUrl) {
-            setPhotoUrl(data.photoUrl);
-          }
+          if (data.photosBase64?.length) setPhotosBase64(data.photosBase64);
           if (data.coverFalUrl) setCoverImageUrl(`/api/proxy?url=${encodeURIComponent(data.coverFalUrl)}`);
           setTimeout(() => generateFullBook(data), 50);
         }).catch(console.error);
@@ -276,26 +273,28 @@ export default function StorybookCreator() {
 
   const addPhoto = useCallback((file: File) => {
     if (!file || !file.type.startsWith("image/")) return;
-    const objectUrl = URL.createObjectURL(file);
-    setPhoto(objectUrl);
+    setPhotos(prev => {
+      if (prev.length >= 2) return prev;
+      return [...prev, URL.createObjectURL(file)];
+    });
     compressImage(file)
       .then(b64 => {
-        setPhotoBase64(b64);
+        setPhotosBase64(prev => prev.length >= 2 ? prev : [...prev, b64]);
         gtagEvent("photo_uploaded");
       })
       .catch(() => {
         const reader = new FileReader();
         reader.onload = (e) => {
-          setPhotoBase64((e.target?.result as string).split(",")[1]);
+          const b64 = (e.target?.result as string).split(",")[1];
+          setPhotosBase64(prev => prev.length >= 2 ? prev : [...prev, b64]);
         };
         reader.readAsDataURL(file);
       });
   }, []);
 
-  const removePhoto = () => {
-    setPhoto(null);
-    setPhotoBase64(null);
-    setPhotoUrl(null);
+  const removePhoto = (idx: number) => {
+    setPhotos(prev => prev.filter((_, i) => i !== idx));
+    setPhotosBase64(prev => prev.filter((_, i) => i !== idx));
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -331,14 +330,9 @@ export default function StorybookCreator() {
     const selectedTheme = THEMES.find(t => t.id === theme);
 
     try {
-      // Upload photo + fetch story in parallel
-      const [uploadRes, storyRes] = await Promise.all([
-        photoBase64
-          ? fetch("/api/upload-photo", {
-              method: "POST", headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ photoBase64 }),
-            }).then(r => r.json())
-          : Promise.resolve(null),
+      // Story + LoRA training in parallel (both independent — saves 5-10s)
+      setPreviewMsg("Writing your story & training your character...");
+      const [storyRes, trainRes] = await Promise.all([
         fetch("/api/story", {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -346,6 +340,12 @@ export default function StorybookCreator() {
             theme: `${selectedTheme?.title} - ${selectedTheme?.subtitle}: ${selectedTheme?.desc}`,
           }),
         }).then(r => r.json()),
+        photosBase64.length > 0
+          ? fetch("/api/train-lora", {
+              method: "POST", headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ photosBase64 }),
+            }).then(r => r.json())
+          : Promise.resolve(null),
       ]);
 
       if (storyRes?.error === "limit_reached") {
@@ -357,43 +357,30 @@ export default function StorybookCreator() {
       const storyData = storyRes?.pages ? storyRes : getFallbackStory(childName);
       setPreviewStory(storyData);
 
-      const imageUrl = uploadRes?.url ?? null;
-      if (imageUrl) setPhotoUrl(imageUrl);
-
-      // ── LoRA training ─────────────────────────────────────────────────────────
+      // ── Poll for LoRA completion ───────────────────────────────────────────────
       let trainedLoraUrl: string | null = null;
-      if (imageUrl) {
-        setPreviewMsg("Generating face variations & training your character... (2-3 min)");
-
-        // Submit training job (generates 3 Kontext variations internally, then trains LoRA)
-        const trainRes = await fetch("/api/train-lora", {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ imageUrl }),
-        }).then(r => r.json());
-
-        if (trainRes.jobId) {
-          // Poll until complete (max 5 min, 5s intervals)
-          let attempts = 0;
-          while (!trainedLoraUrl && attempts < 60) {
-            await new Promise<void>(resolve => setTimeout(resolve, 5000));
-            attempts++;
-            try {
-              const checkRes = await fetch("/api/check-lora", {
-                method: "POST", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ jobId: trainRes.jobId }),
-              }).then(r => r.json());
-              if (checkRes.status === "COMPLETED" && checkRes.loraUrl) {
-                trainedLoraUrl = checkRes.loraUrl;
-              } else if (checkRes.status === "FAILED") {
-                break;
-              }
-            } catch {}
-            if (!trainedLoraUrl) {
-              setPreviewMsg(`Training your character... (${Math.round(attempts * 5)}s)`);
+      if (trainRes?.jobId) {
+        // Poll until complete (max 5 min, 5s intervals)
+        let attempts = 0;
+        while (!trainedLoraUrl && attempts < 60) {
+          await new Promise<void>(resolve => setTimeout(resolve, 5000));
+          attempts++;
+          try {
+            const checkRes = await fetch("/api/check-lora", {
+              method: "POST", headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ jobId: trainRes.jobId }),
+            }).then(r => r.json());
+            if (checkRes.status === "COMPLETED" && checkRes.loraUrl) {
+              trainedLoraUrl = checkRes.loraUrl;
+            } else if (checkRes.status === "FAILED") {
+              break;
             }
+          } catch {}
+          if (!trainedLoraUrl) {
+            setPreviewMsg(`Training your character... (${Math.round(attempts * 5)}s)`);
           }
-          if (trainedLoraUrl) setLoraUrl(trainedLoraUrl);
         }
+        if (trainedLoraUrl) setLoraUrl(trainedLoraUrl);
       }
 
       setPreviewMsg("Illustrating your scenes...");
@@ -451,7 +438,7 @@ export default function StorybookCreator() {
     setPreviewStatus("done");
     gtagEvent("book_generated", { theme, childAge });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [theme, childName, childAge, childGender, hairColor, eyeColor, photoBase64]);
+  }, [theme, childName, childAge, childGender, hairColor, eyeColor, photosBase64]);
 
   useEffect(() => {
     if (onboardingStep === 5 && !previewStarted.current) {
@@ -471,7 +458,7 @@ export default function StorybookCreator() {
     const _savedStory    = savedData?.story         ?? previewStory;
     const _savedFalUrls  = savedData?.previewFalUrls as (string | null)[] | undefined;
     const _savedCoverUrl = savedData?.coverFalUrl   as string | undefined;
-    const _imageUrl      = savedData?.photoUrl ?? photoUrl;
+    const _photosBase64  = (savedData?.photosBase64 as string[] | undefined) ?? photosBase64;
     const _loraUrl       = savedData?.loraUrl  ?? loraUrl;
 
     // Restore cover if it came back from Stripe session
@@ -511,13 +498,13 @@ export default function StorybookCreator() {
 
       setStory(storyData);
 
-      // Re-train LoRA if we have a photo but no loraUrl (e.g. post-purchase re-gen)
+      // Re-train LoRA if we have photos but no loraUrl (e.g. training failed before purchase)
       let activeLoraUrl = _loraUrl;
-      if (_imageUrl && !activeLoraUrl && storyData?.pages) {
-        setLoadingMsg("Preparing your character... (~2-3 min)");
+      if (_photosBase64.length > 0 && !activeLoraUrl && storyData?.pages) {
+        setLoadingMsg("Training your character... (~2-3 min)");
         const trainRes = await fetch("/api/train-lora", {
           method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ imageUrl: _imageUrl }),
+          body: JSON.stringify({ photosBase64: _photosBase64 }),
         }).then(r => r.json());
         if (trainRes.jobId) {
           let attempts = 0;
@@ -602,7 +589,7 @@ export default function StorybookCreator() {
       sessionStorage.setItem(ref, JSON.stringify({
         childName, childAge, childGender, theme, hairColor, eyeColor,
         story: previewStory,
-        photoUrl: photoUrl,
+        photosBase64: photosBase64,
         loraUrl: loraUrl,
         coverFalUrl: previewCoverUrl ? rawFalUrl(previewCoverUrl) : null,
         previewFalUrls: previewImages.map(u => u ? rawFalUrl(u) : null),
@@ -668,7 +655,7 @@ export default function StorybookCreator() {
 
   const resetAll = () => {
     setMainStep("onboarding"); setOnboardingStep(1); setStepDir("fwd");
-    setPhoto(null); setPhotoBase64(null); setPhotoUrl(null); setLoraUrl(null);
+    setPhotos([]); setPhotosBase64([]); setLoraUrl(null);
     setHairColor("brown"); setEyeColor("brown");
     setStory(null); setPreviewStory(null); setPreviewImages(Array(6).fill(null));
     setPreviewCoverUrl(null); setCoverImageUrl(null);
@@ -678,8 +665,7 @@ export default function StorybookCreator() {
     setIsSharedView(false); setRegeneratingPage(null); setFalError(null); setIsDemo(false); setShowNewBookConfirm(false);
   };
 
-  const totalPages   = story?.pages?.length ?? 6;
-  const displayPhoto = photo;
+  const totalPages = story?.pages?.length ?? 6;
 
   // ── BookPage / BookSpread — premium printed book layout ──────────────────────
   const BookTextPage = ({ page }: { page: any }) => {
@@ -944,35 +930,45 @@ export default function StorybookCreator() {
             {/* ── STEP 1: Upload ── */}
             {onboardingStep === 1 && (
               <div>
-                <Mascot msg="Upload 1 clear front-facing photo. No sunglasses, good lighting, face clearly visible." />
+                <Mascot msg="Upload 1-2 clear photos of your child for the best likeness. Front facing, good lighting, no sunglasses." />
 
                 {/* Photo slot */}
+                {/* Photo slots */}
                 <div
                   onDrop={handleDrop}
                   onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
                   onDragLeave={() => setDragOver(false)}
-                  style={{ background: dragOver ? "rgba(255,215,0,0.04)" : "rgba(255,255,255,0.03)", border: `2px dashed ${dragOver ? "#ffd700" : photo ? "rgba(76,175,80,0.4)" : "rgba(255,255,255,0.15)"}`, borderRadius: 22, padding: "20px", transition: "all 0.2s", textAlign: "center" }}
+                  style={{ background: dragOver ? "rgba(255,215,0,0.04)" : "rgba(255,255,255,0.03)", border: `2px dashed ${dragOver ? "#ffd700" : photos.length > 0 ? "rgba(76,175,80,0.4)" : "rgba(255,255,255,0.15)"}`, borderRadius: 22, padding: "20px", transition: "all 0.2s" }}
                 >
-                  {photo ? (
-                    <div style={{ position: "relative", width: 160, height: 160, borderRadius: 16, overflow: "hidden", border: "2px solid rgba(76,175,80,0.5)", margin: "0 auto 10px" }}>
-                      <img src={photo} alt="Your photo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                      <button onClick={removePhoto} style={{ position: "absolute", top: 4, right: 4, width: 24, height: 24, borderRadius: "50%", background: "rgba(0,0,0,0.7)", border: "none", color: "white", fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>×</button>
-                    </div>
-                  ) : (
-                    <>
-                      <div onClick={() => fileRef.current?.click()} style={{ width: 120, height: 120, borderRadius: 16, border: "2px dashed rgba(255,255,255,0.2)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", gap: 6, background: "rgba(255,255,255,0.03)", margin: "0 auto 16px" }}>
-                        <span style={{ fontSize: 36, opacity: 0.5 }}>+</span>
-                        <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 11 }}>Add photo</span>
-                      </div>
-                      <div style={{ fontSize: 48, marginBottom: 8 }}>📸</div>
-                      <p style={{ color: "white", fontSize: 17, fontWeight: 700, margin: "0 0 4px" }}>Upload 1 photo of your child</p>
-                      <p style={{ color: "rgba(255,255,255,0.38)", fontSize: 13, margin: 0 }}>Tap + or drag & drop here</p>
-                    </>
-                  )}
+                  {/* Counter */}
+                  <div style={{ textAlign: "center", marginBottom: 14 }}>
+                    <span style={{ color: photos.length > 0 ? "#4caf50" : "rgba(255,255,255,0.4)", fontSize: 13, fontWeight: 600 }}>
+                      {photos.length}/2 photos added
+                    </span>
+                    {photos.length === 0 && <p style={{ color: "rgba(255,255,255,0.38)", fontSize: 13, margin: "4px 0 0" }}>Tap + or drag & drop</p>}
+                  </div>
 
-                  {photo && (
-                    <div style={{ color: "#4caf50", fontWeight: 700, fontSize: 14 }}>
-                      ✓ Perfect! Photo ready
+                  {/* Thumbnails row */}
+                  <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+                    {photos.map((src, i) => (
+                      <div key={i} style={{ position: "relative", width: 130, height: 130, borderRadius: 14, overflow: "hidden", border: "2px solid rgba(76,175,80,0.5)", flexShrink: 0 }}>
+                        <img src={src} alt={`Photo ${i + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        <button onClick={() => removePhoto(i)} style={{ position: "absolute", top: 4, right: 4, width: 24, height: 24, borderRadius: "50%", background: "rgba(0,0,0,0.7)", border: "none", color: "white", fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>×</button>
+                      </div>
+                    ))}
+
+                    {/* Add slot — visible when < 2 photos */}
+                    {photos.length < 2 && (
+                      <div onClick={() => fileRef.current?.click()} style={{ width: 130, height: 130, borderRadius: 14, border: "2px dashed rgba(255,255,255,0.2)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", gap: 6, background: "rgba(255,255,255,0.03)", flexShrink: 0 }}>
+                        <span style={{ fontSize: 32, opacity: 0.45 }}>+</span>
+                        <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 11 }}>{photos.length === 0 ? "Add photo" : "Add 2nd photo"}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {photos.length > 0 && (
+                    <div style={{ textAlign: "center", marginTop: 12, color: "#4caf50", fontWeight: 700, fontSize: 14 }}>
+                      ✓ {photos.length === 2 ? "2 photos — best likeness!" : "1 photo added — add a 2nd for better results"}
                     </div>
                   )}
                 </div>
@@ -982,7 +978,7 @@ export default function StorybookCreator() {
                 {/* Privacy reassurance */}
                 <div style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(76,175,80,0.08)", border: "1px solid rgba(76,175,80,0.2)", borderRadius: 12, padding: "10px 14px", marginTop: 12 }}>
                   <span style={{ fontSize: 16, flexShrink: 0 }}>🔒</span>
-                  <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, margin: 0, lineHeight: 1.5 }}>Your photo is <strong style={{ color: "#4caf50" }}>private & secure</strong> — used only to personalise your book, then permanently deleted.</p>
+                  <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, margin: 0, lineHeight: 1.5 }}>Your photos are <strong style={{ color: "#4caf50" }}>private & secure</strong> — used only to personalise your book, then permanently deleted.</p>
                 </div>
 
                 <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap", justifyContent: "center" }}>
@@ -994,11 +990,11 @@ export default function StorybookCreator() {
                   ))}
                 </div>
 
-                {photo ? (
+                {photos.length >= 1 && (
                   <button onClick={() => goToStep(2)} style={{ width: "100%", marginTop: 20, padding: "17px", borderRadius: 16, border: "none", background: "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 17, fontWeight: 700, cursor: "pointer", animation: "fadeUp 0.35s ease both" }}>
                     Continue →
                   </button>
-                ) : null}
+                )}
               </div>
             )}
 

@@ -2,13 +2,21 @@ import { fal } from "@fal-ai/client";
 
 export const maxDuration = 60;
 
+const NEGATIVE_PROMPT =
+  "standing still, stiff pose, static, symmetrical, arms at sides, neutral expression, " +
+  "centered portrait, rigid, formal pose, passport photo, school photo, stock photo pose, " +
+  "lifeless, boring composition, text, watermark, words, letters, logos, branded clothing, " +
+  "nude, bare chest, shirtless, adult, teenager, ugly, deformed, blurry, low quality, " +
+  "multiple people, crowd, real people in background, urban background, scary, dark, violent";
+
 async function callLoRA(prompt, loraUrl) {
   const result = await fal.subscribe("fal-ai/flux-lora", {
     input: {
       prompt,
+      negative_prompt: NEGATIVE_PROMPT,
       loras: [{ path: loraUrl, scale: 1.0 }],
-      num_inference_steps: 28,
-      guidance_scale: 3.5,
+      num_inference_steps: 35,
+      guidance_scale: 5.5,
       image_size: "landscape_4_3",
       enable_safety_checker: true,
     },

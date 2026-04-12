@@ -53,39 +53,56 @@ const TOTAL_STEPS     = 5;
 
 // LoRA uses trigger word TOK — all prompts must start with "a photo of TOK"
 const CLOTHING = " No logos, no brand names, no text, no character prints, no emblems of any kind on the clothing.";
-const SCENE_QUALITY = "wide cinematic shot, child as small hero figure taking about 1/3 of frame surrounded by magical world, Pixar-inspired 3D render quality, warm volumetric lighting, soft depth of field, professional children's book illustration, no text, no words, no logos, no branded clothing.";
-const SAFETY = "The child must be fully clothed at all times in age-appropriate adventure clothing. No bare chest, no shirtless scenes. Background contains only nature, animals, and magical storybook elements.";
+const SCENE_QUALITY = "dynamic action pose full of energy and movement, Pixar-inspired 3D render quality, warm volumetric lighting, soft depth of field, professional children's book illustration, wide cinematic framing, child as hero figure, no text, no words, no logos, no branded clothing.";
+const SAFETY = "The child must be fully clothed at all times in age-appropriate adventure outfit. No bare chest, no shirtless scenes. Background contains only nature, animals, and magical storybook elements.";
 
 const COVER_PROMPT =
-  "a photo of TOK, 3/4 portrait view facing forward with wonder and excitement, " +
-  "cinematic 3D-style children's book cover illustration, " +
-  "magical glowing doorway or portal in the background, " +
-  "warm dramatic lighting illuminating face from the front, " +
+  "a photo of TOK, close-up 3/4 portrait caught mid-laugh with sparkling eyes and a huge joyful smile, " +
+  "leaning slightly forward with energy and excitement, " +
+  "magical glowing portal swirling with golden light in the background, " +
+  "warm dramatic rim lighting, face fully illuminated, " +
   "Pixar-inspired quality, vibrant colours, no text anywhere." + CLOTHING;
 
 const SCENE_PROMPTS = [
-  "a photo of TOK, brave young adventurer standing before a breathtaking magical garden at golden hour, " +
-  "ancient glowing stone archway portal swirling with golden sparkles and magical light, fireflies floating around, lush green garden with flowers in background. " +
+  // Scene 1 — discovery: leaning forward reaching toward the portal
+  "a photo of TOK, leaning excitedly forward with one arm outstretched and fingers spread, " +
+  "reaching toward a swirling magical stone archway portal glowing with golden sparkles, " +
+  "one foot lifted mid-step, mouth open in amazement, golden sparkles landing on their hand, " +
+  "magical garden at golden hour, fireflies swirling all around. " +
   SCENE_QUALITY + " " + SAFETY,
 
-  "a photo of TOK, young explorer in an enchanted forest wonderland, enormous glowing trees, " +
-  "bioluminescent mushrooms, singing flowers with happy faces, soft magical light filtering through the canopy, fireflies everywhere. " +
+  // Scene 2 — enchanted forest: spinning with arms wide, taken in by wonder
+  "a photo of TOK, spinning with arms spread wide and head tilted back laughing with delight, " +
+  "caught mid-spin with hair and clothes in motion, surrounded by enormous glowing enchanted trees, " +
+  "bioluminescent mushrooms below, fireflies and magical particles swirling all around. " +
   SCENE_QUALITY + " " + SAFETY,
 
-  "a photo of TOK, child standing in a twilight field looking up at falling stars and shooting comets, " +
-  "pine trees silhouetted below, one large glowing star descending from the sky. " +
+  // Scene 3 — falling star: kneeling in the grass, both arms raised reaching toward the sky
+  "a photo of TOK, kneeling in a field of tall grass with both arms raised high and fingers spread, " +
+  "reaching up toward a single enormous glowing star falling from the night sky, " +
+  "head tilted back, eyes wide, shooting comets and stars everywhere above, " +
+  "pine tree silhouettes on the horizon. " +
   SCENE_QUALITY + " " + SAFETY,
 
-  "a photo of TOK, child in a whimsical forest clearing with giant friendly colourful mushrooms, " +
-  "a large mossy rock, a tiny glowing creature trapped underneath, magical forest light filtering through trees. " +
+  // Scene 4 — trapped creature: crouching very low, hand gently extended
+  "a photo of TOK, crouching very low to the ground with one hand gently extended palm-up " +
+  "toward a tiny glowing creature peeking out from under a mossy rock, " +
+  "face close to the ground, expression soft and caring, " +
+  "giant colourful mushrooms towering above, magical dappled forest light filtering through trees. " +
   SCENE_QUALITY + " " + SAFETY,
 
-  "a photo of TOK, child in a magical forest clearing at night holding up a large radiant rainbow crystal, " +
-  "beams of coloured light shooting in all directions, illuminating the dark forest around them. " +
+  // Scene 5 — crystal: leaping upward with crystal held high, rainbow light exploding out
+  "a photo of TOK, leaping upward with both arms raised high above their head holding a glowing rainbow crystal, " +
+  "caught at the peak of a joyful jump, face lit up with triumph, " +
+  "brilliant rainbow light beams exploding outward from the crystal in all directions, " +
+  "dark magical forest clearing at night below. " +
   SCENE_QUALITY + " " + SAFETY,
 
-  "a photo of TOK, child celebrating in a magical forest with joyful glowing creatures, " +
-  "rabbits, deer and fireflies dancing together, warm golden magical light flooding the scene, stars visible through the tree canopy above. " +
+  // Scene 6 — celebration: dancing and spinning surrounded by joyful creatures
+  "a photo of TOK, dancing and spinning with arms raised in pure joy, " +
+  "caught mid-spin with a huge laugh, hair and clothes swirling with motion, " +
+  "joyful glowing rabbits, deer and fireflies dancing all around, " +
+  "warm golden magical light flooding the scene, stars and tree canopy above. " +
   SCENE_QUALITY + " " + SAFETY,
 ];
 

@@ -6,7 +6,8 @@
       "Bash(git push:*)",
       "Bash(git -C C:/Users/muhar/storybook-magic status --short)",
       "Bash(git -C C:/Users/muhar/storybook-magic pull --rebase)",
-      "Bash(git -C C:/Users/muhar/storybook-magic push)"
+      "Bash(git -C C:/Users/muhar/storybook-magic push)",
+      "Bash(git:*)"
     ]
   }
 }

@@ -7,7 +7,11 @@ const NEGATIVE_PROMPT =
   "centered portrait, rigid, formal pose, passport photo, school photo, stock photo pose, " +
   "lifeless, boring composition, photorealistic, hyperrealistic, live action, real photograph, " +
   "text, watermark, words, letters, logos, branded clothing, " +
-  "nude, bare chest, shirtless, adult, teenager, ugly, deformed, blurry, low quality, " +
+  "nudity, nude, naked, topless, bare chest, shirtless, no shirt, bare torso, exposed chest, " +
+  "bare shoulders, exposed midriff, sleeveless, tank top, crop top, swimsuit, swimwear, bikini, " +
+  "underwear, short shorts, revealing clothing, bare skin on torso, bare arms, bare legs, " +
+  "adult, teenager, mature, sexy, suggestive, " +
+  "ugly, deformed, blurry, low quality, " +
   "multiple people, crowd, real people in background, urban background, scary, dark, violent";
 
 async function callLoRA(prompt, loraUrl) {

@@ -52,9 +52,21 @@ const PAGE_BACKGROUNDS = [
 const TOTAL_STEPS     = 5;
 
 // LoRA uses trigger word TOK — all prompts must start with "a photo of TOK"
-const CLOTHING = " No logos, no brand names, no text, no character prints, no emblems of any kind on the clothing.";
+const CLOTHING = " Fully dressed at all times in age-appropriate adventure clothing — long-sleeved top, full-length trousers or skirt, shoes or boots. No bare skin visible below the neckline or above the wrist. No logos, no brand names, no text, no character prints, no emblems on clothing.";
 const SCENE_QUALITY = "dynamic action pose full of energy and movement, Disney Pixar 3D animated film style, smooth rounded stylized character design, large expressive eyes, vivid saturated colours, painterly magical atmosphere, cinematic warm volumetric lighting, soft depth of field, wide cinematic framing, child as hero figure, no text, no words, no logos, no branded clothing.";
-const SAFETY = "The child must be fully clothed at all times in age-appropriate adventure outfit. No bare chest, no shirtless scenes. Background contains only nature, animals, and magical storybook elements.";
+const SAFETY = "The child is completely and fully clothed in an age-appropriate adventure outfit at all times — long-sleeved top, full-length trousers or skirt, shoes. Absolutely no bare chest, no bare torso, no shirtless, no sleeveless, no exposed midriff, no bare arms or legs. Background contains only nature, animals, and magical storybook elements. Safe for young children.";
+
+// Injects gender, age, and explicit clothing description into every prompt at generation time.
+// This is the primary guard against wrong gender features and any exposed skin.
+function buildGenderedPrompt(prompt: string, gender: string, age: number): string {
+  const hint =
+    gender === "boy"
+      ? `${age}-year-old boy, short hair, masculine features, fully dressed in long-sleeved adventure top and full-length trousers and boots, `
+      : gender === "girl"
+      ? `${age}-year-old girl, fully dressed in long-sleeved adventure top and full-length skirt or trousers and boots, `
+      : `${age}-year-old child, fully dressed in long-sleeved adventure outfit and full-length trousers and boots, `;
+  return prompt.replace("a photo of TOK,", `a photo of TOK, ${hint}`);
+}
 
 const COVER_PROMPT =
   "a photo of TOK, close-up 3/4 portrait caught mid-laugh with large sparkling expressive eyes and a huge joyful smile, " +
@@ -409,7 +421,7 @@ export default function StorybookCreator() {
         const callScene = async (prompt: string) => {
           const res = await fetch("/api/generate-scene", {
             method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ loraUrl: trainedLoraUrl, prompt }),
+            body: JSON.stringify({ loraUrl: trainedLoraUrl, prompt: buildGenderedPrompt(prompt, childGender, childAge) }),
           }).then(r => r.json());
           return res;
         };
@@ -551,7 +563,7 @@ export default function StorybookCreator() {
         const callScene2 = async (prompt: string) => {
           const res = await fetch("/api/generate-scene", {
             method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ loraUrl: activeLoraUrl, prompt }),
+            body: JSON.stringify({ loraUrl: activeLoraUrl, prompt: buildGenderedPrompt(prompt, _gender, _age) }),
           }).then(r => r.json());
           return res;
         };

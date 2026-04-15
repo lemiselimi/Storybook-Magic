@@ -782,10 +782,17 @@ export default function StorybookCreator() {
 
   // ── Mascot ────────────────────────────────────────────────────────────────────
   const Mascot = ({ msg }: { msg: string }) => (
-    <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 22 }}>
-      <div style={{ fontSize: 38, flexShrink: 0, animation: "float 3s ease-in-out infinite" }}>🧙</div>
-      <div style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "18px 18px 18px 4px", padding: "11px 15px", maxWidth: 360 }}>
-        <p style={{ color: "white", fontSize: 14, margin: 0, lineHeight: 1.65 }}>{msg}</p>
+    <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 22 }}>
+      <div style={{ width: 44, height: 44, borderRadius: "50%", background: "linear-gradient(135deg, #6040c0, #9060e0)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, animation: "float 3s ease-in-out infinite", boxShadow: "0 4px 16px rgba(96,64,192,0.45)" }}>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <line x1="3" y1="21" x2="21" y2="3"/>
+          <line x1="15" y1="9" x2="19" y2="5"/>
+          <line x1="5" y1="19" x2="9" y2="15"/>
+          <circle cx="19.5" cy="4.5" r="1.5" fill="rgba(255,215,0,0.9)" stroke="none"/>
+        </svg>
+      </div>
+      <div style={{ background: "rgba(255,255,255,0.09)", border: "1px solid rgba(255,255,255,0.14)", backdropFilter: "blur(8px)", borderRadius: "18px 18px 18px 4px", padding: "12px 16px", maxWidth: 380 }}>
+        <p style={{ color: "rgba(255,255,255,0.92)", fontSize: 14, margin: 0, lineHeight: 1.7 }}>{msg}</p>
       </div>
     </div>
   );
@@ -819,7 +826,11 @@ export default function StorybookCreator() {
 
   // ── Render ────────────────────────────────────────────────────────────────────
   return (
-    <div style={{ minHeight: "100vh", background: "linear-gradient(160deg, #1a0a2e 0%, #2d1b4e 45%, #1a3a2e 100%)", fontFamily: "'Segoe UI', sans-serif", display: "flex", flexDirection: "column", alignItems: "center", padding: isMobile ? "20px 12px 50px" : "36px 16px 70px" }}>
+    <div style={{ minHeight: "100vh", background: "linear-gradient(160deg, #1a0a2e 0%, #2d1b4e 45%, #1a3a2e 100%)", fontFamily: "'Segoe UI', sans-serif", display: "flex", flexDirection: "column", alignItems: "center", padding: isMobile ? "20px 12px 50px" : "36px 16px 70px", position: "relative", overflow: "hidden" }}>
+      {/* Aurora blobs */}
+      <div style={{ position: "fixed", top: "-20%", left: "-15%", width: 700, height: 700, borderRadius: "50%", background: "radial-gradient(circle, rgba(80,50,160,0.45) 0%, transparent 70%)", filter: "blur(90px)", pointerEvents: "none", zIndex: 0 }} />
+      <div style={{ position: "fixed", bottom: "-20%", right: "-15%", width: 800, height: 800, borderRadius: "50%", background: "radial-gradient(circle, rgba(80,20,120,0.35) 0%, transparent 70%)", filter: "blur(110px)", pointerEvents: "none", zIndex: 0 }} />
+      <div style={{ position: "relative", zIndex: 1, width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
       <style>{`
         @keyframes float     { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
         @keyframes fadeUp    { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
@@ -926,8 +937,12 @@ export default function StorybookCreator() {
       `}</style>
 
       {/* Logo */}
-      <div style={{ textAlign: "center", marginBottom: isMobile ? 18 : 24, animation: "fadeUp 0.5s ease both" }}>
-        <div style={{ fontSize: isMobile ? 30 : 38, marginBottom: 4, animation: "float 3s ease-in-out infinite" }}>✨</div>
+      <div style={{ textAlign: "center", marginBottom: isMobile ? 18 : 24, animation: "fadeUp 0.5s ease both", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+        <div style={{ animation: "float 3s ease-in-out infinite" }}>
+          <svg width={isMobile ? 28 : 34} height={isMobile ? 28 : 34} viewBox="0 0 24 24" fill="#ffd700" stroke="none" aria-hidden="true">
+            <path d="M12 1l2.39 7.61L22 12l-7.61 2.39L12 22l-2.39-7.61L2 12l7.61-2.39z"/>
+          </svg>
+        </div>
         <h1 style={{ margin: 0, fontSize: isMobile ? 20 : 26, fontWeight: 800, background: "linear-gradient(90deg, #ffd700, #ff9a9e, #a18cd1, #ffd700)", backgroundSize: "300% 100%", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", animation: "shimmer 4s ease infinite" }}>My Tiny Tales</h1>
       </div>
 
@@ -935,12 +950,34 @@ export default function StorybookCreator() {
       {mainStep === "onboarding" && (
         <>
           {/* Step indicator */}
-          <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 28, animation: "fadeUp 0.4s ease both" }}>
-            {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
-              <div key={i} style={{ height: 6, borderRadius: 3, background: i + 1 <= onboardingStep ? "#ffd700" : "rgba(255,255,255,0.15)", width: i + 1 === onboardingStep ? 28 : 14, transition: "all 0.35s ease" }} />
-            ))}
-            <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 12, marginLeft: 4 }}>Step {onboardingStep} of {TOTAL_STEPS}</span>
-          </div>
+          {(() => {
+            const stepLabels = ["Photo", "Looks", "About", "Adventure", "Preview"];
+            return (
+              <div style={{ marginBottom: 28, animation: "fadeUp 0.4s ease both", width: "100%", maxWidth: 540 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", position: "relative" }}>
+                  {/* connector line */}
+                  <div style={{ position: "absolute", top: 14, left: "10%", right: "10%", height: 2, background: "rgba(255,255,255,0.1)", zIndex: 0 }} />
+                  <div style={{ position: "absolute", top: 14, left: "10%", height: 2, background: "linear-gradient(to right, #ffd700, rgba(255,154,158,0.6))", zIndex: 1, width: `${Math.min((onboardingStep - 1) / (TOTAL_STEPS - 1), 1) * 80}%`, transition: "width 0.4s ease" }} />
+                  {Array.from({ length: TOTAL_STEPS }).map((_, i) => {
+                    const done = i + 1 < onboardingStep;
+                    const active = i + 1 === onboardingStep;
+                    return (
+                      <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, position: "relative", zIndex: 2 }}>
+                        <div style={{ width: 28, height: 28, borderRadius: "50%", background: done ? "#ffd700" : active ? "linear-gradient(135deg, #ffd700, #ff9a9e)" : "rgba(255,255,255,0.1)", border: active ? "none" : done ? "none" : "1.5px solid rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.35s ease", boxShadow: active ? "0 0 16px rgba(255,215,0,0.5)" : "none" }}>
+                          {done ? (
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1a0a2e" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                          ) : (
+                            <span style={{ fontSize: 10, fontWeight: 700, color: active ? "#1a0a2e" : "rgba(255,255,255,0.4)" }}>{i + 1}</span>
+                          )}
+                        </div>
+                        {!isMobile && <span style={{ fontSize: 10, fontWeight: active ? 700 : 400, color: active ? "#ffd700" : done ? "rgba(255,215,0,0.5)" : "rgba(255,255,255,0.25)", letterSpacing: "0.05em", whiteSpace: "nowrap" }}>{stepLabels[i]}</span>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
 
           <div key={`step-${onboardingStep}`} style={{ width: "100%", maxWidth: onboardingStep === 4 ? 740 : 540, animation: `${stepDir === "fwd" ? "slideInFwd" : "slideInBack"} 0.3s ease both` }}>
 
@@ -994,14 +1031,18 @@ export default function StorybookCreator() {
 
                 {/* Privacy reassurance */}
                 <div style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(76,175,80,0.08)", border: "1px solid rgba(76,175,80,0.2)", borderRadius: 12, padding: "10px 14px", marginTop: 12 }}>
-                  <span style={{ fontSize: 16, flexShrink: 0 }}>🔒</span>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4caf50" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }} aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                   <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, margin: 0, lineHeight: 1.5 }}>Your photos are <strong style={{ color: "#4caf50" }}>private & secure</strong> — used only to personalise your book, then permanently deleted.</p>
                 </div>
 
                 <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap", justifyContent: "center" }}>
-                  {[{ icon: "😊", text: "Front-facing" }, { icon: "☀️", text: "Good lighting" }, { icon: "🕶️", text: "No sunglasses" }].map(tip => (
-                    <div key={tip.icon} style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 12, padding: "7px 13px" }}>
-                      <span style={{ fontSize: 16 }}>{tip.icon}</span>
+                  {[
+                    { svg: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>, text: "Front-facing" },
+                    { svg: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>, text: "Good lighting" },
+                    { svg: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="1" y1="1" x2="23" y2="23"/><path d="M10.5 10.5A2 2 0 0 0 8 12H4a4 4 0 0 0 4 4h8a4 4 0 0 0 3.46-2"/><path d="M21.17 9.17A4 4 0 0 0 20 9h-4a4 4 0 0 0-4 4"/></svg>, text: "No sunglasses" },
+                  ].map((tip, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: "7px 13px", color: "rgba(255,255,255,0.5)" }}>
+                      {tip.svg}
                       <span style={{ color: "rgba(255,255,255,0.55)", fontSize: 12 }}>{tip.text}</span>
                     </div>
                   ))}
@@ -1019,7 +1060,7 @@ export default function StorybookCreator() {
             {onboardingStep === 2 && (
               <div>
                 <Mascot msg="Let's make sure we get every detail right! 🎨 Pick your child's hair and eye colour." />
-                <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: 22, padding: isMobile ? 18 : 28, border: "1px solid rgba(255,255,255,0.08)", display: "flex", flexDirection: "column", gap: 28 }}>
+                <div style={{ background: "rgba(255,255,255,0.07)", backdropFilter: "blur(12px)", borderRadius: 22, padding: isMobile ? 18 : 28, border: "1px solid rgba(255,255,255,0.12)", boxShadow: "0 4px 24px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.08)", display: "flex", flexDirection: "column", gap: 28 }}>
                   <ColorPicker label="Hair colour" colors={HAIR_COLORS} selected={hairColor} onSelect={setHairColor} />
                   <ColorPicker label="Eye colour"  colors={EYE_COLORS}  selected={eyeColor}  onSelect={setEyeColor}  />
                 </div>
@@ -1041,7 +1082,7 @@ export default function StorybookCreator() {
                 <Mascot msg="Amazing! Every hero needs a name. What should we call them? 🌟" />
 
                 {/* Form */}
-                <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: 22, padding: isMobile ? 18 : 26, border: "1px solid rgba(255,255,255,0.08)", display: "flex", flexDirection: "column", gap: 22 }}>
+                <div style={{ background: "rgba(255,255,255,0.07)", backdropFilter: "blur(12px)", borderRadius: 22, padding: isMobile ? 18 : 26, border: "1px solid rgba(255,255,255,0.12)", boxShadow: "0 4px 24px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.08)", display: "flex", flexDirection: "column", gap: 22 }}>
                   <div>
                     <label style={{ color: "rgba(255,255,255,0.45)", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: 9 }}>Child's first name</label>
                     <input value={childName} onChange={(e) => setChildName(e.target.value)} placeholder="e.g. Emma, Liam, Zara..." autoFocus style={{ width: "100%", padding: "14px 16px", borderRadius: 13, border: "1.5px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.06)", color: "white", fontSize: 20, fontWeight: 600, boxSizing: "border-box" }} />
@@ -1085,7 +1126,7 @@ export default function StorybookCreator() {
                 <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: 14 }}>
                   {THEMES.map((t) => (
                     <div key={t.id} className="theme-card" onClick={() => setTheme(t.id)} style={{ position: "relative", padding: "22px 18px 18px", borderRadius: 20, cursor: "pointer", border: `2px solid ${theme === t.id ? "#ffd700" : "rgba(255,255,255,0.1)"}`, background: theme === t.id ? "rgba(255,215,0,0.08)" : "rgba(255,255,255,0.04)", boxShadow: theme === t.id ? "0 0 24px rgba(255,215,0,0.18)" : "0 2px 8px rgba(0,0,0,0.2)" }}>
-                      {t.popular && <div style={{ position: "absolute", top: -10, right: 12, background: "linear-gradient(135deg, #ff6b6b, #ee5a24)", color: "white", fontSize: 9, fontWeight: 800, padding: "3px 10px", borderRadius: 20, letterSpacing: "0.06em" }}>⭐ MOST POPULAR</div>}
+                      {t.popular && <div style={{ position: "absolute", top: -10, right: 12, background: "linear-gradient(135deg, #ff6b6b, #ee5a24)", color: "white", fontSize: 9, fontWeight: 800, padding: "3px 10px", borderRadius: 20, letterSpacing: "0.06em" }}>MOST POPULAR</div>}
                       <div style={{ fontSize: 44, marginBottom: 11 }}>{t.emoji}</div>
                       <div style={{ color: theme === t.id ? "#ffd700" : "white", fontWeight: 700, fontSize: 16, marginBottom: 3 }}>{t.title}</div>
                       <div style={{ color: theme === t.id ? "rgba(255,215,0,0.65)" : "rgba(255,255,255,0.35)", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 9 }}>{t.subtitle}</div>
@@ -1107,20 +1148,37 @@ export default function StorybookCreator() {
               <div>
                 {/* Full-screen loading — shown until ALL scenes done */}
                 {previewStatus !== "done" && (
-                  <div style={{ textAlign: "center", padding: isMobile ? "56px 20px" : "72px 32px", background: "rgba(255,255,255,0.04)", borderRadius: 24, border: "1px solid rgba(255,255,255,0.08)" }}>
-                    <div style={{ fontSize: 64, marginBottom: 18, animation: "float 2s ease-in-out infinite" }}>🪄</div>
-                    <h2 style={{ color: "white", fontSize: isMobile ? 20 : 24, fontWeight: 700, margin: "0 0 12px" }}>Creating your story...</h2>
-                    <p style={{ color: "rgba(255,215,0,0.85)", fontSize: 15, fontWeight: 600, margin: "0 0 32px", minHeight: 24 }}>{previewMsg}</p>
+                  <div style={{ textAlign: "center", padding: isMobile ? "56px 20px" : "72px 32px", background: "rgba(255,255,255,0.06)", backdropFilter: "blur(12px)", borderRadius: 28, border: "1px solid rgba(255,255,255,0.12)", boxShadow: "0 8px 48px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08)" }}>
+                    <div style={{ width: 80, height: 80, borderRadius: "50%", background: "linear-gradient(135deg, #6040c0, #c060e0)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", animation: "float 2s ease-in-out infinite", boxShadow: "0 8px 32px rgba(96,64,192,0.5)" }}>
+                      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <line x1="3" y1="21" x2="21" y2="3"/>
+                        <line x1="15" y1="9" x2="19" y2="5"/>
+                        <line x1="5" y1="19" x2="9" y2="15"/>
+                        <circle cx="19.5" cy="4.5" r="1.5" fill="rgba(255,215,0,0.9)" stroke="none"/>
+                      </svg>
+                    </div>
+                    <h2 style={{ color: "white", fontSize: isMobile ? 20 : 24, fontWeight: 700, margin: "0 0 10px" }}>Creating your story...</h2>
+                    <p style={{ color: "rgba(255,215,0,0.9)", fontSize: 15, fontWeight: 600, margin: "0 0 8px", minHeight: 24 }}>{previewMsg}</p>
+                    {previewDone > 0 && (
+                      <div style={{ maxWidth: 240, margin: "12px auto 20px" }}>
+                        <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: 99, height: 6, overflow: "hidden" }}>
+                          <div style={{ height: "100%", borderRadius: 99, background: "linear-gradient(90deg, #ffd700, #ff9a9e)", width: `${(previewDone / 7) * 100}%`, transition: "width 0.5s ease" }} />
+                        </div>
+                        <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginTop: 6 }}>{previewDone} of 7 scenes</p>
+                      </div>
+                    )}
                     <div style={{ display: "flex", justifyContent: "center", gap: 8 }}>
-                      {[0, 1, 2].map(i => <div key={i} style={{ width: 9, height: 9, borderRadius: "50%", background: "#ffd700", animation: "pulseDot 1s ease-in-out infinite", animationDelay: `${i * 0.2}s` }} />)}
+                      {[0, 1, 2].map(i => <div key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: "#ffd700", animation: "pulseDot 1s ease-in-out infinite", animationDelay: `${i * 0.2}s` }} />)}
                     </div>
                   </div>
                 )}
 
                 {/* Rate limit reached */}
                 {previewStatus === "done" && previewStory?._limitReached && (
-                  <div style={{ textAlign: "center", padding: isMobile ? "40px 20px" : "56px 32px", background: "rgba(255,255,255,0.04)", borderRadius: 24, border: "1px solid rgba(255,100,100,0.2)" }}>
-                    <div style={{ fontSize: 52, marginBottom: 16 }}>🔒</div>
+                  <div style={{ textAlign: "center", padding: isMobile ? "40px 20px" : "56px 32px", background: "rgba(255,255,255,0.06)", backdropFilter: "blur(12px)", borderRadius: 24, border: "1px solid rgba(255,100,100,0.2)" }}>
+                    <div style={{ width: 64, height: 64, borderRadius: "50%", background: "rgba(255,100,100,0.12)", border: "1px solid rgba(255,100,100,0.25)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,100,100,0.9)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    </div>
                     <h2 style={{ color: "white", fontSize: isMobile ? 20 : 24, fontWeight: 700, margin: "0 0 10px" }}>Free preview limit reached</h2>
                     <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 15, margin: "0 0 24px" }}>You've used 5 free previews in 24 hours. Purchase once to unlock unlimited generations.</p>
                     <button onClick={() => handlePurchase("digital")} style={{ padding: "15px 36px", borderRadius: 16, border: "none", background: "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 16, fontWeight: 800, cursor: "pointer" }}>
@@ -1183,9 +1241,11 @@ export default function StorybookCreator() {
                             );
                           })}
                         </div>
-                        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "rgba(26,10,46,0.72)", borderRadius: 14, backdropFilter: "blur(2px)" }}>
-                          <div style={{ fontSize: 32, marginBottom: 8 }}>🔒</div>
-                          <p style={{ color: "white", fontWeight: 700, fontSize: 15, margin: "0 0 3px", textAlign: "center" }}>Pages 3–6 are waiting!</p>
+                        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "rgba(26,10,46,0.78)", borderRadius: 14, backdropFilter: "blur(4px)" }}>
+                          <div style={{ width: 48, height: 48, borderRadius: "50%", background: "rgba(255,215,0,0.12)", border: "1px solid rgba(255,215,0,0.25)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffd700" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                          </div>
+                          <p style={{ color: "white", fontWeight: 700, fontSize: 15, margin: "0 0 4px", textAlign: "center" }}>Pages 3–6 are waiting!</p>
                           <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, margin: 0 }}>Unlock your full story below</p>
                         </div>
                       </div>
@@ -1212,7 +1272,7 @@ export default function StorybookCreator() {
 
                     {/* CTAs */}
                     <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,215,0,0.2)", borderRadius: 22, padding: isMobile ? 18 : 24 }}>
-                      <p style={{ color: "rgba(255,215,0,0.9)", fontSize: 13, fontWeight: 700, textAlign: "center", margin: "0 0 4px", letterSpacing: "0.04em" }}>✨ Your story is being crafted with care</p>
+                      <p style={{ color: "rgba(255,215,0,0.9)", fontSize: 13, fontWeight: 700, textAlign: "center", margin: "0 0 4px", letterSpacing: "0.04em" }}>Your story is being crafted with care</p>
                       <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, textAlign: "center", margin: "0 0 18px" }}>6 personalised cinematic 3D-illustrated pages starring {childName || "your child"}</p>
                       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                         <button onClick={() => handlePurchase("digital")} disabled={!!checkoutLoading} style={{ width: "100%", padding: "17px", borderRadius: 16, border: "none", background: checkoutLoading === "digital" ? "rgba(255,215,0,0.5)" : "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 17, fontWeight: 800, cursor: checkoutLoading ? "not-allowed" : "pointer" }}>
@@ -1225,8 +1285,12 @@ export default function StorybookCreator() {
                         )}
                       </div>
                       <div style={{ display: "flex", justifyContent: "center", gap: isMobile ? 10 : 20, marginTop: 14, flexWrap: "wrap" }}>
-                        {["🔒 Secure checkout", "📥 Instant download", "🔄 30-day guarantee"].map(t => (
-                          <span key={t} style={{ color: "rgba(255,255,255,0.3)", fontSize: 11 }}>{t}</span>
+                        {[
+                          { icon: <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>, text: "Secure checkout" },
+                          { icon: <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>, text: "Instant download" },
+                          { icon: <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>, text: "30-day guarantee" },
+                        ].map((t, i) => (
+                          <span key={i} style={{ color: "rgba(255,255,255,0.3)", fontSize: 11, display: "flex", alignItems: "center", gap: 5 }}>{t.icon}{t.text}</span>
                         ))}
                       </div>
                     </div>
@@ -1242,7 +1306,14 @@ export default function StorybookCreator() {
       {/* ══ GENERATING ══════════════════════════════════════════════════════════ */}
       {mainStep === "generating" && (
         <div style={{ textAlign: "center", animation: "fadeUp 0.5s ease both", maxWidth: 400, width: "100%", padding: "0 16px" }}>
-          <div style={{ fontSize: 72, marginBottom: 20, animation: "float 2s ease-in-out infinite" }}>🪄</div>
+          <div style={{ width: 88, height: 88, borderRadius: "50%", background: "linear-gradient(135deg, #6040c0, #c060e0)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", animation: "float 2s ease-in-out infinite", boxShadow: "0 8px 40px rgba(96,64,192,0.5)" }}>
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <line x1="3" y1="21" x2="21" y2="3"/>
+              <line x1="15" y1="9" x2="19" y2="5"/>
+              <line x1="5" y1="19" x2="9" y2="15"/>
+              <circle cx="19.5" cy="4.5" r="1.5" fill="rgba(255,215,0,0.9)" stroke="none"/>
+            </svg>
+          </div>
           <h2 style={{ color: "white", fontSize: 22, fontWeight: 700, margin: "0 0 10px" }}>Creating your magical book...</h2>
           <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 15, margin: "0 0 8px" }}>{loadingMsg}</p>
           <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 13, margin: "0 0 24px" }}>Painting your cover and 6 unique illustrated scenes</p>
@@ -1555,6 +1626,7 @@ export default function StorybookCreator() {
 
         </div>
       )}
+      </div>{/* end inner zIndex wrapper */}
     </div>
   );
 }

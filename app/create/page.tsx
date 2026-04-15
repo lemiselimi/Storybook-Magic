@@ -12,6 +12,21 @@ const THEMES = [
 
 const CHAPTER_NAMES = ["One", "Two", "Three", "Four", "Five", "Six"];
 
+const TRAINING_MESSAGES = [
+  "Studying your child's face...",
+  "Learning their unique features...",
+  "Capturing the sparkle in their eyes...",
+  "Teaching the AI their smile...",
+  "Perfecting every little detail...",
+  "Adding the finishing touches to their look...",
+  "Almost there — magic takes a moment...",
+  "Making sure every illustration looks just right...",
+  "Bringing your child to life on the page...",
+  "Getting the character just perfect...",
+  "Nearly ready — good things take time...",
+  "One moment — weaving a little magic...",
+];
+
 const THEME_CLOSING: Record<string, (name: string) => string> = {
   adventure:  (n) => `Remember, ${n}: every great adventure begins with one brave step. The world is full of magic — and you have everything it takes to find it.`,
   dragon:     (n) => `${n}, you showed the world that kindness is the greatest power of all. Even the most fearsome things become friends when met with a gentle heart.`,
@@ -406,7 +421,7 @@ export default function StorybookCreator() {
             }
           } catch {}
           if (!trainedLoraUrl) {
-            setPreviewMsg(`Training your character... (${Math.round(attempts * 5)}s)`);
+            setPreviewMsg(TRAINING_MESSAGES[attempts % TRAINING_MESSAGES.length]);
           }
         }
         if (trainedLoraUrl) setLoraUrl(trainedLoraUrl);
@@ -517,7 +532,7 @@ export default function StorybookCreator() {
 
       if (!storyData) {
         const sel = THEMES.find(t => t.id === _theme);
-        setLoadingMsg("Writing your story... 📖");
+        setLoadingMsg("Writing your story...");
         const res = await fetch("/api/story", {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ childName: _name, childAge: String(_age), gender: _gender, hairColor: _hair, eyeColor: _eye, theme: `${sel?.title} - ${sel?.subtitle}` }),
@@ -552,7 +567,7 @@ export default function StorybookCreator() {
                 break;
               }
             } catch {}
-            if (!activeLoraUrl) setLoadingMsg(`Training character... (${Math.round(attempts * 5)}s)`);
+            if (!activeLoraUrl) setLoadingMsg(TRAINING_MESSAGES[attempts % TRAINING_MESSAGES.length]);
           }
         }
       }

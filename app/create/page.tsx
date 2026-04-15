@@ -202,6 +202,8 @@ export default function StorybookCreator() {
   const [previewStatus,  setPreviewStatus]  = useState<"idle" | "loading" | "done">("idle");
   const [previewMsg,     setPreviewMsg]     = useState("Writing your story...");
   const [previewDone,    setPreviewDone]    = useState(0); // scenes completed count (out of 7)
+  const [trainingFailed, setTrainingFailed] = useState(false);
+  const [retryingScenes, setRetryingScenes] = useState(false);
   const previewStarted = useRef(false);
 
   // ── Full book ─────────────────────────────────────────────────────────────────
@@ -238,6 +240,20 @@ export default function StorybookCreator() {
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
   }, []);
+
+  // Restore LoRA URL from a previous session (valid for 6 hours)
+  useEffect(() => {
+    try {
+      const savedUrl = localStorage.getItem("sb_lora_url");
+      const savedTs  = localStorage.getItem("sb_lora_ts");
+      if (savedUrl && savedTs && (Date.now() - Number(savedTs)) < 6 * 3600 * 1000) {
+        setLoraUrl(savedUrl);
+      } else if (savedUrl) {
+        localStorage.removeItem("sb_lora_url");
+        localStorage.removeItem("sb_lora_ts");
+      }
+    } catch {}
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Stripe return + share link ────────────────────────────────────────────────
   useEffect(() => {
@@ -406,6 +422,7 @@ export default function StorybookCreator() {
       if (trainRes?.jobId) {
         // Poll until complete (max 5 min, 5s intervals)
         let attempts = 0;
+        let trainJobFailed = false;
         while (!trainedLoraUrl && attempts < 60) {
           await new Promise<void>(resolve => setTimeout(resolve, 5000));
           attempts++;
@@ -417,6 +434,7 @@ export default function StorybookCreator() {
             if (checkRes.status === "COMPLETED" && checkRes.loraUrl) {
               trainedLoraUrl = checkRes.loraUrl;
             } else if (checkRes.status === "FAILED") {
+              trainJobFailed = true;
               break;
             }
           } catch {}
@@ -424,7 +442,18 @@ export default function StorybookCreator() {
             setPreviewMsg(TRAINING_MESSAGES[attempts % TRAINING_MESSAGES.length]);
           }
         }
-        if (trainedLoraUrl) setLoraUrl(trainedLoraUrl);
+        if (trainedLoraUrl) {
+          setLoraUrl(trainedLoraUrl);
+          try {
+            localStorage.setItem("sb_lora_url", trainedLoraUrl);
+            localStorage.setItem("sb_lora_ts", String(Date.now()));
+          } catch {}
+        } else {
+          // Training failed or timed out — flag it so the UI can explain
+          setTrainingFailed(true);
+          const reason = trainJobFailed ? "Character training failed" : "Character training timed out";
+          setPreviewMsg(`${reason} — your story is ready but without personalised illustrations.`);
+        }
       }
 
       setPreviewMsg("Illustrating your scenes...");
@@ -490,6 +519,30 @@ export default function StorybookCreator() {
       generatePreview();
     }
   }, [onboardingStep, generatePreview]);
+
+  // Retry scenes that failed in the preview
+  const retryFailedPreviewScenes = useCallback(async () => {
+    if (!loraUrl || retryingScenes) return;
+    const failedIdxs = previewImages.map((img, i) => img === "__failed__" ? i : -1).filter(i => i >= 0);
+    if (failedIdxs.length === 0) return;
+    setRetryingScenes(true);
+    for (const idx of failedIdxs) {
+      try {
+        const res = await fetch("/api/generate-scene", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ loraUrl, prompt: buildGenderedPrompt(SCENE_PROMPTS[idx], childGender, childAge) }),
+        }).then(r => r.json());
+        if (res.url) {
+          setPreviewImages(prev => {
+            const n = [...prev];
+            n[idx] = `/api/proxy?url=${encodeURIComponent(res.url)}`;
+            return n;
+          });
+        }
+      } catch {}
+    }
+    setRetryingScenes(false);
+  }, [loraUrl, previewImages, childGender, childAge, retryingScenes]);
 
   // ── Full book generation (post-purchase) ─────────────────────────────────────
   const generateFullBook = async (savedData?: any) => {
@@ -1167,6 +1220,9 @@ export default function StorybookCreator() {
                     Preview your story →
                   </button>
                 </div>
+                <p style={{ color: "rgba(255,255,255,0.28)", fontSize: 12, textAlign: "center", marginTop: 12, lineHeight: 1.6 }}>
+                  Takes 3–4 minutes — we&apos;re painting every illustration just for {childName || "your child"}
+                </p>
               </div>
             )}
 
@@ -1176,7 +1232,14 @@ export default function StorybookCreator() {
                 {/* Full-screen loading — shown until ALL scenes done */}
                 {previewStatus !== "done" && (
                   <div style={{ textAlign: "center", padding: isMobile ? "56px 20px" : "72px 32px", background: "rgba(255,255,255,0.06)", backdropFilter: "blur(12px)", borderRadius: 28, border: "1px solid rgba(255,255,255,0.12)", boxShadow: "0 8px 48px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08)" }}>
-                    <div style={{ width: 80, height: 80, borderRadius: "50%", background: "linear-gradient(135deg, #6040c0, #c060e0)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", animation: "float 2s ease-in-out infinite", boxShadow: "0 8px 32px rgba(96,64,192,0.5)" }}>
+                    {/* Mobile keep-tab-open notice */}
+                    {isMobile && (
+                      <div style={{ background: "rgba(255,215,0,0.1)", border: "1px solid rgba(255,215,0,0.25)", borderRadius: 10, padding: "8px 14px", marginBottom: 24, display: "flex", alignItems: "center", gap: 8 }}>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffd700" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <p style={{ color: "rgba(255,215,0,0.85)", fontSize: 12, margin: 0, textAlign: "left" }}>Keep this tab open while we create your book</p>
+                      </div>
+                    )}
+                    <div style={{ width: 80, height: 80, borderRadius: "50%", background: trainingFailed ? "linear-gradient(135deg, #804040, #c06060)" : "linear-gradient(135deg, #6040c0, #c060e0)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", animation: "float 2s ease-in-out infinite", boxShadow: trainingFailed ? "0 8px 32px rgba(192,64,64,0.5)" : "0 8px 32px rgba(96,64,192,0.5)" }}>
                       <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <line x1="3" y1="21" x2="21" y2="3"/>
                         <line x1="15" y1="9" x2="19" y2="5"/>
@@ -1184,9 +1247,16 @@ export default function StorybookCreator() {
                         <circle cx="19.5" cy="4.5" r="1.5" fill="rgba(255,215,0,0.9)" stroke="none"/>
                       </svg>
                     </div>
-                    <h2 style={{ color: "white", fontSize: isMobile ? 20 : 24, fontWeight: 700, margin: "0 0 10px" }}>Creating your story...</h2>
-                    <p style={{ color: "rgba(255,215,0,0.9)", fontSize: 15, fontWeight: 600, margin: "0 0 8px", minHeight: 24 }}>{previewMsg}</p>
-                    {previewDone > 0 && (
+                    <h2 style={{ color: "white", fontSize: isMobile ? 20 : 24, fontWeight: 700, margin: "0 0 6px" }}>
+                      {trainingFailed ? "Story ready!" : "Creating your story..."}
+                    </h2>
+                    {!trainingFailed && (
+                      <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 12, margin: "0 0 12px" }}>
+                        Takes 3–4 minutes — we&apos;re painting every illustration to look just like {childName || "your child"}
+                      </p>
+                    )}
+                    <p style={{ color: trainingFailed ? "rgba(255,180,100,0.9)" : "rgba(255,215,0,0.9)", fontSize: 15, fontWeight: 600, margin: "0 0 8px", minHeight: 24 }}>{previewMsg}</p>
+                    {!trainingFailed && previewDone > 0 && (
                       <div style={{ maxWidth: 240, margin: "12px auto 20px" }}>
                         <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: 99, height: 6, overflow: "hidden" }}>
                           <div style={{ height: "100%", borderRadius: 99, background: "linear-gradient(90deg, #ffd700, #ff9a9e)", width: `${(previewDone / 7) * 100}%`, transition: "width 0.5s ease" }} />
@@ -1194,9 +1264,11 @@ export default function StorybookCreator() {
                         <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginTop: 6 }}>{previewDone} of 7 scenes</p>
                       </div>
                     )}
-                    <div style={{ display: "flex", justifyContent: "center", gap: 8 }}>
-                      {[0, 1, 2].map(i => <div key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: "#ffd700", animation: "pulseDot 1s ease-in-out infinite", animationDelay: `${i * 0.2}s` }} />)}
-                    </div>
+                    {!trainingFailed && (
+                      <div style={{ display: "flex", justifyContent: "center", gap: 8 }}>
+                        {[0, 1, 2].map(i => <div key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: "#ffd700", animation: "pulseDot 1s ease-in-out infinite", animationDelay: `${i * 0.2}s` }} />)}
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -1208,8 +1280,8 @@ export default function StorybookCreator() {
                     </div>
                     <h2 style={{ color: "white", fontSize: isMobile ? 20 : 24, fontWeight: 700, margin: "0 0 10px" }}>Free preview limit reached</h2>
                     <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 15, margin: "0 0 24px" }}>You've used 5 free previews in 24 hours. Purchase once to unlock unlimited generations.</p>
-                    <button onClick={() => handlePurchase("digital")} style={{ padding: "15px 36px", borderRadius: 16, border: "none", background: "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 16, fontWeight: 800, cursor: "pointer" }}>
-                      Unlock My Book — $17.99 →
+                    <button onClick={() => handlePurchase("digital")} disabled={!!checkoutLoading} style={{ padding: "15px 36px", borderRadius: 16, border: "none", background: checkoutLoading ? "rgba(255,215,0,0.5)" : "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 16, fontWeight: 800, cursor: checkoutLoading ? "not-allowed" : "pointer" }}>
+                      {checkoutLoading === "digital" ? "Redirecting..." : "Unlock My Book — $17.99 →"}
                     </button>
                   </div>
                 )}
@@ -1229,6 +1301,16 @@ export default function StorybookCreator() {
                           <div style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, fontStyle: "italic" }}>{previewStory.dedication}</div>
                         </div>
                         <div style={{ position: "absolute", top: 10, right: 10, background: "rgba(255,215,0,0.95)", borderRadius: 8, padding: "3px 9px", fontSize: 10, fontWeight: 700, color: "#1a0a2e" }}>✨ Cover</div>
+                      </div>
+                    )}
+
+                    {/* Retry failed scenes */}
+                    {previewImages.some(img => img === "__failed__") && (
+                      <div style={{ background: "rgba(255,100,100,0.08)", border: "1px solid rgba(255,100,100,0.2)", borderRadius: 14, padding: "12px 16px", marginBottom: 14, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                        <p style={{ color: "rgba(255,200,200,0.9)", fontSize: 13, margin: 0 }}>Some scenes didn't load — tap to retry them.</p>
+                        <button onClick={retryFailedPreviewScenes} disabled={retryingScenes} style={{ flexShrink: 0, padding: "8px 16px", borderRadius: 10, border: "none", background: retryingScenes ? "rgba(255,255,255,0.15)" : "rgba(255,100,100,0.25)", color: "white", fontSize: 12, fontWeight: 700, cursor: retryingScenes ? "not-allowed" : "pointer", whiteSpace: "nowrap" }}>
+                          {retryingScenes ? "Retrying..." : "Retry scenes"}
+                        </button>
                       </div>
                     )}
 

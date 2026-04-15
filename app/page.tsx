@@ -261,21 +261,23 @@ export default function LandingPage() {
   return (
     <div style={{ fontFamily: "var(--font-inter, 'Segoe UI', system-ui, sans-serif)", color: WARM_BROWN, overflowX: "hidden" }}>
       <style>{`
+        html { scroll-behavior: smooth; }
         @keyframes float   { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
         @keyframes shimmer { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
         @keyframes fadeUp  { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
         @keyframes sparkle { 0%,100%{opacity:0.3;transform:scale(1)} 50%{opacity:1;transform:scale(1.3)} }
         @keyframes slideEx { from{opacity:0;transform:translateX(30px)} to{opacity:1;transform:translateX(0)} }
-        .cta-btn:hover  { transform:translateY(-2px);box-shadow:0 12px 40px rgba(245,166,35,0.45)!important; }
+        .cta-btn:hover  { transform:translateY(-2px);box-shadow:0 16px 48px rgba(245,166,35,0.5)!important; }
         .cta-btn        { transition:transform 0.2s,box-shadow 0.2s; }
-        .feature-card:hover { transform:translateY(-4px);box-shadow:0 16px 40px rgba(45,27,105,0.12)!important; }
-        .feature-card   { transition:transform 0.25s,box-shadow 0.25s; }
-        .review-card:hover  { transform:translateY(-3px); }
-        .review-card    { transition:transform 0.2s; }
+        .feature-card:hover { transform:translateY(-6px);box-shadow:0 20px 64px rgba(45,27,105,0.16)!important; }
+        .feature-card   { transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1),box-shadow 0.3s; }
+        .review-card:hover  { transform:translateY(-5px);box-shadow:0 20px 56px rgba(45,27,105,0.14)!important; }
+        .review-card    { transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1),box-shadow 0.3s; }
         .pricing-card:hover { transform:translateY(-4px); }
         .pricing-card   { transition:transform 0.25s; }
-        .ex-nav:hover   { background:rgba(255,255,255,0.15)!important; }
+        .ex-nav:hover   { background:rgba(255,255,255,0.2)!important; }
         * { box-sizing:border-box; }
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration:0.01ms!important; animation-iteration-count:1!important; transition-duration:0.01ms!important; } }
       `}</style>
 
       {/* ── NAV ── */}
@@ -292,9 +294,14 @@ export default function LandingPage() {
       </nav>
 
       {/* ── HERO ── */}
-      <section style={{ minHeight: "100vh", background: `linear-gradient(160deg, ${PURPLE_DARK} 0%, ${PURPLE_MID} 50%, #1a1050 100%)`, display: "flex", alignItems: "center", justifyContent: "center", padding: isMobile ? "100px 24px 60px" : "120px 48px 80px", position: "relative", overflow: "hidden" }}>
-        {["10%,20%", "80%,15%", "15%,75%", "85%,70%", "50%,10%", "60%,85%"].map((pos, i) => (
-          <div key={i} style={{ position: "absolute", left: pos.split(",")[0], top: pos.split(",")[1], fontSize: [16,12,20,14,18,10][i], animation: `sparkle ${2 + i * 0.4}s ease-in-out infinite`, animationDelay: `${i * 0.3}s`, opacity: 0.4 }}>✦</div>
+      <section style={{ minHeight: "100vh", background: `linear-gradient(160deg, ${PURPLE_DARK} 0%, #3a2580 50%, #1a1050 100%)`, display: "flex", alignItems: "center", justifyContent: "center", padding: isMobile ? "100px 24px 60px" : "120px 48px 80px", position: "relative", overflow: "hidden" }}>
+        {/* Aurora blobs */}
+        <div style={{ position: "absolute", top: "-20%", left: "-10%", width: 700, height: 700, borderRadius: "50%", background: "radial-gradient(circle, rgba(100,70,200,0.55) 0%, transparent 70%)", filter: "blur(90px)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", bottom: "-20%", right: "-10%", width: 800, height: 800, borderRadius: "50%", background: "radial-gradient(circle, rgba(255,138,101,0.18) 0%, transparent 70%)", filter: "blur(110px)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", top: "30%", right: "20%", width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle, rgba(245,166,35,0.12) 0%, transparent 70%)", filter: "blur(70px)", pointerEvents: "none" }} />
+        {/* Subtle sparkles */}
+        {["12%,18%", "82%,12%", "88%,72%", "8%,78%"].map((pos, i) => (
+          <div key={i} style={{ position: "absolute", left: pos.split(",")[0], top: pos.split(",")[1], fontSize: [14,10,16,12][i], animation: `sparkle ${2.5 + i * 0.5}s ease-in-out infinite`, animationDelay: `${i * 0.4}s`, opacity: 0.3, color: GOLD }}>✦</div>
         ))}
 
         <div style={{ maxWidth: 1100, width: "100%", display: "flex", alignItems: "center", gap: isMobile ? 0 : 80, flexDirection: isMobile ? "column" : "row" }}>
@@ -330,20 +337,34 @@ export default function LandingPage() {
                   Preview Your Book Free →
                 </button>
               </Link>
-              <button onClick={() => document.getElementById("examples")?.scrollIntoView({ behavior: "smooth" })} style={{ padding: isMobile ? "14px 24px" : "17px 32px", borderRadius: 50, border: "1px solid rgba(255,255,255,0.25)", background: "transparent", color: "rgba(255,255,255,0.85)", fontWeight: 600, fontSize: isMobile ? 14 : 16, cursor: "pointer" }}>
+              <button onClick={() => document.getElementById("examples")?.scrollIntoView({ behavior: "smooth" })} style={{ padding: isMobile ? "14px 24px" : "17px 32px", borderRadius: 50, border: "1px solid rgba(255,255,255,0.25)", background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.85)", fontWeight: 600, fontSize: isMobile ? 14 : 16, cursor: "pointer", backdropFilter: "blur(8px)" }}>
                 See Example Books
               </button>
             </div>
+            <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 13, marginTop: 18, letterSpacing: 0.3 }}>
+              Trusted by 500+ families · Free preview · No subscription
+            </p>
           </div>
 
           {/* Book mockup */}
           {!isMobile && (
-            <div style={{ flexShrink: 0, animation: "float 4s ease-in-out infinite", animationDelay: "0.5s" }}>
+            <div style={{ flexShrink: 0, animation: "float 4s ease-in-out infinite", animationDelay: "0.5s", position: "relative" }}>
+              {/* Glow behind image */}
+              <div style={{ position: "absolute", inset: -30, borderRadius: 40, background: "radial-gradient(ellipse, rgba(245,166,35,0.22) 0%, transparent 70%)", filter: "blur(24px)", pointerEvents: "none" }} />
               <img
                 src="/examples/example-1.jfif"
                 alt="Example page from a My Tiny Tales storybook"
-                style={{ width: 320, height: 420, objectFit: "cover", borderRadius: 16, boxShadow: "0 40px 80px rgba(0,0,0,0.55), 0 8px 24px rgba(0,0,0,0.3)", transform: "rotate(-2deg)" }}
+                style={{ width: 340, height: 440, objectFit: "cover", borderRadius: 20, boxShadow: "0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08), 0 8px 24px rgba(0,0,0,0.3)", transform: "rotate(-2deg)", position: "relative", display: "block" }}
               />
+              {/* Floating badge */}
+              <div style={{ position: "absolute", bottom: 28, left: -28, background: "white", borderRadius: 14, padding: "10px 16px", boxShadow: "0 8px 32px rgba(0,0,0,0.25)", transform: "rotate(2deg)", display: "flex", alignItems: "center", gap: 8, zIndex: 1 }}>
+                <IconStar size={15} color={GOLD} />
+                <span style={{ fontSize: 12, fontWeight: 700, color: PURPLE_DARK, whiteSpace: "nowrap" }}>6 unique pages</span>
+              </div>
+              {/* Top badge */}
+              <div style={{ position: "absolute", top: 20, right: -24, background: `linear-gradient(135deg, ${PURPLE_MID}, #6040c0)`, borderRadius: 14, padding: "8px 14px", boxShadow: "0 8px 24px rgba(79,53,163,0.4)", transform: "rotate(3deg)", zIndex: 1 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "white", whiteSpace: "nowrap" }}>Disney-style art</span>
+              </div>
             </div>
           )}
         </div>
@@ -380,14 +401,18 @@ export default function LandingPage() {
             {!isMobile && <div style={{ position: "absolute", top: 36, left: "16%", right: "16%", height: 2, background: `linear-gradient(to right, ${CORAL}, ${GOLD})`, opacity: 0.4, zIndex: 0 }} />}
             {STEPS.map((s, i) => (
               <div key={i} style={{ flex: 1, textAlign: "center", padding: isMobile ? "0 0 0 20px" : "0 24px", position: "relative", zIndex: 1, display: "flex", flexDirection: isMobile ? "row" : "column", alignItems: isMobile ? "flex-start" : "center", gap: isMobile ? 16 : 0 }}>
-                <div style={{ flexShrink: 0 }}>
-                  <div style={{ width: 72, height: 72, borderRadius: "50%", background: `linear-gradient(135deg, ${PURPLE_MID}, ${PURPLE_ACCENT})`, display: "flex", alignItems: "center", justifyContent: "center", margin: isMobile ? "0" : "0 auto 20px", boxShadow: `0 8px 24px rgba(79,53,163,0.3)` }}>
-                    <span style={{ fontSize: 28 }}>{s.icon}</span>
+                {/* Watermark number */}
+                {!isMobile && (
+                  <div style={{ position: "absolute", top: -8, left: "50%", transform: "translateX(-50%)", fontSize: 120, fontWeight: 900, color: PURPLE_MID, opacity: 0.06, lineHeight: 1, pointerEvents: "none", userSelect: "none", fontFamily: "Georgia, serif", whiteSpace: "nowrap" }}>{s.num}</div>
+                )}
+                <div style={{ flexShrink: 0, position: "relative" }}>
+                  <div style={{ width: 76, height: 76, borderRadius: "50%", background: `linear-gradient(135deg, ${PURPLE_MID}, #6040c0)`, display: "flex", alignItems: "center", justifyContent: "center", margin: isMobile ? "0" : "0 auto 20px", boxShadow: `0 12px 32px rgba(79,53,163,0.35), 0 2px 8px rgba(79,53,163,0.2)` }}>
+                    {s.icon}
                   </div>
                 </div>
                 <div>
                   <div style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontWeight: 700, fontSize: 18, color: PURPLE_DARK, marginBottom: 8 }}>{s.title}</div>
-                  <p style={{ color: "#6b5447", fontSize: 14, lineHeight: 1.65, margin: 0 }}>{s.desc}</p>
+                  <p style={{ color: "#6b5447", fontSize: 15, lineHeight: 1.75, margin: 0 }}>{s.desc}</p>
                 </div>
               </div>
             ))}
@@ -484,11 +509,11 @@ export default function LandingPage() {
           </div>
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 20 }}>
             {FEATURES.map((f, i) => (
-              <div key={i} className="feature-card" style={{ background: "white", border: "1px solid #ede8dc", borderRadius: 20, padding: "32px 28px", display: "flex", gap: 20, alignItems: "flex-start", boxShadow: "0 4px 20px rgba(45,27,105,0.06)" }}>
+              <div key={i} className="feature-card" style={{ background: "linear-gradient(145deg, #ffffff 0%, #fdf7ef 100%)", border: "1px solid rgba(235,215,195,0.7)", borderRadius: 24, padding: "32px 28px", display: "flex", gap: 20, alignItems: "flex-start", boxShadow: "0 1px 0 rgba(255,255,255,0.9) inset, 0 2px 4px rgba(45,27,105,0.04), 0 8px 24px rgba(45,27,105,0.07), 0 24px 64px rgba(45,27,105,0.05)" }}>
                 <div style={{ width: 52, height: 52, borderRadius: 14, background: `linear-gradient(135deg, rgba(255,138,101,0.1), rgba(245,166,35,0.1))`, border: "1px solid rgba(255,138,101,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{f.icon}</div>
                 <div>
                   <h3 style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: 17, fontWeight: 700, color: PURPLE_DARK, margin: "0 0 8px", lineHeight: 1.3 }}>{f.title}</h3>
-                  <p style={{ color: "#6b5447", fontSize: 14, lineHeight: 1.65, margin: 0 }}>{f.desc}</p>
+                  <p style={{ color: "#6b5447", fontSize: 15, lineHeight: 1.75, margin: 0 }}>{f.desc}</p>
                 </div>
               </div>
             ))}
@@ -506,7 +531,7 @@ export default function LandingPage() {
           </div>
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 20, alignItems: "stretch" }}>
             {/* Digital */}
-            <div className="pricing-card" style={{ background: "rgba(255,255,255,0.05)", borderRadius: 24, padding: "36px 32px", boxShadow: "0 8px 32px rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.1)", display: "flex", flexDirection: "column" }}>
+            <div className="pricing-card" style={{ background: "rgba(255,255,255,0.1)", backdropFilter: "blur(20px)", borderRadius: 24, padding: "36px 32px", boxShadow: "0 8px 32px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.15)", display: "flex", flexDirection: "column" }}>
               <div style={{ marginBottom: 24 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.6)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Digital Book</div>
                 <div style={{ display: "flex", alignItems: "flex-start", gap: 4 }}>
@@ -572,16 +597,18 @@ export default function LandingPage() {
           </div>
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: 20 }}>
             {REVIEWS.map((r, i) => (
-              <div key={i} className="review-card" style={{ background: "white", borderRadius: 20, padding: "28px 24px", boxShadow: "0 4px 24px rgba(45,27,105,0.07)", border: "1px solid #ede8dc" }}>
-                <div style={{ color: GOLD, fontSize: 16, marginBottom: 14, letterSpacing: 2 }}>{"★".repeat(5)}</div>
-                <p style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: 15, lineHeight: 1.7, color: WARM_BROWN, margin: "0 0 20px", fontStyle: "italic" }}>"{r.text}"</p>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div key={i} className="review-card" style={{ background: "linear-gradient(145deg, #ffffff 0%, #fdf7ef 100%)", borderRadius: 24, padding: "32px 28px", boxShadow: "0 1px 0 rgba(255,255,255,0.9) inset, 0 2px 4px rgba(45,27,105,0.04), 0 10px 32px rgba(45,27,105,0.08)", border: "1px solid rgba(235,215,195,0.7)", display: "flex", flexDirection: "column" }}>
+                {/* Decorative quote mark */}
+                <div style={{ fontFamily: "Georgia, serif", fontSize: 80, lineHeight: 0.75, color: PURPLE_MID, opacity: 0.1, marginBottom: 12, fontWeight: 700, userSelect: "none" }}>"</div>
+                <div style={{ color: GOLD, fontSize: 12, marginBottom: 12, letterSpacing: 3 }}>{"★".repeat(5)}</div>
+                <p style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: 15, lineHeight: 1.8, color: "#3d2b1f", margin: "0 0 24px", fontStyle: "italic", flex: 1 }}>{r.text}</p>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, paddingTop: 18, borderTop: "1px solid rgba(45,27,105,0.07)" }}>
                   <div style={{ width: 44, height: 44, borderRadius: "50%", overflow: "hidden", flexShrink: 0 }}>
                     {REVIEW_AVATARS[i]}
                   </div>
                   <div>
                     <div style={{ fontWeight: 700, fontSize: 14, color: PURPLE_DARK }}>{r.name}</div>
-                    <div style={{ fontSize: 12, color: "#8a6d5a" }}>{r.role}</div>
+                    <div style={{ fontSize: 12, color: "#8a6d5a", marginTop: 2 }}>{r.role}</div>
                   </div>
                 </div>
               </div>

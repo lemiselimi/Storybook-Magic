@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 
-const PRICE = Number(process.env.BOOK_PRICE_CENTS || 1799); // $17.99 digital
+const PRICE_DIGITAL = process.env.STRIPE_PRICE_DIGITAL || "price_1TMvnV2LQoLokMlx6gqTBOke";
+const PRICE_PRINT   = process.env.STRIPE_PRICE_PRINT   || "price_1TMvoB2LQoLokMlxwL0e3Ng6";
 
 export async function POST(request) {
   if (!process.env.STRIPE_SECRET_KEY) {
@@ -11,24 +12,11 @@ export async function POST(request) {
     const { ref, plan } = await request.json();
     const origin = request.headers.get("origin") || "https://mytinytales.studio";
 
-    const isPrint   = plan === "print";
-    const unitPrice = isPrint ? Number(process.env.PRINT_PRICE_CENTS || 3799) : PRICE; // $37.99 print
-    const planLabel = isPrint ? "Print + Digital" : "Digital";
+    const priceId = plan === "print" ? PRICE_PRINT : PRICE_DIGITAL;
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
-      line_items: [{
-        price_data: {
-          currency: "usd",
-          product_data: {
-            name: `My Tiny Tales — Personalised Storybook (${planLabel})`,
-            description: "A unique cinematic 3D-style illustrated book starring your child",
-            images: ["https://mytinytales.studio/og-image.png"],
-          },
-          unit_amount: unitPrice,
-        },
-        quantity: 1,
-      }],
+      line_items: [{ price: priceId, quantity: 1 }],
       mode: "payment",
       success_url: `${origin}/create?success=1&session_id={CHECKOUT_SESSION_ID}&ref=${ref}`,
       cancel_url: `${origin}/create?cancelled=1`,

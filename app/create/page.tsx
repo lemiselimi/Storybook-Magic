@@ -916,8 +916,7 @@ export default function StorybookCreator() {
         /* ── Print styles ── */
         @page { size: landscape; margin: 0; }
         @media print {
-          * { margin: 0 !important; padding: 0 !important; box-sizing: border-box !important; }
-          html, body { width: 100vw; height: 100vh; overflow: hidden; }
+          html, body { margin: 0 !important; padding: 0 !important; height: auto !important; overflow: visible !important; }
           body * { visibility: hidden !important; }
           #print-book-root,
           #print-book-root * {
@@ -928,9 +927,9 @@ export default function StorybookCreator() {
           }
           #print-book-root {
             display: block !important;
-            position: absolute;
-            top: 0; left: 0;
-            width: 100vw;
+            position: absolute !important;
+            top: 0 !important; left: 0 !important;
+            width: 100% !important;
           }
           .print-page {
             width: 100vw !important;
@@ -1282,7 +1281,7 @@ export default function StorybookCreator() {
                         return (
                           <div key={idx} style={{ background: "white", borderRadius: 16, overflow: "hidden", boxShadow: "0 8px 32px rgba(0,0,0,0.3)", display: "flex", flexDirection: isMobile ? "column" : "row" }}>
                             <div style={{ flex: isMobile ? undefined : "0 0 45%", aspectRatio: isMobile ? "4/2.5" : undefined, minHeight: isMobile ? undefined : 180, background: "#1a1a2e", position: "relative", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-                              {img && <img src={img} alt={`Page ${page.pageNum}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
+                              {img && img !== "__failed__" && <img src={img} alt={`Page ${page.pageNum}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
                               <div style={{ position: "absolute", top: 8, left: 8, background: "rgba(0,0,0,0.55)", borderRadius: 8, padding: "2px 8px", color: "rgba(255,255,255,0.8)", fontSize: 10, fontWeight: 700 }}>Page {page.pageNum}</div>
                               <div style={{ position: "absolute", top: 8, right: 8, background: "rgba(255,215,0,0.95)", borderRadius: 8, padding: "2px 8px", color: "#1a0a2e", fontSize: 10, fontWeight: 700 }}>✨ AI Scene</div>
                             </div>
@@ -1301,7 +1300,7 @@ export default function StorybookCreator() {
                             return (
                               <div key={idx} style={{ background: "white", borderRadius: 14, overflow: "hidden", height: 90, display: "flex" }}>
                                 <div style={{ flex: "0 0 40%", background: img ? "#1a1a2e" : PAGE_BACKGROUNDS[(idx + 2) % PAGE_BACKGROUNDS.length], position: "relative", overflow: "hidden" }}>
-                                  {img && <img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
+                                  {img && img !== "__failed__" && <img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
                                 </div>
                                 <div style={{ flex: 1, background: "#fff8f0", padding: "14px 16px" }}>
                                   <div style={{ height: 10, background: "#e0d4c8", borderRadius: 5, marginBottom: 8, width: "80%" }} />
@@ -1419,108 +1418,68 @@ export default function StorybookCreator() {
             return null;
           })()}
           {currentPage === -2 ? (
-            // ── BOOK COVER — illustration top, title banner bottom ────────────
-            <div style={{ borderRadius: isMobile ? 16 : 20, overflow: "hidden", boxShadow: "0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,215,0,0.12)", animation: "fadeUp 0.4s ease both", display: "flex", flexDirection: "column", minHeight: isMobile ? 420 : 560 }}>
-              {/* Illustration: explicit pixel height so browser allocates space before image loads */}
-              <div style={{ width: "100%", height: isMobile ? 280 : 390, position: "relative", overflow: "hidden", display: "block", backgroundColor: "#2D1B69" }}>
-                <img
-                  src={pageImages[0] || undefined}
-                  alt="Book cover"
-                  style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top", display: "block" }}
-                  onError={e => { e.currentTarget.style.display = "none"; }}
-                />
-                <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "30%", background: "linear-gradient(to bottom, transparent, rgba(13,7,30,0.75))" }} />
-              </div>
-              {/* Title banner */}
-              <div style={{ background: "linear-gradient(160deg, #0d071e 0%, #2D1B69 60%, #150d28 100%)", borderTop: "1.5px solid rgba(255,215,0,0.3)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: isMobile ? "14px 22px 16px" : "20px 40px 20px", textAlign: "center", gap: 7 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 4, background: "linear-gradient(135deg, #F5A623, #ffb347)", borderRadius: 50, padding: "4px 12px", boxShadow: "0 2px 8px rgba(0,0,0,0.35)" }}>
-                  <span style={{ fontSize: 10 }}>✨</span>
-                  <span style={{ color: "#1a0a2e", fontWeight: 800, fontSize: 10, letterSpacing: "0.05em" }}>My Tiny Tales</span>
+            // ── BOOK COVER — full-bleed poster ───────────────────────────────
+            <div style={{ borderRadius: isMobile ? 16 : 20, overflow: "hidden", boxShadow: "0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,215,0,0.12)", animation: "fadeUp 0.4s ease both", position: "relative", minHeight: isMobile ? 420 : 560, background: "#07041A" }}>
+              {pageImages[0] && pageImages[0] !== "__failed__" && (
+                <img src={pageImages[0]} alt="Book cover" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top" }} />
+              )}
+              <div style={{ position: "absolute", top: 16, left: 0, right: 0, display: "flex", justifyContent: "center", zIndex: 2 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 5, background: "rgba(255,215,0,0.92)", borderRadius: 50, padding: "5px 16px" }}>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="#1a0a2e" aria-hidden="true"><path d="M12 1l2.39 7.61L22 12l-7.61 2.39L12 22l-2.39-7.61L2 12l7.61-2.39z"/></svg>
+                  <span style={{ color: "#1a0a2e", fontWeight: 800, fontSize: 11, letterSpacing: "0.06em" }}>My Tiny Tales</span>
                 </div>
-                <h1 style={{ fontFamily: "var(--font-playfair, Georgia, serif)", color: "rgba(255,255,255,0.75)", fontSize: "clamp(1.2rem, 3vw, 1.8rem)", fontWeight: 700, margin: 0, lineHeight: 1.2, letterSpacing: "0.01em", textShadow: "0 2px 12px rgba(0,0,0,0.5)", wordBreak: "break-word" }}>
+              </div>
+              <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(to top, rgba(5,2,15,0.97) 0%, rgba(5,2,15,0.72) 40%, transparent 100%)", padding: isMobile ? "56px 22px 22px" : "90px 36px 28px", zIndex: 2 }}>
+                <h1 style={{ fontFamily: "var(--font-playfair, Georgia, serif)", color: "white", fontSize: isMobile ? "1.65rem" : "2.4rem", fontWeight: 900, margin: "0 0 6px", lineHeight: 1.15, textShadow: "0 2px 20px rgba(0,0,0,0.8)", wordBreak: "break-word" }}>
                   {story.title}
                 </h1>
-                <p style={{ color: "rgba(255,215,0,0.7)", fontFamily: "Georgia, serif", fontStyle: "italic", fontSize: "0.75rem", margin: 0, letterSpacing: "0.03em" }}>
+                <p style={{ color: "rgba(255,215,0,0.75)", fontFamily: "Georgia, serif", fontStyle: "italic", fontSize: isMobile ? "0.82rem" : "0.95rem", margin: 0, letterSpacing: "0.03em" }}>
                   {THEMES.find(t => t.id === theme)?.subtitle ?? story.dedication}
                 </p>
               </div>
             </div>
           ) : currentPage === -1 ? (
-            // ── DEDICATION PAGE ──────────────────────────────────────────────────
-            <DarkFrame>
-              {(() => {
-                const capName = childName
-                  ? childName.charAt(0).toUpperCase() + childName.slice(1).toLowerCase()
-                  : "You";
-                return (
-                  <>
-                    {/* Gift tag icon */}
-                    <div style={{ width: 52, height: 52, borderRadius: "50%", background: "rgba(255,215,0,0.1)", border: "1px solid rgba(255,215,0,0.3)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255,215,0,0.8)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/>
-                        <line x1="12" y1="22" x2="12" y2="7"/>
-                        <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/>
-                        <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
-                      </svg>
-                    </div>
-                    <p style={{ color: "rgba(255,215,0,0.55)", fontSize: isMobile ? 10 : 11, fontWeight: 600, letterSpacing: "0.22em", textTransform: "uppercase", margin: "0 0 8px", fontFamily: "Georgia, serif" }}>
-                      A story created as a gift for
-                    </p>
-                    <h1 style={{ fontFamily: "var(--font-playfair, Georgia, serif)", color: "white", fontSize: isMobile ? 44 : 62, fontWeight: 900, margin: "0 0 20px", letterSpacing: "-0.02em", lineHeight: 1.0 }}>
-                      {capName}
-                    </h1>
-                    <div style={{ display: "flex", alignItems: "center", gap: 12, maxWidth: 280, margin: "0 auto 24px" }}>
-                      <div style={{ height: 1, flex: 1, background: "rgba(255,215,0,0.22)" }} />
-                      <span style={{ color: "rgba(255,215,0,0.45)", fontSize: 13 }}>✦</span>
-                      <div style={{ height: 1, flex: 1, background: "rgba(255,215,0,0.22)" }} />
-                    </div>
-                    <p style={{ fontFamily: "Georgia, 'Times New Roman', serif", color: "rgba(255,255,255,0.75)", fontSize: isMobile ? 14 : 16, lineHeight: 1.95, fontStyle: "italic", margin: "0 0 28px" }}>
-                      "May every adventure remind you how loved,<br />brave, and magical you are."
-                    </p>
-                    <p style={{ color: "rgba(255,215,0,0.35)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.18em", margin: 0 }}>✦ My Tiny Tales ✦</p>
-                  </>
-                );
-              })()}
-            </DarkFrame>
+            // ── DEDICATION PAGE ─ full-bleed editorial ────────────────────────────
+            (() => {
+              const capName = childName
+                ? childName.charAt(0).toUpperCase() + childName.slice(1).toLowerCase()
+                : 'You';
+              return (
+                <div style={{ borderRadius: isMobile ? 16 : 20, overflow: 'hidden', boxShadow: '0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,215,0,0.1)', animation: 'fadeUp 0.4s ease both', position: 'relative', minHeight: isMobile ? 420 : 560, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: isMobile ? '52px 32px' : '72px 64px', background: '#07041A' }}>
+                  <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 55%, rgba(80,40,160,0.28) 0%, transparent 65%)', pointerEvents: 'none' }} />
+                  <p style={{ position: 'relative', color: 'rgba(255,215,0,0.4)', fontSize: isMobile ? 10 : 11, fontWeight: 700, letterSpacing: '0.32em', textTransform: 'uppercase', margin: '0 0 20px', fontFamily: 'Georgia, serif' }}>A story created for</p>
+                  <h1 style={{ position: 'relative', fontFamily: 'var(--font-playfair, Georgia, serif)', color: 'white', fontSize: isMobile ? '3.2rem' : '5rem', fontWeight: 900, margin: 0, letterSpacing: '-0.03em', lineHeight: 0.95 }}>{capName}</h1>
+                  <div style={{ position: 'relative', width: 52, height: 2, background: 'rgba(255,215,0,0.45)', borderRadius: 1, margin: isMobile ? '22px auto' : '30px auto' }} />
+                  <p style={{ position: 'relative', fontFamily: 'Georgia, serif', color: 'rgba(255,255,255,0.58)', fontSize: isMobile ? 14 : 17, lineHeight: 1.85, fontStyle: 'italic', maxWidth: 400, margin: '0 auto' }}>&ldquo;May every adventure remind you how loved, brave, and magical you are.&rdquo;</p>
+                  <p style={{ position: 'relative', color: 'rgba(255,215,0,0.22)', fontFamily: 'Georgia, serif', fontSize: 11, letterSpacing: '0.24em', margin: isMobile ? '28px 0 0' : '36px 0 0' }}>My Tiny Tales</p>
+                </div>
+              );
+            })()
           ) : currentPage < totalPages ? (
             // ── STORY SPREADS ────────────────────────────────────────────────────
             <div key={`spread-${currentPage}`} style={{ borderRadius: isMobile ? 12 : 16, overflow: "hidden", boxShadow: "0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,215,0,0.08)", animation: `${navDir === "fwd" ? "slideInFwd" : "slideInBack"} 0.25s ease both` }}>
               <BookSpread spreadIndex={currentPage} />
             </div>
           ) : (
-            // ── CLOSING KEEPSAKE PAGE ────────────────────────────────────────────
-            <DarkFrame>
-              {(() => {
-                const capName = childName
-                  ? childName.charAt(0).toUpperCase() + childName.slice(1).toLowerCase()
-                  : "";
-                const closingText = THEME_CLOSING[theme]?.(capName) ||
-                  `Remember, ${capName}: every great adventure begins with one brave step. The world is full of magic — and you have everything it takes to find it.`;
-                return (
-                  <>
-                    {/* Dramatic The End typography */}
-                    <p style={{ color: "rgba(255,215,0,0.22)", fontFamily: "Georgia, serif", fontSize: isMobile ? 11 : 13, fontWeight: 600, letterSpacing: "0.28em", textTransform: "uppercase", margin: "0 0 12px" }}>
-                      ✦ &nbsp; ✦ &nbsp; ✦
-                    </p>
-                    <h2 style={{ fontFamily: "var(--font-playfair, Georgia, serif)", color: "#ffd700", fontSize: isMobile ? 52 : 72, fontWeight: 900, letterSpacing: "-0.02em", lineHeight: 1, margin: "0 0 8px", textShadow: "0 0 60px rgba(255,215,0,0.35)" }}>
-                      The End
-                    </h2>
-                    <div style={{ display: "flex", alignItems: "center", gap: 12, maxWidth: 260, margin: "0 auto 28px" }}>
-                      <div style={{ height: 1, flex: 1, background: "rgba(255,215,0,0.25)" }} />
-                      <span style={{ color: "rgba(255,215,0,0.5)", fontSize: 12 }}>✦</span>
-                      <div style={{ height: 1, flex: 1, background: "rgba(255,215,0,0.25)" }} />
-                    </div>
-                    <p style={{ fontFamily: "Georgia, 'Times New Roman', serif", color: "rgba(255,255,255,0.72)", fontSize: isMobile ? 13 : 15, lineHeight: 2, fontStyle: "italic", margin: "0 0 28px" }}>
-                      {closingText}
-                    </p>
-                    <p style={{ color: "rgba(255,255,255,0.22)", fontFamily: "Georgia, serif", fontSize: 11, fontStyle: "italic", margin: "0 0 12px" }}>
-                      Created with love · {new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
-                    </p>
-                    <p style={{ color: "rgba(255,215,0,0.3)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.18em", margin: 0 }}>✦ My Tiny Tales ✦</p>
-                  </>
-                );
-              })()}
-            </DarkFrame>
+            // ── CLOSING PAGE ─ full-bleed with last scene ────────────────────
+            (() => {
+              const capName = childName ? childName.charAt(0).toUpperCase() + childName.slice(1).toLowerCase() : '';
+              const closingText = THEME_CLOSING[theme]?.(capName) || ('Remember, ' + capName + ': every great adventure begins with one brave step. The world is full of magic — and you have everything it takes to find it.');
+              const bgImg = (pageImages[5] && pageImages[5] !== '__failed__') ? pageImages[5] : (pageImages[4] && pageImages[4] !== '__failed__') ? pageImages[4] : null;
+              return (
+                <div style={{ borderRadius: isMobile ? 12 : 16, overflow: 'hidden', boxShadow: '0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,215,0,0.08)', animation: 'fadeUp 0.4s ease both', position: 'relative', minHeight: isMobile ? 420 : 560, background: '#07041A' }}>
+                  {bgImg && <img src={bgImg} alt='' style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.35 }} />}
+                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(5,2,15,0.55) 0%, rgba(5,2,15,0.88) 100%)' }} />
+                  <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: isMobile ? 420 : 560, padding: isMobile ? '52px 28px' : '72px 64px', textAlign: 'center' }}>
+                    <p style={{ color: 'rgba(255,215,0,0.3)', fontSize: 11, fontWeight: 700, letterSpacing: '0.3em', margin: '0 0 14px', fontFamily: 'Georgia, serif' }}>❖ &nbsp; ❖ &nbsp; ❖</p>
+                    <h2 style={{ fontFamily: 'var(--font-playfair, Georgia, serif)', color: '#ffd700', fontSize: isMobile ? '3.2rem' : '4.8rem', fontWeight: 900, letterSpacing: '-0.02em', lineHeight: 1, margin: '0 0 8px', textShadow: '0 0 60px rgba(255,215,0,0.45)' }}>The End</h2>
+                    <div style={{ width: 48, height: 1, background: 'rgba(255,215,0,0.4)', margin: isMobile ? '18px auto' : '22px auto' }} />
+                    <p style={{ fontFamily: 'Georgia, serif', color: 'rgba(255,255,255,0.62)', fontSize: isMobile ? 13 : 16, lineHeight: 1.9, fontStyle: 'italic', maxWidth: 420, margin: '0 auto 24px' }}>{closingText}</p>
+                    <p style={{ color: 'rgba(255,255,255,0.2)', fontFamily: 'Georgia, serif', fontSize: 11, fontStyle: 'italic', margin: 0 }}>Created with love &middot; {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                  </div>
+                </div>
+              );
+            })()
           )}
 
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: isMobile ? 10 : 16, marginTop: 18 }}>
@@ -1653,17 +1612,20 @@ export default function StorybookCreator() {
       {mainStep === "book" && story && (
         <div id="print-book-root">
 
-          {/* Page 1: Cover (front of book) */}
-          <div className="print-page print-page-col" style={{ background: "#0d071e" }}>
-            <div style={{ flex: "0 0 60%", width: "100%", position: "relative", overflow: "hidden", background: "linear-gradient(160deg, #1a0a2e, #4a2060, #1a3040)" }}>
-              {coverImageUrl && <img crossOrigin="anonymous" src={coverImageUrl} alt="cover" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top" }} />}
-            </div>
-            <div style={{ flex: "0 0 40%", background: "linear-gradient(160deg, #0d071e, #2D1B69, #150d28)", borderTop: "1.5px solid rgba(255,215,0,0.3)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", gap: 10, padding: "20px 80px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, background: "linear-gradient(135deg, #ffd700, #ffb347)", borderRadius: 50, padding: "5px 16px" }}>
-                <span>✨</span><span style={{ color: "#1a0a2e", fontWeight: 800, fontSize: 12 }}>My Tiny Tales</span>
+          {/* Page 1: Cover (front of book) — full-bleed poster */}
+          <div className="print-page" style={{ position: "relative", background: "#07041A" }}>
+            {coverImageUrl && <img crossOrigin="anonymous" src={coverImageUrl} alt="cover" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top" }} />}
+            {/* Top branding */}
+            <div style={{ position: "absolute", top: 28, left: 0, right: 0, display: "flex", justifyContent: "center", zIndex: 2 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255,215,0,0.92)", borderRadius: 50, padding: "6px 20px" }}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="#1a0a2e" aria-hidden="true"><path d="M12 1l2.39 7.61L22 12l-7.61 2.39L12 22l-2.39-7.61L2 12l7.61-2.39z"/></svg>
+                <span style={{ color: "#1a0a2e", fontWeight: 800, fontSize: 12, letterSpacing: "0.06em" }}>My Tiny Tales</span>
               </div>
-              <div style={{ color: "white", fontSize: 38, fontWeight: 900, fontFamily: "Georgia, serif", lineHeight: 1.15 }}>{story.title}</div>
-              <div style={{ color: "rgba(255,215,0,0.7)", fontStyle: "italic", fontSize: 15, fontFamily: "Georgia, serif" }}>{THEMES.find(t => t.id === theme)?.subtitle ?? story.dedication}</div>
+            </div>
+            {/* Bottom gradient + title */}
+            <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(to top, rgba(5,2,15,0.97) 0%, rgba(5,2,15,0.72) 40%, transparent 100%)", padding: "100px 80px 48px", zIndex: 2 }}>
+              <div style={{ color: "white", fontSize: 52, fontWeight: 900, fontFamily: "Georgia, serif", lineHeight: 1.1, marginBottom: 10, textShadow: "0 2px 24px rgba(0,0,0,0.8)" }}>{story.title}</div>
+              <div style={{ color: "rgba(255,215,0,0.75)", fontStyle: "italic", fontSize: 18, fontFamily: "Georgia, serif" }}>{THEMES.find(t => t.id === theme)?.subtitle ?? story.dedication}</div>
             </div>
           </div>
 
@@ -1671,21 +1633,18 @@ export default function StorybookCreator() {
           <div className="print-page" style={{ background: "#0d071e" }} />
 
           {/* Page 3: Dedication */}
-          <div className="print-page" style={{ background: "linear-gradient(160deg, #0d071e 0%, #2D1B69 50%, #0d071e 100%)", alignItems: "center", justifyContent: "center", position: "relative" }}>
-            <div style={{ position: "absolute", inset: 40, border: "1.5px solid rgba(255,215,0,0.35)", borderRadius: 10, pointerEvents: "none" }} />
-            <div style={{ position: "absolute", inset: 60, border: "0.5px solid rgba(255,215,0,0.15)", borderRadius: 6, pointerEvents: "none" }} />
-            <div style={{ textAlign: "center", maxWidth: 600, position: "relative", zIndex: 1 }}>
-              <p style={{ color: "rgba(255,215,0,0.6)", fontSize: 13, fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase", margin: "0 0 20px", fontFamily: "Georgia, serif" }}>
-                This story was created especially for
-              </p>
-              <h1 style={{ fontFamily: "Georgia, serif", color: "white", fontSize: 72, fontWeight: 900, margin: "0 0 24px", letterSpacing: "-0.02em", lineHeight: 1.05 }}>
+          <div className="print-page" style={{ position: "relative", background: "#07041A", alignItems: "center", justifyContent: "center", flexDirection: "column" }}>
+            <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse at 50% 55%, rgba(80,40,160,0.3) 0%, transparent 65%)", pointerEvents: "none" }} />
+            <div style={{ position: "relative", textAlign: "center", maxWidth: 700, padding: "0 80px" }}>
+              <p style={{ color: "rgba(255,215,0,0.4)", fontSize: 12, fontWeight: 700, letterSpacing: "0.32em", textTransform: "uppercase", margin: "0 0 24px", fontFamily: "Georgia, serif" }}>A story created for</p>
+              <h1 style={{ fontFamily: "Georgia, serif", color: "white", fontSize: 80, fontWeight: 900, margin: 0, letterSpacing: "-0.03em", lineHeight: 0.9 }}>
                 {childName ? childName.charAt(0).toUpperCase() + childName.slice(1).toLowerCase() : "You"}
               </h1>
-              <div style={{ height: 1, background: "rgba(255,215,0,0.25)", maxWidth: 240, margin: "0 auto 24px" }} />
-              <p style={{ fontFamily: "Georgia, serif", color: "rgba(255,255,255,0.78)", fontSize: 20, lineHeight: 1.9, fontStyle: "italic", margin: "0 0 32px" }}>
-                "May every adventure remind you how loved, brave, and magical you are."
+              <div style={{ width: 60, height: 2, background: "rgba(255,215,0,0.45)", borderRadius: 1, margin: "32px auto" }} />
+              <p style={{ fontFamily: "Georgia, serif", color: "rgba(255,255,255,0.6)", fontSize: 20, lineHeight: 1.85, fontStyle: "italic", margin: 0 }}>
+                &ldquo;May every adventure remind you how loved, brave, and magical you are.&rdquo;
               </p>
-              <p style={{ color: "rgba(255,215,0,0.4)", fontFamily: "Georgia, serif", fontSize: 13, letterSpacing: "0.16em", margin: 0 }}>✦ My Tiny Tales ✦</p>
+              <p style={{ color: "rgba(255,215,0,0.22)", fontFamily: "Georgia, serif", fontSize: 13, letterSpacing: "0.24em", margin: "40px 0 0" }}>My Tiny Tales</p>
             </div>
           </div>
 
@@ -1696,27 +1655,24 @@ export default function StorybookCreator() {
             </div>
           ))}
 
-          {/* Page 10: Closing keepsake */}
+          {/* Page 10: Closing */}
           {(() => {
-            const capName = childName
-              ? childName.charAt(0).toUpperCase() + childName.slice(1).toLowerCase()
-              : "";
+            const capName = childName ? childName.charAt(0).toUpperCase() + childName.slice(1).toLowerCase() : "";
             const closingText = THEME_CLOSING[theme]?.(capName) ||
-              `Remember, ${capName}: every great adventure begins with one brave step. The world is full of magic — and you have everything it takes to find it.`;
+              ("Remember, " + capName + ": every great adventure begins with one brave step. The world is full of magic — and you have everything it takes to find it.");
+            const bgImgPrint = (pageImages[5] && pageImages[5] !== "__failed__") ? pageImages[5] : null;
             return (
-              <div className="print-page" style={{ background: "linear-gradient(160deg, #0d071e 0%, #2D1B69 50%, #0d071e 100%)", alignItems: "center", justifyContent: "center", position: "relative" }}>
-                <div style={{ position: "absolute", inset: 40, border: "1.5px solid rgba(255,215,0,0.35)", borderRadius: 10, pointerEvents: "none" }} />
-                <div style={{ position: "absolute", inset: 60, border: "0.5px solid rgba(255,215,0,0.15)", borderRadius: 6, pointerEvents: "none" }} />
-                <div style={{ textAlign: "center", maxWidth: 680, position: "relative", zIndex: 1 }}>
-                  <p style={{ fontFamily: "Georgia, serif", color: "rgba(255,215,0,0.82)", fontSize: 22, lineHeight: 1.95, fontStyle: "italic", margin: "0 0 32px" }}>
-                    {closingText}
-                  </p>
-                  <div style={{ height: 1, background: "rgba(255,215,0,0.22)", maxWidth: 200, margin: "0 auto 20px" }} />
-                  <p style={{ color: "rgba(255,215,0,0.6)", fontFamily: "Georgia, serif", fontSize: 28, letterSpacing: "0.1em", margin: "0 0 24px" }}>✦ The End ✦</p>
-                  <p style={{ color: "rgba(255,255,255,0.28)", fontFamily: "Georgia, serif", fontSize: 13, fontStyle: "italic", margin: "0 0 16px" }}>
+              <div className="print-page" style={{ position: "relative", background: "#07041A", alignItems: "center", justifyContent: "center", flexDirection: "column" }}>
+                {bgImgPrint && <img crossOrigin="anonymous" src={bgImgPrint} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.3 }} />}
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(5,2,15,0.5) 0%, rgba(5,2,15,0.9) 100%)" }} />
+                <div style={{ position: "relative", textAlign: "center", maxWidth: 720, padding: "0 80px" }}>
+                  <p style={{ color: "rgba(255,215,0,0.3)", fontSize: 13, letterSpacing: "0.3em", margin: "0 0 16px", fontFamily: "Georgia, serif" }}>❖ &nbsp; ❖ &nbsp; ❖</p>
+                  <h2 style={{ fontFamily: "Georgia, serif", color: "#ffd700", fontSize: 72, fontWeight: 900, letterSpacing: "-0.02em", lineHeight: 1, margin: "0 0 8px", textShadow: "0 0 60px rgba(255,215,0,0.4)" }}>The End</h2>
+                  <div style={{ width: 60, height: 1, background: "rgba(255,215,0,0.4)", margin: "24px auto" }} />
+                  <p style={{ fontFamily: "Georgia, serif", color: "rgba(255,255,255,0.65)", fontSize: 20, lineHeight: 1.9, fontStyle: "italic", margin: "0 0 28px" }}>{closingText}</p>
+                  <p style={{ color: "rgba(255,255,255,0.22)", fontFamily: "Georgia, serif", fontSize: 13, fontStyle: "italic", margin: 0 }}>
                     Created with love · {new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
                   </p>
-                  <p style={{ color: "rgba(255,215,0,0.35)", fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.16em", margin: 0 }}>✦ My Tiny Tales ✦</p>
                 </div>
               </div>
             );

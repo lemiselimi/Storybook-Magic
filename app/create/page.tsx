@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef, useCallback, useEffect } from "react";
+import { createPortal } from "react-dom";
 
 const THEMES = [
   { id: "adventure",  emoji: "🌋", title: "The Big Adventure", subtitle: "Quest & Exploration",  desc: "Your child discovers a hidden world and must be brave to save the day", popular: true },
@@ -916,43 +917,36 @@ export default function StorybookCreator() {
         /* ── Print styles ── */
         @page { size: landscape; margin: 0; }
         @media print {
-          html, body { margin: 0 !important; padding: 0 !important; height: auto !important; overflow: visible !important; }
-          body * { visibility: hidden !important; }
-          #print-book-root,
-          #print-book-root * {
-            visibility: visible !important;
+          html, body { margin: 0 !important; padding: 0 !important; background: #000 !important; }
+          /* Hide the entire Next.js shell — only show the portal */
+          body > *:not(#print-book-root) { display: none !important; }
+          #print-book-root {
+            display: block !important;
+            width: 100% !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
             color-adjust: exact !important;
           }
-          #print-book-root {
-            display: block !important;
-            position: absolute !important;
-            top: 0 !important; left: 0 !important;
-            width: 100% !important;
+          #print-book-root * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+            box-sizing: border-box !important;
           }
           .print-page {
             width: 100vw !important;
             height: 100vh !important;
-            max-height: 100vh !important;
-            page-break-after: always;
-            break-after: page;
-            page-break-inside: avoid;
-            break-inside: avoid;
+            page-break-after: always !important;
+            break-after: page !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
             overflow: hidden !important;
             margin: 0 !important;
             padding: 0 !important;
-            display: flex !important;
-            flex-direction: row !important;
-            border-radius: 0 !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
+            display: block !important;
+            position: relative !important;
           }
-          .print-page-col {
-            flex-direction: column !important;
-          }
-          .print-page:last-child { page-break-after: avoid; break-after: avoid; }
-
+          .print-page:last-child { page-break-after: avoid !important; break-after: avoid !important; }
           /* Story spreads: full-bleed illustration with text overlay */
           .print-spread {
             width: 100% !important;
@@ -1608,8 +1602,8 @@ export default function StorybookCreator() {
         </div>
       )}
 
-      {/* ── Print-only book pages (hidden on screen, shown on print) ── */}
-      {mainStep === "book" && story && (
+      {/* ── Print-only book pages — rendered as body portal for correct pagination ── */}
+      {mainStep === "book" && story && typeof document !== "undefined" && createPortal(
         <div id="print-book-root">
 
           {/* Page 1: Cover (front of book) — full-bleed poster */}
@@ -1681,7 +1675,8 @@ export default function StorybookCreator() {
           {/* Page 11: Blank inside back cover (print/hardcover only) */}
           <div className="print-page" style={{ background: "#0d071e" }} />
 
-        </div>
+        </div>,
+        document.body
       )}
       </div>{/* end inner zIndex wrapper */}
     </div>

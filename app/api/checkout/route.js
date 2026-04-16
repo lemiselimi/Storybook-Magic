@@ -18,8 +18,19 @@ export async function POST(request) {
       payment_method_types: ["card"],
       line_items: [{ price: priceId, quantity: 1 }],
       mode: "payment",
-      success_url: `${origin}/create?success=1&session_id={CHECKOUT_SESSION_ID}&ref=${ref}`,
+      success_url: `${origin}/create?success=1&session_id={CHECKOUT_SESSION_ID}&ref=${ref}&plan=${plan}`,
       cancel_url: `${origin}/create?cancelled=1`,
+      // Collect shipping address for print orders — Stripe shows address form at checkout
+      ...(plan === "print" ? {
+        shipping_address_collection: {
+          allowed_countries: [
+            "US","CA","GB","AU","NZ","DE","FR","NL","SE","NO","DK","FI",
+            "CH","AT","BE","IE","IT","ES","PT","PL","CZ","SK","HU","RO",
+            "BG","HR","SI","LT","LV","EE","GR","CY","MT","LU","IS","LI",
+          ],
+        },
+        phone_number_collection: { enabled: true },
+      } : {}),
     });
 
     return Response.json({ url: session.url });

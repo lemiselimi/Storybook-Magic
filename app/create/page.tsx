@@ -223,6 +223,11 @@ export default function StorybookCreator() {
   const [regeneratingPage, setRegeneratingPage] = useState<number | null>(null);
   const [shareCopied,      setShareCopied]      = useState(false);
   const [isMobile,         setIsMobile]         = useState(false);
+  const [printOrdered,     setPrintOrdered]     = useState(false);
+  const [printOrderError,  setPrintOrderError]  = useState<string | null>(null);
+  const [printFulfilling,  setPrintFulfilling]  = useState(false);
+  const printFulfilledRef = useRef(false);
+  const [pendingPrintSession, setPendingPrintSession] = useState<string | null>(null);
   const [isSharedView,     setIsSharedView]     = useState(false);
   const [isDemo,           setIsDemo]           = useState(false);
   const [showNewBookConfirm, setShowNewBookConfirm] = useState(false);
@@ -298,6 +303,7 @@ export default function StorybookCreator() {
       if (!saved) return;
       sessionStorage.removeItem(ref);
       const data = JSON.parse(saved);
+      const plan = params.get("plan");
       fetch(`/api/verify-session?session_id=${sessionId}`)
         .then(r => r.json())
         .then(result => {
@@ -307,6 +313,7 @@ export default function StorybookCreator() {
           setHairColor(data.hairColor || "brown"); setEyeColor(data.eyeColor || "brown");
           if (data.photosBase64?.length) setPhotosBase64(data.photosBase64);
           if (data.coverFalUrl) setCoverImageUrl(`/api/proxy?url=${encodeURIComponent(data.coverFalUrl)}`);
+          if (plan === "print") setPendingPrintSession(sessionId);
           setTimeout(() => generateFullBook(data), 50);
         }).catch(console.error);
     }
@@ -750,6 +757,40 @@ export default function StorybookCreator() {
   const printBook = () => {
     window.print();
   };
+
+  // ── Lulu print fulfillment — triggered after print payment ────────────────────
+  useEffect(() => {
+    if (!pendingPrintSession || mainStep !== "book" || !story || printFulfilledRef.current) return;
+    if (pageImages.filter(Boolean).length < 6) return; // wait for all scenes
+    printFulfilledRef.current = true;
+    setPrintFulfilling(true);
+
+    const coverFalUrl  = coverImageUrl ? rawFalUrl(coverImageUrl) : null;
+    const pageFalUrls  = pageImages.map(u => (u && u !== "__failed__") ? rawFalUrl(u) : null);
+
+    fetch("/api/fulfill-print-order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sessionId:   pendingPrintSession,
+        coverFalUrl,
+        pageFalUrls,
+        story,
+        childName,
+        theme,
+      }),
+    })
+      .then(r => r.json())
+      .then(res => {
+        if (res.ok) {
+          setPrintOrdered(true);
+        } else {
+          setPrintOrderError(res.error || "Print order failed — please contact us at hello@mytinytales.studio");
+        }
+      })
+      .catch(err => setPrintOrderError(err.message))
+      .finally(() => setPrintFulfilling(false));
+  }, [pendingPrintSession, mainStep, story, pageImages, coverImageUrl, childName, theme]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const resetAll = () => {
     setMainStep("onboarding"); setOnboardingStep(1); setStepDir("fwd");
@@ -1493,10 +1534,37 @@ export default function StorybookCreator() {
             <button onClick={() => navigate(Math.min(totalPages, currentPage + 1))} disabled={currentPage >= totalPages} style={{ padding: isMobile ? "10px 16px" : "11px 22px", borderRadius: 11, border: "none", background: "linear-gradient(135deg, #F5A623, #ffb347)", color: "#1a0a2e", fontSize: 14, fontWeight: 600, cursor: currentPage >= totalPages ? "not-allowed" : "pointer", opacity: currentPage >= totalPages ? 0.4 : 1 }}>Next →</button>
           </div>
 
+          {/* ── Print order status banner ── */}
+          {printFulfilling && (
+            <div style={{ margin: "12px auto 0", maxWidth: 900, background: "rgba(255,215,0,0.08)", border: "1px solid rgba(255,215,0,0.25)", borderRadius: 14, padding: "14px 20px", display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ width: 18, height: 18, border: "2.5px solid rgba(255,215,0,0.2)", borderTop: "2.5px solid #ffd700", borderRadius: "50%", animation: "spin 0.9s linear infinite", flexShrink: 0 }} />
+              <p style={{ color: "rgba(255,215,0,0.85)", fontSize: 14, margin: 0 }}>
+                Generating your print files and submitting to our print partner — this takes about 30 seconds…
+              </p>
+            </div>
+          )}
+          {printOrdered && (
+            <div style={{ margin: "12px auto 0", maxWidth: 900, background: "rgba(40,200,100,0.08)", border: "1px solid rgba(40,200,100,0.3)", borderRadius: 14, padding: "16px 24px" }}>
+              <p style={{ color: "rgba(180,255,200,0.95)", fontWeight: 700, fontSize: 15, margin: "0 0 4px" }}>
+                Your printed book is on its way!
+              </p>
+              <p style={{ color: "rgba(180,255,200,0.7)", fontSize: 13, margin: 0 }}>
+                Your order has been sent to our print partner (Lulu). You'll receive a shipping confirmation by email within 3–5 business days.
+              </p>
+            </div>
+          )}
+          {printOrderError && (
+            <div style={{ margin: "12px auto 0", maxWidth: 900, background: "rgba(255,80,80,0.08)", border: "1px solid rgba(255,80,80,0.25)", borderRadius: 14, padding: "14px 20px" }}>
+              <p style={{ color: "rgba(255,180,180,0.9)", fontSize: 13, margin: "0 0 6px", fontWeight: 600 }}>Print order issue</p>
+              <p style={{ color: "rgba(255,180,180,0.7)", fontSize: 13, margin: "0 0 8px" }}>{printOrderError}</p>
+              <a href="mailto:hello@mytinytales.studio" style={{ color: "#ffd700", fontSize: 12 }}>Contact us →</a>
+            </div>
+          )}
+
           <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 16, flexWrap: "wrap" }}>
             <button onClick={printBook} style={{ padding: "10px 20px", borderRadius: 11, border: "none", background: "linear-gradient(135deg, #F5A623, #ffb347)", color: "#1a0a2e", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-              Print / Save PDF
+              Save PDF
             </button>
             <button onClick={copyShareLink} style={{ padding: "10px 20px", borderRadius: 11, border: "1px solid rgba(255,255,255,0.15)", background: shareCopied ? "linear-gradient(135deg, #667eea, #764ba2)" : "rgba(255,255,255,0.1)", color: shareCopied ? "white" : "rgba(255,255,255,0.8)", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.3s", display: "flex", alignItems: "center", gap: 6 }}>
               {shareCopied ? (

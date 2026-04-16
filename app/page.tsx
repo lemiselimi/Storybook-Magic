@@ -288,7 +288,7 @@ export default function LandingPage() {
         </div>
         <Link href="/create" style={{ textDecoration: "none" }}>
           <button className="cta-btn" style={{ padding: isMobile ? "8px 16px" : "10px 24px", borderRadius: 50, border: "none", background: `linear-gradient(135deg, ${GOLD}, #ffb347)`, color: PURPLE_DARK, fontWeight: 700, fontSize: isMobile ? 12 : 14, cursor: "pointer", boxShadow: "0 4px 20px rgba(245,166,35,0.35)" }}>
-            Preview Your Book Free →
+            Try Free →
           </button>
         </Link>
       </nav>
@@ -334,7 +334,7 @@ export default function LandingPage() {
             <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
               <Link href="/create" style={{ textDecoration: "none" }}>
                 <button className="cta-btn" style={{ padding: isMobile ? "14px 28px" : "17px 40px", borderRadius: 50, border: "none", background: `linear-gradient(135deg, ${GOLD}, #ffb347)`, color: PURPLE_DARK, fontWeight: 700, fontSize: isMobile ? 15 : 17, cursor: "pointer", boxShadow: "0 8px 32px rgba(245,166,35,0.4)" }}>
-                  Preview Your Book Free →
+                  Try Free — No Card Needed →
                 </button>
               </Link>
               <button onClick={() => document.getElementById("examples")?.scrollIntoView({ behavior: "smooth" })} style={{ padding: isMobile ? "14px 24px" : "17px 32px", borderRadius: 50, border: "1px solid rgba(255,255,255,0.25)", background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.85)", fontWeight: 600, fontSize: isMobile ? 14 : 16, cursor: "pointer", backdropFilter: "blur(8px)" }}>
@@ -420,7 +420,7 @@ export default function LandingPage() {
           <div style={{ textAlign: "center", marginTop: isMobile ? 48 : 64 }}>
             <Link href="/create" style={{ textDecoration: "none" }}>
               <button className="cta-btn" style={{ padding: "15px 40px", borderRadius: 50, border: "none", background: `linear-gradient(135deg, ${PURPLE_MID}, ${PURPLE_ACCENT})`, color: "white", fontWeight: 700, fontSize: 16, cursor: "pointer", boxShadow: "0 8px 28px rgba(79,53,163,0.3)" }}>
-                Preview Your Book Free →
+                Try Free — No Card Needed →
               </button>
             </Link>
           </div>
@@ -492,7 +492,7 @@ export default function LandingPage() {
           <div style={{ textAlign: "center", marginTop: 40 }}>
             <Link href="/create" style={{ textDecoration: "none" }}>
               <button className="cta-btn" style={{ padding: "15px 40px", borderRadius: 50, border: "none", background: `linear-gradient(135deg, ${GOLD}, #ffb347)`, color: PURPLE_DARK, fontWeight: 700, fontSize: 16, cursor: "pointer", boxShadow: "0 8px 28px rgba(245,166,35,0.35)" }}>
-                Create a Book Like This →
+                Try Free — No Card Needed →
               </button>
             </Link>
           </div>
@@ -635,7 +635,7 @@ export default function LandingPage() {
           </p>
           <Link href="/create" style={{ textDecoration: "none" }}>
             <button className="cta-btn" style={{ padding: isMobile ? "16px 36px" : "18px 52px", borderRadius: 50, border: "none", background: `linear-gradient(135deg, ${GOLD}, #ffb347)`, color: PURPLE_DARK, fontWeight: 700, fontSize: isMobile ? 16 : 18, cursor: "pointer", boxShadow: "0 12px 40px rgba(245,166,35,0.4)" }}>
-              Preview Your Book Free →
+              Try Free — No Card Needed →
             </button>
           </Link>
           <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 13, marginTop: 16 }}>See 2 pages free · No subscription required</p>

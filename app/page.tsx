@@ -3,13 +3,12 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 
 const GOLD         = "#F5A623";   // golden amber — CTA buttons
-const GOLD_LIGHT   = "#F5A623";
+const GOLD_LIGHT   = "#FFD580";   // lighter gold — shimmer highlight
 const PURPLE_DARK  = "#2D1B69";   // deep violet — dark sections / footer
 const PURPLE_MID   = "#4F35A3";   // rich violet — primary brand
-const PURPLE_ACCENT = "#4F35A3";
+const PURPLE_ACCENT = "#6040c0";  // lighter violet — gradient end
 const CORAL        = "#FF8A65";   // warm coral — section labels, feature icons
 const CREAM        = "#FFF8F0";   // warm cream — main background
-const CREAM2       = "#FFF8F0";
 const WARM_BROWN   = "#1A1A1A";   // near-black — body text on light
 
 // ── SVG Icon components ────────────────────────────────────────────────────────
@@ -130,28 +129,28 @@ const OUTCOMES = [
 
 const EXAMPLES = [
   {
-    tag: "Loki's Big Adventure",
+    tag: "The Big Adventure",
     title: "A Real Hero",
     caption: "Your child as the hero — brave, kind, and unforgettable",
     img: "/examples/example-1.jfif",
     quote: '"Loki was a real hero! He learned that being brave and kind saves the day. What an amazing adventure!"',
-    child: "Loki's Story — Age 4",
+    child: "Loki, Age 4 — Adventure theme",
   },
   {
-    tag: "Loki's Big Adventure",
-    title: "He Did Not Give Up",
+    tag: "To The Stars",
+    title: "She Reached the Stars",
     caption: "Every page packed with heart — your child's real face in every scene",
     img: "/examples/example-2.jfif",
-    quote: '"Loki pushed and pushed the rock! His muscles got stronger with each try. He did not give up!"',
-    child: "Loki's Story — Age 4",
+    quote: '"Aria blasted off into the cosmos and discovered that the bravest explorers carry kindness in their hearts."',
+    child: "Aria, Age 6 — Space theme",
   },
   {
-    tag: "Loki's Big Adventure",
-    title: "Into the Magical Forest",
+    tag: "Dragon Tamer",
+    title: "The Dragon Needed Him",
     caption: "Cinematic Disney-style illustrations made just for them",
     img: "/examples/example-3.jfif",
-    quote: '"Wow! A magical forest appeared! Tall trees and glowing lights were everywhere. Loki walked forward, brave and curious."',
-    child: "Loki's Story — Age 4",
+    quote: '"Only Noah had what it took. He walked right up to the great dragon and said: I\'m here to help."',
+    child: "Noah, Age 5 — Dragon theme",
   },
 ];
 
@@ -162,7 +161,7 @@ const REVIEWS = [
 ];
 
 const DIGITAL_FEATURES = ["6 unique cinematic 3D-illustrated pages", "Personalised story tailored to their age", "Instant digital download", "Shareable link for family", "Print at home on any printer", "Print as many copies as you like", "Free print guide included"];
-const PRINT_FEATURES   = ["Everything in Digital", "Premium hardcover book", "Lay-flat binding", "Ships within 5–7 days", "Gift wrapping available"];
+const PRINT_FEATURES   = ["Everything in Digital", "Premium hardcover book", "Lay-flat binding", "Ships within 5–7 days"];
 
 // ── Illustrated review avatars ────────────────────────────────────────────────
 function AvatarSarah() {
@@ -371,13 +370,13 @@ export default function LandingPage() {
       </section>
 
       {/* ── TRUST BAR ── */}
-      <section style={{ background: CREAM2, borderTop: "1px solid #e8dcc8", borderBottom: "1px solid #e8dcc8" }}>
+      <section style={{ background: CREAM, borderTop: "1px solid #e8dcc8", borderBottom: "1px solid #e8dcc8" }}>
         <div style={{ maxWidth: 900, margin: "0 auto", padding: isMobile ? "24px 24px" : "24px 48px", display: "flex", alignItems: "center", justifyContent: "space-around", flexWrap: "wrap", gap: 16 }}>
           {[
             { icon: <IconStar size={22} color={GOLD} />,           value: "5-Star Rated",    label: "By early families" },
-            { icon: <IconSparkle size={22} color={PURPLE_MID} />,  value: "Magical Results", label: "Worth the wait" },
-            { icon: <IconLock size={22} color={PURPLE_MID} />,     value: "Private",         label: "Photo deleted after use" },
-            { icon: <IconShield size={22} color={PURPLE_MID} />,   value: "30-Day",          label: "Satisfaction guarantee" },
+            { icon: <IconSparkle size={22} color={PURPLE_MID} />,  value: "Ready in 5 min",  label: "From photo to preview" },
+            { icon: <IconLock size={22} color={PURPLE_MID} />,     value: "Never Stored",    label: "Photos deleted after use" },
+            { icon: <IconShield size={22} color={PURPLE_MID} />,   value: "No Subscription", label: "Pay once, keep forever" },
           ].map((t, i) => (
             <div key={i} style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <span style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>{t.icon}</span>
@@ -549,7 +548,7 @@ export default function LandingPage() {
                 ))}
               </ul>
               <Link href="/create" style={{ textDecoration: "none" }}>
-                <button className="cta-btn" style={{ width: "100%", padding: "14px", borderRadius: 50, border: "1px solid rgba(255,255,255,0.25)", background: "transparent", color: "white", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>Preview Free, Then Buy →</button>
+                <button className="cta-btn" style={{ width: "100%", padding: "14px", borderRadius: 50, border: "1px solid rgba(255,255,255,0.25)", background: "transparent", color: "white", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>Try Free — No Card Needed →</button>
               </Link>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 12, flexWrap: "wrap" }}>
                 <span style={{ display: "flex", alignItems: "center", color: "rgba(255,255,255,0.3)" }}><IconLock size={11} color="rgba(255,255,255,0.3)" /></span>
@@ -561,8 +560,8 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Print + Digital — Coming Soon */}
-            <div className="pricing-card" style={{ background: `linear-gradient(145deg, ${PURPLE_MID}, #3d1f6e)`, borderRadius: 24, padding: "36px 32px", boxShadow: "0 16px 48px rgba(0,0,0,0.35)", border: "1px solid rgba(245,166,35,0.2)", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden", opacity: 0.65, pointerEvents: "none" }}>
+            {/* Print + Digital — Waitlist */}
+            <div className="pricing-card" style={{ background: `linear-gradient(145deg, ${PURPLE_MID}, #3d1f6e)`, borderRadius: 24, padding: "36px 32px", boxShadow: "0 16px 48px rgba(0,0,0,0.35)", border: "1px solid rgba(245,166,35,0.2)", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}>
               <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 4, background: `linear-gradient(90deg, ${GOLD}, #ffb347)` }} />
               <div style={{ position: "absolute", top: 18, right: 20, background: `linear-gradient(135deg, ${GOLD}, #ffb347)`, color: PURPLE_DARK, fontSize: 11, fontWeight: 800, padding: "4px 12px", borderRadius: 50 }}>Coming Soon</div>
               <div style={{ marginBottom: 24 }}>
@@ -581,7 +580,9 @@ export default function LandingPage() {
                   </li>
                 ))}
               </ul>
-              <button style={{ width: "100%", padding: "14px", borderRadius: 50, border: "none", background: `linear-gradient(135deg, ${GOLD}, #ffb347)`, color: PURPLE_DARK, fontWeight: 700, fontSize: 15, cursor: "not-allowed" }}>Launching Soon</button>
+              <a href="mailto:hello@mytinytales.studio?subject=Print Book Waitlist" style={{ textDecoration: "none" }}>
+                <button className="cta-btn" style={{ width: "100%", padding: "14px", borderRadius: 50, border: "none", background: `linear-gradient(135deg, ${GOLD}, #ffb347)`, color: PURPLE_DARK, fontWeight: 700, fontSize: 15, cursor: "pointer" }}>Join the Waitlist →</button>
+              </a>
             </div>
           </div>
           <p style={{ textAlign: "center", color: "rgba(255,255,255,0.35)", fontSize: 13, marginTop: 24, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}><IconShield size={13} color="rgba(255,255,255,0.35)" /> 30-day happiness promise. We're committed to making sure you love your book.</p>
@@ -600,7 +601,7 @@ export default function LandingPage() {
               <div key={i} className="review-card" style={{ background: "linear-gradient(145deg, #ffffff 0%, #fdf7ef 100%)", borderRadius: 24, padding: "32px 28px", boxShadow: "0 1px 0 rgba(255,255,255,0.9) inset, 0 2px 4px rgba(45,27,105,0.04), 0 10px 32px rgba(45,27,105,0.08)", border: "1px solid rgba(235,215,195,0.7)", display: "flex", flexDirection: "column" }}>
                 {/* Decorative quote mark */}
                 <div style={{ fontFamily: "Georgia, serif", fontSize: 80, lineHeight: 0.75, color: PURPLE_MID, opacity: 0.1, marginBottom: 12, fontWeight: 700, userSelect: "none" }}>"</div>
-                <div style={{ color: GOLD, fontSize: 12, marginBottom: 12, letterSpacing: 3 }}>{"★".repeat(5)}</div>
+                <div style={{ display: "flex", gap: 3, marginBottom: 12 }}>{[0,1,2,3,4].map(i => <IconStar key={i} size={14} color={GOLD} />)}</div>
                 <p style={{ fontFamily: "var(--font-playfair, Georgia, serif)", fontSize: 15, lineHeight: 1.8, color: "#3d2b1f", margin: "0 0 24px", fontStyle: "italic", flex: 1 }}>{r.text}</p>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, paddingTop: 18, borderTop: "1px solid rgba(45,27,105,0.07)" }}>
                   <div style={{ width: 44, height: 44, borderRadius: "50%", overflow: "hidden", flexShrink: 0 }}>

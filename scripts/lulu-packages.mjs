@@ -31,7 +31,7 @@ if (!CLIENT_ID || !CLIENT_SECRET) {
 // ── 1. Get token ─────────────────────────────────────────────────────────────
 console.log("Authenticating with Lulu...");
 const tokenRes = await fetch(
-  "https://api.lulu.com/auth/realms/lulu/protocol/openid-connect/token",
+  "https://api.lulu.com/auth/realms/sandbox/protocol/openid-connect/token",
   {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },

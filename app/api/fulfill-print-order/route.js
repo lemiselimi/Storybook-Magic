@@ -3,7 +3,7 @@ import Stripe from "stripe";
 export const maxDuration = 60;
 
 // Lulu production API
-const LULU_TOKEN_URL = "https://api.lulu.com/auth/realms/lulu/protocol/openid-connect/token";
+const LULU_TOKEN_URL = "https://api.lulu.com/auth/realms/sandbox/protocol/openid-connect/token";
 const LULU_JOBS_URL  = "https://api.lulu.com/print-jobs/";
 
 // 11×8.5" landscape, full color, standard softcover (perfect bound)

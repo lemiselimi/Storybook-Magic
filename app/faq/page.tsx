@@ -2,7 +2,7 @@ export default function FAQPage() {
   const faqs = [
     {
       q: "How does it work?",
-      a: "Upload a photo of your child, tell us their name and age, and we'll train a personalised AI character that looks just like them. Within minutes you'll have a 10-page illustrated storybook starring your little one.",
+      a: "Upload a photo of your child, tell us their name and age, and we'll create a personalised AI character that looks just like them. Within minutes you'll have a beautifully illustrated 6-scene storybook starring your little one.",
     },
     {
       q: "What photo should I use?",
@@ -10,7 +10,7 @@ export default function FAQPage() {
     },
     {
       q: "How long does it take?",
-      a: "The AI character training takes 3–4 minutes. Once training is done, all 10 scenes are generated in about 2 more minutes. Total time from upload to preview: roughly 5–6 minutes.",
+      a: "Your personalised character is created in 3–4 minutes. All 6 illustrated scenes are then generated in about 2 more minutes. Total time from photo to preview: roughly 5–6 minutes.",
     },
     {
       q: "Is my child's photo stored?",
@@ -18,11 +18,11 @@ export default function FAQPage() {
     },
     {
       q: "Can I preview before paying?",
-      a: "Yes — you get a full 10-page preview completely free. You only pay when you decide to download or order a print.",
+      a: "Yes — you get a full preview of all 6 illustrated scenes completely free. You only pay when you decide to download or order a print.",
     },
     {
       q: "What's included in the digital download?",
-      a: "A high-resolution PDF of your personalised 10-page storybook, ready to print at home or at any print shop.",
+      a: "A high-resolution PDF of your personalised storybook with 6 full illustrated scenes plus cover, dedication, and closing pages — ready to print at home or at any print shop.",
     },
     {
       q: "Is there a subscription?",

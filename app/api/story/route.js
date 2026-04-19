@@ -57,21 +57,46 @@ export async function POST(request) {
     else if (ageNum <= 10) ageGuidance = "MIDDLE GRADE (8-10 yrs): richer vocabulary, more complex sentences, emotional depth.";
     else                   ageGuidance = "PRETEEN (11-12 yrs): sophisticated vocabulary, nuanced emotions, more complex plot.";
 
+    const pronouns = gender === "girl" ? "she/her" : gender === "boy" ? "he/him" : "they/them";
+    const pronoun  = gender === "girl" ? "she"     : gender === "boy" ? "he"     : "they";
+    const name     = childName || "our hero";
+
     const response = await client.messages.create({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 1500,
+      max_tokens: 1800,
       messages: [{
         role: "user",
-        content: `Create a 6-page children's book for ${childName || "a child"}, age ${childAge || 5}, gender: ${gender === "girl" ? "girl (use she/her)" : gender === "boy" ? "boy (use he/him)" : "neutral (use they/them)"}, with the theme: ${theme}. ${appearanceNote}
+        content: `You are a world-class children's book author — think the warmth of Julia Donaldson, the imagination of Roald Dahl, and the emotional punch of Pixar. Write a 6-page personalised storybook.
 
-IMPORTANT: Never describe the child's physical appearance in the story text. Do not mention hair colour, eye colour, skin tone, height, or any physical traits. The story should focus entirely on personality, actions, emotions, and adventure.
+CHILD: ${name}, age ${childAge || 5}, pronouns ${pronouns}
+THEME: ${theme}
+${appearanceNote}
 
-Age writing level — ${ageGuidance}
+STORY RULES:
+- Page 1: Open with a single vivid sentence that drops us straight into the world — no "once upon a time". Establish ${name}'s world and hint at what ${pronoun} wants most.
+- Page 2: Something unexpected happens — a discovery, a call to adventure, a problem that only ${name} can solve.
+- Page 3: ${name} faces their first real challenge. ${pronoun.charAt(0).toUpperCase() + pronoun.slice(1)} tries something and it doesn't quite work. Show courage despite doubt.
+- Page 4: The stakes rise. Things get harder or more magical. A helper, creature, or surprise appears.
+- Page 5: The climax — ${name}'s unique quality (bravery, kindness, cleverness, imagination) saves the day in a specific, satisfying way.
+- Page 6: A warm, earned resolution. The world has changed because ${name} was in it. End on one short, resonant sentence.
 
-The "illustration" field for each page must be a vivid, detailed scene description for AI image generation (1-2 sentences). IMPORTANT: always describe the main character's age accurately — e.g. "a tiny toddler" for age 1-2, "a small young child" for age 3-5, etc. Describe: the environment/setting, what the main character is doing, mood/lighting, and any magical or theme-specific elements. Be specific and visual. Example: "A cozy bedroom at dawn with floating glowing stars, the child sitting up in bed holding a treasure map that pulses with golden light, moonbeams streaming through the window."
+WRITING RULES:
+- Age level: ${ageGuidance}
+- Use ${name}'s name naturally — not in every sentence, but enough to feel personal
+- Use specific, concrete details — not "a big tree" but "an oak tree so wide it took ten hugs to reach around"
+- Use sound words, action verbs, and short punchy sentences for excitement
+- Every page must end on a moment that makes you want to turn the page
+- NEVER describe physical appearance (hair, eyes, skin, height) — focus on actions, feelings, and personality
+- Pronouns: ${pronouns}
+
+ILLUSTRATION RULES:
+- Each "illustration" field: 1-2 vivid sentences describing the scene for an AI image generator
+- Always specify the age accurately: ${ageNum <= 2 ? "a tiny baby toddler" : ageNum <= 4 ? "a small preschooler" : ageNum <= 7 ? "a young child" : "an older child"}
+- Describe: setting, what the character is doing, emotion on their face, lighting/mood, any magical elements
+- Make each scene visually distinct from the others — vary the setting, lighting, and composition
 
 Respond ONLY with this exact JSON, no markdown, no extra text:
-{"title":"Book Title","dedication":"Sweet dedication to the child","pages":[{"pageNum":1,"text":"Page story text here (2-3 sentences).","illustration":"Detailed scene description for image generation."},{"pageNum":2,"text":"Page story text here.","illustration":"Detailed scene description."},{"pageNum":3,"text":"Page story text here.","illustration":"Detailed scene description."},{"pageNum":4,"text":"Page story text here.","illustration":"Detailed scene description."},{"pageNum":5,"text":"Page story text here.","illustration":"Detailed scene description."},{"pageNum":6,"text":"Page story text here.","illustration":"Detailed scene description."}]}`
+{"title":"A short punchy book title (max 5 words)","dedication":"A warm one-line dedication to ${name}","pages":[{"pageNum":1,"text":"Page text.","illustration":"Scene description."},{"pageNum":2,"text":"Page text.","illustration":"Scene description."},{"pageNum":3,"text":"Page text.","illustration":"Scene description."},{"pageNum":4,"text":"Page text.","illustration":"Scene description."},{"pageNum":5,"text":"Page text.","illustration":"Scene description."},{"pageNum":6,"text":"Page text.","illustration":"Scene description."}]}`
       }]
     });
 

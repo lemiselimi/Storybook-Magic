@@ -289,8 +289,18 @@ const DEMO_IMAGES: string[] = [
 ];
 const DEMO_COVER = "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=800";
 
-const encodeShare = (data: object) => btoa(unescape(encodeURIComponent(JSON.stringify(data))));
-const decodeShare = (s: string)    => JSON.parse(decodeURIComponent(escape(atob(s))));
+const encodeShare = (data: object) => {
+  const json = JSON.stringify(data);
+  const b64  = btoa(unescape(encodeURIComponent(json)));
+  // URL-safe base64: replace chars that break query strings
+  return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+};
+const decodeShare = (s: string) => {
+  // Restore standard base64 from URL-safe form
+  const b64 = s.replace(/-/g, "+").replace(/_/g, "/");
+  const pad  = b64.length % 4 ? "=".repeat(4 - (b64.length % 4)) : "";
+  return JSON.parse(decodeURIComponent(escape(atob(b64 + pad))));
+};
 const rawFalUrl   = (proxyUrl: string) => {
   try { return decodeURIComponent(proxyUrl.replace("/api/proxy?url=", "")); }
   catch { return proxyUrl; }
@@ -893,7 +903,12 @@ export default function StorybookCreator() {
 
   const copyShareLink = async () => {
     if (!story) return;
-    const data = { story, coverFalUrl: coverImageUrl ? rawFalUrl(coverImageUrl) : null, pageFalUrls: pageImages.map(u => u ? rawFalUrl(u) : null) };
+    // Strip illustration fields — not needed for viewing, reduces URL size
+    const shareStory = {
+      ...story,
+      pages: (story.pages || []).map(({ pageNum, text }: any) => ({ pageNum, text })),
+    };
+    const data = { story: shareStory, coverFalUrl: coverImageUrl ? rawFalUrl(coverImageUrl) : null, pageFalUrls: pageImages.map(u => u ? rawFalUrl(u) : null) };
     const url = `${window.location.origin}/create?share=${encodeShare(data)}`;
     try { await navigator.clipboard.writeText(url); setShareCopied(true); setTimeout(() => setShareCopied(false), 2500); } catch {}
   };

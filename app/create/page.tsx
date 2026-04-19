@@ -1017,10 +1017,10 @@ export default function StorybookCreator() {
         </div>
 
         {/* ── Bottom text overlay (cinematic caption band) ── */}
-        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(to top, rgba(5,2,15,0.97) 0%, rgba(5,2,15,0.9) 55%, transparent 100%)", padding: isMobile ? "44px 20px 18px" : "72px 36px 24px" }}>
+        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(to top, rgba(5,2,15,0.95) 0%, rgba(5,2,15,0.82) 45%, transparent 100%)", padding: isMobile ? "28px 18px 14px" : "40px 32px 20px" }}>
           {/* Subtle paper noise */}
           <div style={{ position: "absolute", inset: 0, opacity: 0.025, backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E\")", pointerEvents: "none" }} />
-          <p style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: isMobile ? 14 : 17, lineHeight: 1.9, color: "rgba(255,255,255,0.93)", margin: "0 0 12px", letterSpacing: "0.01em", position: "relative" }}>
+          <p style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: isMobile ? 11 : 13, lineHeight: 1.55, color: "rgba(255,255,255,0.88)", margin: "0 0 8px", letterSpacing: "0.01em", position: "relative" }}>
             {page.text}
           </p>
           <div style={{ display: "flex", alignItems: "center", gap: 10, position: "relative" }}>

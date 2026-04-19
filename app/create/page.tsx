@@ -75,8 +75,10 @@ const STYLE_TOKEN =
   "CAMERA: wide environmental shot, camera pulled back 3-4 metres, character shown from waist to head occupying NO MORE than 40% of the frame. " +
   "Environment and setting must fill the remaining 60% of the frame — sky, landscape, background scenery are as important as the character. " +
   "Never a portrait, never a close-up, never a face-filling shot, never a bust shot. " +
+  "CHARACTER ANGLE: child faces the viewer at a three-quarter angle — face clearly visible, expressive, and engaged. Never a side profile, never facing fully away. " +
   "LIGHTING: warm golden-hour sunlight, soft directional side lighting, glowing amber rim light wrapping around the character's hair and shoulders. No flat lighting, no front lighting, no overcast. " +
-  "COLOUR: fully warm harmonized palette — golden amber, honey, soft orange, warm peach shadows. Clothing colour should complement the warm environment tones. No cool blues, no cold grey tones anywhere. " +
+  "MAGICAL LIGHT RULE: any glowing portals, orbs, crystals, or magical elements must cast warm amber or golden light — NOT cool blue, NOT white, NOT purple. The glow should be a warm honey-gold that enhances the scene warmth, not overpowers it. The scene overall colour temperature stays warm regardless of magical light sources present. " +
+  "COLOUR: fully warm harmonized palette — golden amber, honey, soft orange, warm peach shadows. Clothing colour should complement the warm environment tones. No cool blues, no cold grey tones, no blue-tinted scenes. " +
   "DEPTH: strong three-layer composition — detailed foreground elements (grass, rocks, flowers, water), character in midground, expansive richly detailed background with atmospheric haze and soft bokeh. No empty backgrounds, no plain surfaces behind the character. " +
   "STYLE: cinematic photorealistic child, natural skin texture, lifelike face, subtle Disney-inspired charm — 80% realistic 20% magical stylization. Slightly expressive eyes with warmth and wonder. Integrated into environment with painterly magical atmosphere. Child as hero of their world. " +
   "No text, no words, no logos, no branded clothing.";

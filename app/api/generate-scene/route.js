@@ -14,9 +14,14 @@ const NEGATIVE_PROMPT =
   // Pose rejects
   "standing still, stiff pose, static, symmetrical, arms at sides, neutral expression, rigid, formal pose, " +
   "lifeless, boring composition, stock photo pose, " +
+  // Lighting rejects (extended)
+  "blue portal glow, cool blue light source, cold blue tinted scene, blue toned lighting, blue wash, " +
+  "purple tinted scene, cold magical light, icy glow, moonlit blue cast, " +
   // Style rejects
   "plastic skin, airbrushed skin, waxy skin, oversmoothed skin, porcelain skin, doll-like, " +
   "3D animated, CGI render, Pixar style, cartoon, 2D, flat cartoon, anime, sketch, " +
+  // Pose rejects (extended)
+  "side profile face, full profile, facing away, back to camera, " +
   // Safety rejects
   "text, watermark, words, letters, logos, branded clothing, " +
   "nudity, nude, naked, topless, bare chest, shirtless, no shirt, bare torso, exposed chest, " +

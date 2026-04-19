@@ -71,16 +71,20 @@ const TOTAL_STEPS     = 5;
 const CLOTHING = " Fully dressed at all times in age-appropriate adventure clothing — long-sleeved top, full-length trousers or skirt, shoes or boots. No bare skin visible below the neckline or above the wrist. No logos, no brand names, no text, no character prints, no emblems on clothing.";
 
 // Reusable style token — prepended to every page prompt for visual consistency across all 6 pages
+// Prepended to every scene prompt — style anchor must stay identical across all 6 pages
+const STYLE_ANCHOR =
+  "Pixar-Disney 3D animated storybook illustration, stylized child character with large expressive eyes and soft rounded face, warm painted lighting, vibrant saturated colours, ";
+
 const STYLE_TOKEN =
   "CAMERA: wide environmental shot, camera pulled back 3-4 metres, character shown from waist to head occupying NO MORE than 40% of the frame. " +
   "Environment and setting must fill the remaining 60% of the frame — sky, landscape, background scenery are as important as the character. " +
   "Never a portrait, never a close-up, never a face-filling shot, never a bust shot. " +
   "CHARACTER ANGLE: child faces the viewer at a three-quarter angle — face clearly visible, expressive, and engaged. Never a side profile, never facing fully away. " +
-  "LIGHTING: warm golden-hour sunlight, soft directional side lighting, glowing amber rim light wrapping around the character's hair and shoulders. No flat lighting, no front lighting, no overcast. " +
-  "MAGICAL LIGHT RULE: any glowing portals, orbs, crystals, or magical elements must cast warm amber or golden light — NOT cool blue, NOT white, NOT purple. The glow should be a warm honey-gold that enhances the scene warmth, not overpowers it. The scene overall colour temperature stays warm regardless of magical light sources present. " +
-  "COLOUR: fully warm harmonized palette — golden amber, honey, soft orange, warm peach shadows. Clothing colour should complement the warm environment tones. No cool blues, no cold grey tones, no blue-tinted scenes. " +
-  "DEPTH: strong three-layer composition — detailed foreground elements (grass, rocks, flowers, water), character in midground, expansive richly detailed background with atmospheric haze and soft bokeh. No empty backgrounds, no plain surfaces behind the character. " +
-  "STYLE: cinematic photorealistic child, natural skin texture, lifelike face, subtle Disney-inspired charm — 80% realistic 20% magical stylization. Slightly expressive eyes with warmth and wonder. Integrated into environment with painterly magical atmosphere. Child as hero of their world. " +
+  "LIGHTING: warm golden-hour painted light, soft directional side lighting, glowing amber rim light wrapping the character. No flat lighting, no overcast. " +
+  "MAGICAL LIGHT RULE: any glowing portals, orbs, crystals, or magical elements must cast warm amber or golden light — NOT cool blue, NOT white, NOT purple. Scene colour temperature stays warm regardless of magical light sources. " +
+  "COLOUR: fully warm harmonized palette — golden amber, honey, soft orange, warm peach shadows. No cool blues, no cold grey tones, no blue-tinted scenes. " +
+  "DEPTH: strong three-layer composition — detailed foreground elements, character in midground, expansive richly detailed background with atmospheric haze. No empty backgrounds. " +
+  "STYLE: Pixar-Disney 3D animated film frame — stylized character design, slightly exaggerated expressive features, smooth soft rendering, no realistic skin pores or photographic texture. Humans AND animals rendered in the same Pixar animation aesthetic. Consistent character stylization across every page. Child as hero of their world. " +
   "No text, no words, no logos, no branded clothing.";
 
 const SAFETY = "The child is completely and fully clothed in an age-appropriate adventure outfit at all times — long-sleeved top, full-length trousers or skirt, shoes. Absolutely no bare chest, no bare torso, no shirtless, no sleeveless, no exposed midriff, no bare arms or legs. Background contains only nature, animals, and magical storybook elements. Safe for young children.";
@@ -105,7 +109,8 @@ function buildGenderedPrompt(prompt: string, gender: string, age: number, hairCo
       : gender === "girl"
       ? `${age}-year-old girl, ${sizeHint}feminine features, long hair, ${hairHint}${eyeHint}fully dressed in long-sleeved adventure top and full-length skirt or trousers and boots, `
       : `${age}-year-old child, ${sizeHint}${hairHint}${eyeHint}fully dressed in long-sleeved adventure outfit and full-length trousers and boots, `;
-  return prompt.replace("a photo of TOK,", `a photo of TOK, ${hint}`);
+  // Prepend style anchor immediately after TOK trigger for maximum influence
+  return prompt.replace("a photo of TOK,", `a photo of TOK, ${STYLE_ANCHOR}${hint}`);
 }
 
 const COVER_PROMPT =

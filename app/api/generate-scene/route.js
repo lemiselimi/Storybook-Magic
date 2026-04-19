@@ -17,9 +17,11 @@ const NEGATIVE_PROMPT =
   // Lighting rejects (extended)
   "blue portal glow, cool blue light source, cold blue tinted scene, blue toned lighting, blue wash, " +
   "purple tinted scene, cold magical light, icy glow, moonlit blue cast, " +
-  // Style rejects
-  "plastic skin, airbrushed skin, waxy skin, oversmoothed skin, porcelain skin, doll-like, " +
-  "3D animated, CGI render, Pixar style, cartoon, 2D, flat cartoon, anime, sketch, " +
+  // Style rejects — photorealism forbidden, Pixar animation is the target
+  "photorealistic, photography, DSLR, photo, realistic skin texture, realistic skin pores, " +
+  "hyper-realistic, live action, real human, cinematic photography, " +
+  "waxy skin, porcelain skin, plastic skin, oversmoothed skin, " +
+  "2D, flat cartoon, anime, manga, sketch, " +
   // Pose rejects (extended)
   "side profile face, full profile, facing away, back to camera, " +
   // Safety rejects

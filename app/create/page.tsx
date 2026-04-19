@@ -635,10 +635,17 @@ export default function StorybookCreator() {
           setPreviewMsg(done < total ? `${done} of ${total} scenes ready...` : "All illustrations ready!");
         };
 
+        // Build prompts from Claude's illustration descriptions — keeps text and image in sync
+        const storyScenePrompts = (storyData.pages || []).map((pg: any) =>
+          pg.illustration
+            ? `a photo of TOK, ${pg.illustration} ${SCENE_QUALITY} ${SAFETY}`
+            : themePrompts[0]
+        );
+
         // All 7 scenes in parallel — cover + 6 story scenes
         await Promise.all([
           handleScene(COVER_PROMPT, -1),
-          ...themePrompts.map((p, idx) => handleScene(p, idx)),
+          ...storyScenePrompts.map((p: string, idx: number) => handleScene(p, idx)),
         ]);
       }
     } catch { setPreviewStory(getFallbackStory(childName)); }
@@ -775,6 +782,11 @@ export default function StorybookCreator() {
         };
 
         const fullThemePrompts = SCENE_PROMPTS_BY_THEME[_theme] ?? SCENE_PROMPTS_BY_THEME.adventure;
+        const fullStoryPrompts = (storyData?.pages || []).map((pg: any) =>
+          pg.illustration
+            ? `a photo of TOK, ${pg.illustration} ${SCENE_QUALITY} ${SAFETY}`
+            : fullThemePrompts[0]
+        );
 
         const handleScene2 = async (prompt: string, idx: number) => {
           let url: string | null = null;
@@ -799,7 +811,7 @@ export default function StorybookCreator() {
 
         await Promise.all([
           handleScene2(COVER_PROMPT, -1),
-          ...fullThemePrompts.map((p, idx) => handleScene2(p, idx)),
+          ...fullStoryPrompts.map((p: string, idx: number) => handleScene2(p, idx)),
         ]);
       }
 
@@ -851,11 +863,15 @@ export default function StorybookCreator() {
     if (!loraUrl || regeneratingPage !== null) return;
     setRegeneratingPage(pageIdx);
     try {
-      const regenPrompts = SCENE_PROMPTS_BY_THEME[theme] ?? SCENE_PROMPTS_BY_THEME.adventure;
-      const prompt = regenPrompts[pageIdx] ?? regenPrompts[0];
+      const illustrationDesc = story?.pages?.[pageIdx]?.illustration;
+      const basePrompt = illustrationDesc
+        ? `a photo of TOK, ${illustrationDesc} ${SCENE_QUALITY} ${SAFETY}`
+        : (SCENE_PROMPTS_BY_THEME[theme] ?? SCENE_PROMPTS_BY_THEME.adventure)[pageIdx];
+      const prompt = buildGenderedPrompt(basePrompt, childGender, childAge, hairColor, eyeColor);
+      const seed = Math.floor(Math.random() * 2_147_483_647);
       const res = await fetch("/api/generate-scene", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ loraUrl, prompt }),
+        body: JSON.stringify({ loraUrl, prompt, seed }),
       }).then(r => r.json());
       if (res.url) setPageImages(prev => { const n = [...prev]; n[pageIdx] = `/api/proxy?url=${encodeURIComponent(res.url)}`; return n; });
     } catch (err) { console.error("Regenerate failed:", err); }

@@ -72,11 +72,13 @@ const CLOTHING = " Fully dressed at all times in age-appropriate adventure cloth
 
 // Reusable style token — prepended to every page prompt for visual consistency across all 6 pages
 const STYLE_TOKEN =
-  "wide cinematic shot, character occupies 35-45% of frame, fully integrated into richly detailed environment, never a portrait or close-up. " +
-  "Warm golden-hour lighting, soft directional sunlight, visible glowing rim light wrapping around character, no flat or front-lit scenes. " +
-  "Warm harmonized colour palette throughout — amber, honey gold, soft orange, warm shadow tones, no cool blues or cold greys. " +
-  "Strong depth layering: detailed foreground elements, character in midground, expansive atmospheric background with soft bokeh haze, no empty or flat backgrounds. " +
-  "Pixar Disney cinematic 3D animation aesthetic, smooth stylized character, painterly magical atmosphere, dynamic action pose, large expressive eyes, child as hero figure. " +
+  "CAMERA: wide environmental shot, camera pulled back 3-4 metres, character shown from waist to head occupying NO MORE than 40% of the frame. " +
+  "Environment and setting must fill the remaining 60% of the frame — sky, landscape, background scenery are as important as the character. " +
+  "Never a portrait, never a close-up, never a face-filling shot, never a bust shot. " +
+  "LIGHTING: warm golden-hour sunlight, soft directional side lighting, glowing amber rim light wrapping around the character's hair and shoulders. No flat lighting, no front lighting, no overcast. " +
+  "COLOUR: fully warm harmonized palette — golden amber, honey, soft orange, warm peach shadows. Clothing colour should complement the warm environment tones. No cool blues, no cold grey tones anywhere. " +
+  "DEPTH: strong three-layer composition — detailed foreground elements (grass, rocks, flowers, water), character in midground, expansive richly detailed background with atmospheric haze and soft bokeh. No empty backgrounds, no plain surfaces behind the character. " +
+  "STYLE: cinematic photorealistic child, natural skin texture, lifelike face, subtle Disney-inspired charm — 80% realistic 20% magical stylization. Slightly expressive eyes with warmth and wonder. Integrated into environment with painterly magical atmosphere. Child as hero of their world. " +
   "No text, no words, no logos, no branded clothing.";
 
 const SAFETY = "The child is completely and fully clothed in an age-appropriate adventure outfit at all times — long-sleeved top, full-length trousers or skirt, shoes. Absolutely no bare chest, no bare torso, no shirtless, no sleeveless, no exposed midriff, no bare arms or legs. Background contains only nature, animals, and magical storybook elements. Safe for young children.";

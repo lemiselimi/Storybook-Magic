@@ -4,16 +4,19 @@ export const maxDuration = 60;
 
 const NEGATIVE_PROMPT =
   // Composition rejects
-  "portrait, close-up, face close-up, head shot, bust shot, character filling entire frame, " +
-  "character larger than 50% of frame, zoomed in face, passport photo, school photo, " +
-  "centered portrait, flat background, empty background, plain background, character floating, " +
+  "portrait, close-up, extreme close-up, face close-up, head shot, bust shot, face filling frame, " +
+  "character larger than 50% of frame, zoomed in, tight framing, cropped background, " +
+  "character with no environment, character against blurred background only, " +
+  "passport photo, school photo, studio portrait, character floating in space, " +
+  "centered portrait, flat background, empty background, plain background, minimal background, " +
   // Lighting rejects
   "flat lighting, front lighting, studio lighting, overcast, grey sky, cool tones, blue tones, cold light, " +
   // Pose rejects
   "standing still, stiff pose, static, symmetrical, arms at sides, neutral expression, rigid, formal pose, " +
   "lifeless, boring composition, stock photo pose, " +
   // Style rejects
-  "photorealistic, hyperrealistic, live action, real photograph, 2D, cartoon flat, anime, sketch, " +
+  "plastic skin, airbrushed skin, waxy skin, oversmoothed skin, porcelain skin, doll-like, " +
+  "3D animated, CGI render, Pixar style, cartoon, 2D, flat cartoon, anime, sketch, " +
   // Safety rejects
   "text, watermark, words, letters, logos, branded clothing, " +
   "nudity, nude, naked, topless, bare chest, shirtless, no shirt, bare torso, exposed chest, " +
@@ -30,7 +33,7 @@ async function callLoRA(prompt, loraUrl, seed) {
       negative_prompt: NEGATIVE_PROMPT,
       loras: [{ path: loraUrl, scale: 1.0 }],
       num_inference_steps: 32,
-      guidance_scale: 7.5,
+      guidance_scale: 6.0,
       image_size: "landscape_4_3",
       enable_safety_checker: true,
       ...(seed != null ? { seed } : {}),

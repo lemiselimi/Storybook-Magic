@@ -375,6 +375,8 @@ export default function StorybookCreator() {
   const [regeneratingPage, setRegeneratingPage] = useState<number | null>(null);
   const [shareCopied,      setShareCopied]      = useState(false);
   const [isMobile,         setIsMobile]         = useState(false);
+  const [tabHidden,        setTabHidden]        = useState(false); // user backgrounded the tab during generation
+  const wakeLockRef = useRef<any>(null);
   const [printOrdered,     setPrintOrdered]     = useState(false);
   const [printOrderError,  setPrintOrderError]  = useState<string | null>(null);
   const [printFulfilling,  setPrintFulfilling]  = useState(false);
@@ -398,6 +400,31 @@ export default function StorybookCreator() {
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
   }, []);
+
+  // ── Wake Lock: keep screen on during generation (Chrome Android) ─────────────
+  const acquireWakeLock = async () => {
+    try {
+      if ("wakeLock" in navigator) {
+        wakeLockRef.current = await (navigator as any).wakeLock.request("screen");
+      }
+    } catch {}
+  };
+  const releaseWakeLock = () => {
+    try { wakeLockRef.current?.release(); wakeLockRef.current = null; } catch {}
+  };
+
+  // ── Visibility change: warn user if they background during generation ────────
+  useEffect(() => {
+    const onVisibility = () => {
+      const isGenerating = previewStatus === "loading" || (mainStep === "book" && scenesCompleted < 6);
+      if (document.hidden && isGenerating) setTabHidden(true);
+      if (!document.hidden) setTabHidden(false);
+      // Re-acquire wake lock when tab comes back (it auto-releases on hide)
+      if (!document.hidden && isGenerating) acquireWakeLock();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, [previewStatus, mainStep, scenesCompleted]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Restore LoRA URL from a previous session (valid for 6 hours)
   useEffect(() => {
@@ -544,6 +571,7 @@ export default function StorybookCreator() {
     setPreviewMsg("Writing your story...");
     setPreviewDone(0);
     setPreviewImages(Array(6).fill(null));
+    acquireWakeLock();
     setPreviewCoverUrl(null);
     setLoraUrl(null);
 
@@ -571,6 +599,7 @@ export default function StorybookCreator() {
       if (storyRes?.error === "limit_reached") {
         setPreviewMsg("Preview limit reached — please purchase to continue.");
         setPreviewStatus("done");
+        releaseWakeLock();
         setPreviewStory({ title: "", dedication: "", pages: [], _limitReached: true });
         return;
       }
@@ -672,6 +701,7 @@ export default function StorybookCreator() {
     } catch { setPreviewStory(getFallbackStory(childName)); }
 
     setPreviewStatus("done");
+    releaseWakeLock();
     gtagEvent("book_generated", { theme, childAge });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [theme, childName, childAge, childGender, hairColor, eyeColor, photosBase64]);
@@ -1439,6 +1469,13 @@ export default function StorybookCreator() {
                       </p>
                     )}
                     <p style={{ color: trainingFailed ? "rgba(255,180,100,0.9)" : "rgba(255,215,0,0.9)", fontSize: 15, fontWeight: 600, margin: "0 0 8px", minHeight: 24 }}>{previewMsg}</p>
+                    {/* Tab-backgrounded warning */}
+                    {tabHidden && (
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(255,160,0,0.12)", border: "1px solid rgba(255,160,0,0.35)", borderRadius: 10, padding: "9px 14px", margin: "0 0 12px", maxWidth: 320, marginLeft: "auto", marginRight: "auto" }}>
+                        <span style={{ fontSize: 16 }}>⚠️</span>
+                        <p style={{ color: "rgba(255,200,100,0.95)", fontSize: 11, margin: 0, lineHeight: 1.5 }}>Keep this tab open — generation pauses when the browser is minimised</p>
+                      </div>
+                    )}
                     {!trainingFailed && previewDone > 0 && (
                       <div style={{ maxWidth: 240, margin: "12px auto 20px" }}>
                         <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: 99, height: 6, overflow: "hidden" }}>

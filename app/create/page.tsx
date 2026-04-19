@@ -976,7 +976,7 @@ export default function StorybookCreator() {
 
   const totalPages = story?.pages?.length ?? 6;
 
-  // ── BookSpread — full-bleed cinematic layout ─────────────────────────────────
+  // ── BookSpread — split-page layout: text left, illustration right with bleed ──
   const BookSpread = ({ spreadIndex }: { spreadIndex: number }) => {
     const page     = story.pages[spreadIndex];
     if (!page) return null;
@@ -984,55 +984,99 @@ export default function StorybookCreator() {
     const isRegen     = regeneratingPage === page.pageNum - 1;
     const chapterNum  = CHAPTER_NAMES[page.pageNum - 1] || String(page.pageNum);
 
-    return (
-      <div className="print-spread scene-wrap" style={{
-        position: "relative", width: "100%",
-        height: isMobile ? undefined : 560,
-        aspectRatio: isMobile ? "1 / 1" : undefined,
-        overflow: "hidden", background: "#0d0718",
-      }}>
-        {/* ── Full-bleed illustration ── */}
+    // ── Shared illustration slot ──────────────────────────────────────────────
+    const IllustrationSlot = ({ style }: { style?: React.CSSProperties }) => (
+      <>
         {isRegen ? (
-          <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12 }}>
-            <div style={{ width: 40, height: 40, border: "3px solid rgba(255,215,0,0.2)", borderTop: "3px solid #ffd700", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
-            <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 13 }}>Repainting...</span>
+          <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, ...style }}>
+            <div style={{ width: 36, height: 36, border: "3px solid rgba(255,215,0,0.2)", borderTop: "3px solid #ffd700", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+            <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 12 }}>Repainting...</span>
           </div>
         ) : sceneImg === "__failed__" ? (
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(160deg, #2D1B69 0%, #1a0a2e 100%)", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <span style={{ fontSize: 44, opacity: 0.7 }}>✨</span>
           </div>
         ) : sceneImg ? (
-          <img crossOrigin="anonymous" src={sceneImg} alt={`Page ${page.pageNum}`} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+          <img crossOrigin="anonymous" src={sceneImg} alt={`Page ${page.pageNum}`} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
         ) : (
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(160deg, #1a0a2e 0%, #2d1b4e 60%, #0d071e 100%)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <div style={{ width: 36, height: 36, border: "3px solid rgba(255,215,0,0.15)", borderTop: "3px solid rgba(255,215,0,0.5)", borderRadius: "50%", animation: "spin 1.2s linear infinite" }} />
+            <div style={{ width: 32, height: 32, border: "3px solid rgba(255,215,0,0.15)", borderTop: "3px solid rgba(255,215,0,0.5)", borderRadius: "50%", animation: "spin 1.2s linear infinite" }} />
           </div>
         )}
+      </>
+    );
 
-        {/* ── Top chapter header ── */}
-        <div style={{ position: "absolute", top: 0, left: 0, right: 0, background: "linear-gradient(to bottom, rgba(5,2,15,0.82) 0%, transparent 100%)", padding: isMobile ? "14px 18px 28px" : "18px 28px 40px", display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ height: 1, flex: 1, background: "rgba(255,215,0,0.28)" }} />
-          <span style={{ color: "rgba(255,215,0,0.8)", fontSize: 9, fontWeight: 700, letterSpacing: "0.24em", textTransform: "uppercase", fontFamily: "Georgia, serif" }}>Chapter {chapterNum}</span>
-          <div style={{ height: 1, flex: 1, background: "rgba(255,215,0,0.28)" }} />
+    if (isMobile) {
+      // ── Mobile: illustration top, text panel below ─────────────────────────
+      return (
+        <div className="print-spread scene-wrap" style={{ position: "relative", width: "100%", background: "#05020f", overflow: "hidden" }}>
+          {/* Illustration block (top 56%) */}
+          <div style={{ position: "relative", width: "100%", paddingTop: "56%", overflow: "hidden" }}>
+            <IllustrationSlot />
+            {/* Bottom fade into text panel */}
+            <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "45%", background: "linear-gradient(to top, #05020f 0%, transparent 100%)", zIndex: 1 }} />
+          </div>
+          {/* Text panel */}
+          <div style={{ padding: "4px 22px 20px", background: "#05020f" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+              <div style={{ height: 1, width: 16, background: "rgba(255,215,0,0.35)" }} />
+              <span style={{ color: "rgba(255,215,0,0.65)", fontSize: 8, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", fontFamily: "Georgia, serif" }}>Chapter {chapterNum}</span>
+            </div>
+            <p style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: 13, lineHeight: 1.7, color: "rgba(255,255,255,0.88)", margin: "0 0 14px", letterSpacing: "0.01em" }}>
+              {page.text}
+            </p>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ height: 1, flex: 1, background: "rgba(255,215,0,0.18)" }} />
+              <span style={{ color: "rgba(255,215,0,0.4)", fontFamily: "Georgia, serif", fontSize: 8, letterSpacing: "0.14em" }}>— {page.pageNum} —</span>
+              <div style={{ height: 1, flex: 1, background: "rgba(255,215,0,0.18)" }} />
+            </div>
+          </div>
+          {/* Redo button */}
+          {!isSharedView && loraUrl && !isRegen && (
+            <button className="regen-btn" onClick={() => regenerateScene(page.pageNum - 1)} style={{ position: "absolute", top: 10, right: 10, background: "rgba(0,0,0,0.6)", border: "1px solid rgba(255,255,255,0.18)", borderRadius: 8, padding: "5px 10px", color: "rgba(255,255,255,0.75)", fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, backdropFilter: "blur(4px)" }}>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>
+              Redo
+            </button>
+          )}
         </div>
+      );
+    }
 
-        {/* ── Bottom text overlay (cinematic caption band) ── */}
-        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(to top, rgba(5,2,15,0.95) 0%, rgba(5,2,15,0.82) 45%, transparent 100%)", padding: isMobile ? "28px 18px 14px" : "40px 32px 20px" }}>
-          {/* Subtle paper noise */}
-          <div style={{ position: "absolute", inset: 0, opacity: 0.025, backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E\")", pointerEvents: "none" }} />
-          <p style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: isMobile ? 11 : 13, lineHeight: 1.55, color: "rgba(255,255,255,0.88)", margin: "0 0 8px", letterSpacing: "0.01em", position: "relative" }}>
+    // ── Desktop: illustration fills frame, bleeds left into text column ───────
+    return (
+      <div className="print-spread scene-wrap" style={{ position: "relative", width: "100%", height: 520, overflow: "hidden", background: "#05020f" }}>
+        {/* Illustration — full frame, anchored right so main subject is on right half */}
+        <IllustrationSlot />
+
+        {/* Left-bleed gradient: image fades into dark text zone starting at ~55% */}
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, #05020f 0%, #05020f 28%, rgba(5,2,15,0.92) 40%, rgba(5,2,15,0.55) 52%, transparent 68%)", zIndex: 1 }} />
+
+        {/* Thin top vignette */}
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 60, background: "linear-gradient(to bottom, rgba(5,2,15,0.5) 0%, transparent 100%)", zIndex: 1 }} />
+
+        {/* Text column — sits entirely within the solid dark zone (left 42%) */}
+        <div style={{ position: "absolute", top: 0, left: 0, bottom: 0, width: "42%", zIndex: 2, display: "flex", flexDirection: "column", justifyContent: "center", padding: "48px 44px 48px 44px" }}>
+          {/* Chapter label */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 22 }}>
+            <div style={{ height: 1, width: 20, background: "rgba(255,215,0,0.4)", flexShrink: 0 }} />
+            <span style={{ color: "rgba(255,215,0,0.72)", fontSize: 9, fontWeight: 700, letterSpacing: "0.26em", textTransform: "uppercase", fontFamily: "Georgia, serif", whiteSpace: "nowrap" }}>Chapter {chapterNum}</span>
+          </div>
+
+          {/* Story text */}
+          <p style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: 15, lineHeight: 1.8, color: "rgba(255,255,255,0.92)", margin: 0, letterSpacing: "0.015em" }}>
             {page.text}
           </p>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, position: "relative" }}>
-            <div style={{ height: 1, flex: 1, background: "rgba(255,215,0,0.2)" }} />
-            <span style={{ color: "rgba(255,215,0,0.5)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.14em" }}>— {page.pageNum} —</span>
-            <div style={{ height: 1, flex: 1, background: "rgba(255,215,0,0.2)" }} />
+
+          {/* Page number rule */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 24 }}>
+            <div style={{ height: 1, width: 32, background: "rgba(255,215,0,0.25)", flexShrink: 0 }} />
+            <span style={{ color: "rgba(255,215,0,0.4)", fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.16em" }}>— {page.pageNum} —</span>
           </div>
         </div>
 
-        {/* ── Redo button ── */}
+        {/* Redo button */}
         {!isSharedView && loraUrl && !isRegen && (
-          <button className="regen-btn" onClick={() => regenerateScene(page.pageNum - 1)} style={{ position: "absolute", top: 12, right: 12, background: "rgba(0,0,0,0.6)", border: "1px solid rgba(255,255,255,0.18)", borderRadius: 8, padding: "5px 10px", color: "rgba(255,255,255,0.75)", fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, backdropFilter: "blur(4px)" }}>
+          <button className="regen-btn" onClick={() => regenerateScene(page.pageNum - 1)} style={{ position: "absolute", top: 12, right: 12, zIndex: 3, background: "rgba(0,0,0,0.6)", border: "1px solid rgba(255,255,255,0.18)", borderRadius: 8, padding: "5px 10px", color: "rgba(255,255,255,0.75)", fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, backdropFilter: "blur(4px)" }}>
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>
             Redo
           </button>

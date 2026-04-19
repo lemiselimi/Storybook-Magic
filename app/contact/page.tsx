@@ -2,19 +2,32 @@
 import { useState } from "react";
 
 export default function ContactPage() {
-  const [sent, setSent] = useState(false);
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [form, setForm] = useState({ name: "", email: "", message: "" });
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     setForm({ ...form, [e.target.name]: e.target.value });
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const subject = encodeURIComponent("Message from " + form.name);
-    const body = encodeURIComponent(`Name: ${form.name}\nEmail: ${form.email}\n\n${form.message}`);
-    window.location.href = `mailto:hello@mytinytales.studio?subject=${subject}&body=${body}`;
-    setSent(true);
+    setStatus("sending");
+    try {
+      const res = await fetch("/api/email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "contact",
+          name: form.name,
+          email: form.email,
+          message: form.message,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      setStatus("sent");
+    } catch {
+      setStatus("error");
+    }
   }
 
   const inputStyle: React.CSSProperties = {
@@ -36,16 +49,19 @@ export default function ContactPage() {
         <h1 style={{ fontSize: 40, fontWeight: 700, marginBottom: 8, color: "#F5A623" }}>
           Get in Touch
         </h1>
-        <p style={{ fontSize: 17, color: "#B8A9C9", marginBottom: 48 }}>
+        <p style={{ fontSize: 17, color: "#B8A9C9", marginBottom: 8 }}>
           Questions, feedback, or something not quite right? We'd love to hear from you.
         </p>
+        <p style={{ fontSize: 14, color: "#6B5A7A", marginBottom: 48 }}>
+          We reply within one business day.
+        </p>
 
-        {sent ? (
+        {status === "sent" ? (
           <div style={{ textAlign: "center", padding: "48px 0" }}>
             <div style={{ fontSize: 48, marginBottom: 16 }}>✉️</div>
-            <h2 style={{ fontSize: 24, marginBottom: 12 }}>Your email client is open!</h2>
+            <h2 style={{ fontSize: 24, marginBottom: 12 }}>Message sent!</h2>
             <p style={{ color: "#B8A9C9" }}>
-              We'll get back to you within 1–2 business days.
+              We'll get back to you within one business day.
             </p>
           </div>
         ) : (
@@ -91,21 +107,27 @@ export default function ContactPage() {
                 style={{ ...inputStyle, resize: "vertical" }}
               />
             </div>
+            {status === "error" && (
+              <p style={{ color: "#ff6b6b", fontSize: 14, margin: 0 }}>
+                Something went wrong. Please email us directly at hello@mytinytales.studio
+              </p>
+            )}
             <button
               type="submit"
+              disabled={status === "sending"}
               style={{
-                background: "#F5A623",
+                background: status === "sending" ? "rgba(245,166,35,0.5)" : "#F5A623",
                 color: "#0D0820",
                 fontWeight: 700,
                 fontSize: 16,
                 padding: "16px",
                 borderRadius: 12,
                 border: "none",
-                cursor: "pointer",
+                cursor: status === "sending" ? "default" : "pointer",
                 fontFamily: "inherit",
               }}
             >
-              Send Message
+              {status === "sending" ? "Sending…" : "Send Message"}
             </button>
           </form>
         )}

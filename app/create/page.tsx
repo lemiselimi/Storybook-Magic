@@ -602,10 +602,12 @@ export default function StorybookCreator() {
         const total = 7; // 1 cover + 6 pages
         const themePrompts = SCENE_PROMPTS_BY_THEME[theme] ?? SCENE_PROMPTS_BY_THEME.adventure;
 
+        const bookSeed = Math.floor(Math.random() * 2_147_483_647);
+
         const callScene = async (prompt: string) => {
           const res = await fetch("/api/generate-scene", {
             method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ loraUrl: trainedLoraUrl, prompt: buildGenderedPrompt(prompt, childGender, childAge, hairColor, eyeColor) }),
+            body: JSON.stringify({ loraUrl: trainedLoraUrl, prompt: buildGenderedPrompt(prompt, childGender, childAge, hairColor, eyeColor), seed: bookSeed }),
           }).then(r => r.json());
           return res;
         };
@@ -762,10 +764,12 @@ export default function StorybookCreator() {
       if (activeLoraUrl && storyData?.pages) {
         setLoadingMsg("Painting your illustrations... (~2 min)");
 
+        const bookSeed2 = Math.floor(Math.random() * 2_147_483_647);
+
         const callScene2 = async (prompt: string) => {
           const res = await fetch("/api/generate-scene", {
             method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ loraUrl: activeLoraUrl, prompt: buildGenderedPrompt(prompt, _gender, _age, _hair, _eye) }),
+            body: JSON.stringify({ loraUrl: activeLoraUrl, prompt: buildGenderedPrompt(prompt, _gender, _age, _hair, _eye), seed: bookSeed2 }),
           }).then(r => r.json());
           return res;
         };

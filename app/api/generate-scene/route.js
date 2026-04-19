@@ -14,16 +14,17 @@ const NEGATIVE_PROMPT =
   "ugly, deformed, blurry, low quality, " +
   "multiple people, crowd, real people in background, urban background, scary, dark, violent";
 
-async function callLoRA(prompt, loraUrl) {
+async function callLoRA(prompt, loraUrl, seed) {
   const result = await fal.subscribe("fal-ai/flux-lora", {
     input: {
       prompt,
       negative_prompt: NEGATIVE_PROMPT,
       loras: [{ path: loraUrl, scale: 1.0 }],
-      num_inference_steps: 28,
-      guidance_scale: 5.5,
+      num_inference_steps: 32,
+      guidance_scale: 7.5,
       image_size: "landscape_4_3",
       enable_safety_checker: true,
+      ...(seed != null ? { seed } : {}),
     },
   });
   return result.data.images[0].url;
@@ -32,20 +33,20 @@ async function callLoRA(prompt, loraUrl) {
 export async function POST(request) {
   fal.config({ credentials: process.env.FAL_API_KEY });
   try {
-    const { loraUrl, prompt } = await request.json();
+    const { loraUrl, prompt, seed } = await request.json();
 
     if (!loraUrl) return Response.json({ error: "loraUrl required" }, { status: 400 });
     if (!prompt)  return Response.json({ error: "prompt required" },   { status: 400 });
 
-    console.log("Generate scene (LoRA):", prompt.substring(0, 80));
+    console.log("Generate scene (LoRA):", prompt.substring(0, 80), seed != null ? `seed=${seed}` : "");
 
     let url;
     try {
-      url = await callLoRA(prompt, loraUrl);
+      url = await callLoRA(prompt, loraUrl, seed);
     } catch (firstErr) {
       console.warn("LoRA attempt 1 failed:", firstErr.message, "— retrying");
       try {
-        url = await callLoRA(prompt, loraUrl);
+        url = await callLoRA(prompt, loraUrl, seed);
       } catch (retryErr) {
         console.error("LoRA retry failed:", retryErr.message);
         return Response.json({ error: retryErr.message, failed: true }, { status: 500 });

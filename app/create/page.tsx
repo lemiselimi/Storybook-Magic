@@ -759,37 +759,33 @@ export default function StorybookCreator() {
           return res;
         };
 
-        // Cover first
-        try {
-          const res = await callScene2(COVER_PROMPT);
-          if (res.url) setCoverImageUrl(`/api/proxy?url=${encodeURIComponent(res.url)}`);
-        } catch {}
-        setScenesCompleted(p => p + 1);
+        const fullThemePrompts = SCENE_PROMPTS_BY_THEME[_theme] ?? SCENE_PROMPTS_BY_THEME.adventure;
 
-        // 6 page scenes — sequential with 500ms gap, one client-side retry each
-        for (let idx = 0; idx < SCENE_PROMPTS.length; idx++) {
-          await new Promise<void>(resolve => setTimeout(resolve, 500));
+        const handleScene2 = async (prompt: string, idx: number) => {
           let url: string | null = null;
           try {
-            const res = await callScene2(SCENE_PROMPTS[idx]);
+            const res = await callScene2(prompt);
             url = res.url ?? null;
-            if (!url) {
-              const retry = await callScene2(SCENE_PROMPTS[idx]);
-              url = retry.url ?? null;
-            }
+            if (!url) url = (await callScene2(prompt)).url ?? null;
           } catch {
-            try {
-              const retry = await callScene2(SCENE_PROMPTS[idx]);
-              url = retry.url ?? null;
-            } catch {}
+            try { url = (await callScene2(prompt)).url ?? null; } catch {}
           }
-          setPageImages(prev => {
-            const n = [...prev];
-            n[idx] = url ? `/api/proxy?url=${encodeURIComponent(url)}` : "__failed__";
-            return n;
-          });
+          if (idx === -1) {
+            if (url) setCoverImageUrl(`/api/proxy?url=${encodeURIComponent(url)}`);
+          } else {
+            setPageImages(prev => {
+              const n = [...prev];
+              n[idx] = url ? `/api/proxy?url=${encodeURIComponent(url)}` : "__failed__";
+              return n;
+            });
+          }
           setScenesCompleted(p => p + 1);
-        }
+        };
+
+        await Promise.all([
+          handleScene2(COVER_PROMPT, -1),
+          ...fullThemePrompts.map((p, idx) => handleScene2(p, idx)),
+        ]);
       }
 
       setCurrentPage(-2); setMainStep("book");
@@ -840,7 +836,8 @@ export default function StorybookCreator() {
     if (!loraUrl || regeneratingPage !== null) return;
     setRegeneratingPage(pageIdx);
     try {
-      const prompt = SCENE_PROMPTS[pageIdx] ?? SCENE_PROMPTS[0];
+      const regenPrompts = SCENE_PROMPTS_BY_THEME[theme] ?? SCENE_PROMPTS_BY_THEME.adventure;
+      const prompt = regenPrompts[pageIdx] ?? regenPrompts[0];
       const res = await fetch("/api/generate-scene", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ loraUrl, prompt }),

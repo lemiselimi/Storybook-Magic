@@ -1688,8 +1688,18 @@ export default function StorybookCreator() {
             </div>
           )}
 
+          {isMobile && (
+            <div style={{ margin: "0 auto 12px", maxWidth: 420, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 12, padding: "12px 16px", display: "flex", alignItems: "flex-start", gap: 10 }}>
+              <span style={{ fontSize: 18, flexShrink: 0 }}>💡</span>
+              <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.75)", lineHeight: 1.5 }}>
+                For the best PDF quality, open this page on a <strong style={{ color: "white" }}>desktop or laptop</strong> to save or print your book.
+                You can use the <strong style={{ color: "white" }}>Share Book</strong> link below to pick it up there.
+              </p>
+            </div>
+          )}
+
           <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 16, flexWrap: "wrap" }}>
-            <button onClick={printBook} style={{ padding: "10px 20px", borderRadius: 11, border: "none", background: "linear-gradient(135deg, #F5A623, #ffb347)", color: "#1a0a2e", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+            <button onClick={isMobile ? undefined : printBook} style={{ padding: "10px 20px", borderRadius: 11, border: "none", background: isMobile ? "rgba(255,255,255,0.15)" : "linear-gradient(135deg, #F5A623, #ffb347)", color: isMobile ? "rgba(255,255,255,0.4)" : "#1a0a2e", fontSize: 13, fontWeight: 700, cursor: isMobile ? "default" : "pointer", display: "flex", alignItems: "center", gap: 6, opacity: isMobile ? 0.5 : 1 }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
               Save PDF
             </button>

@@ -74,13 +74,24 @@ const SAFETY = "The child is completely and fully clothed in an age-appropriate 
 
 // Injects gender, age, and explicit clothing description into every prompt at generation time.
 // This is the primary guard against wrong gender features and any exposed skin.
-function buildGenderedPrompt(prompt: string, gender: string, age: number): string {
+function buildGenderedPrompt(prompt: string, gender: string, age: number, hairColor?: string, eyeColor?: string): string {
+  // Age-based body size descriptor
+  const sizeHint =
+    age <= 1  ? "tiny baby, infant, barely walking, very small toddler body, " :
+    age <= 2  ? "tiny toddler, very small young child body, " :
+    age <= 4  ? "small preschooler, small young child body, " :
+    age <= 7  ? "young child, small child body, " :
+    age <= 10 ? "older child, " : "";
+
+  const hairHint = hairColor ? `${hairColor.replace(/-/g, " ")} hair, ` : "";
+  const eyeHint  = eyeColor  ? `${eyeColor.replace(/-/g, " ")} eyes, `  : "";
+
   const hint =
     gender === "boy"
-      ? `${age}-year-old boy, short hair, masculine features, fully dressed in long-sleeved adventure top and full-length trousers and boots, `
+      ? `${age}-year-old boy, ${sizeHint}short hair, masculine features, ${hairHint}${eyeHint}fully dressed in long-sleeved adventure top and full-length trousers and boots, `
       : gender === "girl"
-      ? `${age}-year-old girl, fully dressed in long-sleeved adventure top and full-length skirt or trousers and boots, `
-      : `${age}-year-old child, fully dressed in long-sleeved adventure outfit and full-length trousers and boots, `;
+      ? `${age}-year-old girl, ${sizeHint}feminine features, long hair, ${hairHint}${eyeHint}fully dressed in long-sleeved adventure top and full-length skirt or trousers and boots, `
+      : `${age}-year-old child, ${sizeHint}${hairHint}${eyeHint}fully dressed in long-sleeved adventure outfit and full-length trousers and boots, `;
   return prompt.replace("a photo of TOK,", `a photo of TOK, ${hint}`);
 }
 
@@ -594,7 +605,7 @@ export default function StorybookCreator() {
         const callScene = async (prompt: string) => {
           const res = await fetch("/api/generate-scene", {
             method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ loraUrl: trainedLoraUrl, prompt: buildGenderedPrompt(prompt, childGender, childAge) }),
+            body: JSON.stringify({ loraUrl: trainedLoraUrl, prompt: buildGenderedPrompt(prompt, childGender, childAge, hairColor, eyeColor) }),
           }).then(r => r.json());
           return res;
         };
@@ -653,7 +664,7 @@ export default function StorybookCreator() {
       try {
         const res = await fetch("/api/generate-scene", {
           method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ loraUrl, prompt: buildGenderedPrompt(themePrompts[idx], childGender, childAge) }),
+          body: JSON.stringify({ loraUrl, prompt: buildGenderedPrompt(themePrompts[idx], childGender, childAge, hairColor, eyeColor) }),
         }).then(r => r.json());
         if (res.url) {
           setPreviewImages(prev => {
@@ -754,7 +765,7 @@ export default function StorybookCreator() {
         const callScene2 = async (prompt: string) => {
           const res = await fetch("/api/generate-scene", {
             method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ loraUrl: activeLoraUrl, prompt: buildGenderedPrompt(prompt, _gender, _age) }),
+            body: JSON.stringify({ loraUrl: activeLoraUrl, prompt: buildGenderedPrompt(prompt, _gender, _age, _hair, _eye) }),
           }).then(r => r.json());
           return res;
         };

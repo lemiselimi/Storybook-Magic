@@ -635,10 +635,10 @@ export default function StorybookCreator() {
           setPreviewMsg(done < total ? `${done} of ${total} scenes ready...` : "All illustrations ready!");
         };
 
-        // Build prompts from Claude's illustration descriptions — keeps text and image in sync
+        // Build prompts from Claude's illustration descriptions + story text as context
         const storyScenePrompts = (storyData.pages || []).map((pg: any) =>
           pg.illustration
-            ? `a photo of TOK, ${pg.illustration} ${SCENE_QUALITY} ${SAFETY}`
+            ? `a photo of TOK, ${pg.illustration} Scene context: ${(pg.text || "").substring(0, 120)} ${SCENE_QUALITY} ${SAFETY}`
             : themePrompts[0]
         );
 
@@ -784,7 +784,7 @@ export default function StorybookCreator() {
         const fullThemePrompts = SCENE_PROMPTS_BY_THEME[_theme] ?? SCENE_PROMPTS_BY_THEME.adventure;
         const fullStoryPrompts = (storyData?.pages || []).map((pg: any) =>
           pg.illustration
-            ? `a photo of TOK, ${pg.illustration} ${SCENE_QUALITY} ${SAFETY}`
+            ? `a photo of TOK, ${pg.illustration} Scene context: ${(pg.text || "").substring(0, 120)} ${SCENE_QUALITY} ${SAFETY}`
             : fullThemePrompts[0]
         );
 
@@ -864,8 +864,9 @@ export default function StorybookCreator() {
     setRegeneratingPage(pageIdx);
     try {
       const illustrationDesc = story?.pages?.[pageIdx]?.illustration;
+      const storyText = story?.pages?.[pageIdx]?.text || "";
       const basePrompt = illustrationDesc
-        ? `a photo of TOK, ${illustrationDesc} ${SCENE_QUALITY} ${SAFETY}`
+        ? `a photo of TOK, ${illustrationDesc} Scene context: ${storyText.substring(0, 120)} ${SCENE_QUALITY} ${SAFETY}`
         : (SCENE_PROMPTS_BY_THEME[theme] ?? SCENE_PROMPTS_BY_THEME.adventure)[pageIdx];
       const prompt = buildGenderedPrompt(basePrompt, childGender, childAge, hairColor, eyeColor);
       const seed = Math.floor(Math.random() * 2_147_483_647);

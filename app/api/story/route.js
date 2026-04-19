@@ -89,11 +89,17 @@ WRITING RULES:
 - NEVER describe physical appearance (hair, eyes, skin, height) — focus on actions, feelings, and personality
 - Pronouns: ${pronouns}
 
-ILLUSTRATION RULES:
-- Each "illustration" field: 1-2 vivid sentences describing the scene for an AI image generator
-- Always specify the age accurately: ${ageNum <= 2 ? "a tiny baby toddler" : ageNum <= 4 ? "a small preschooler" : ageNum <= 7 ? "a young child" : "an older child"}
-- Describe: setting, what the character is doing, emotion on their face, lighting/mood, any magical elements
-- Make each scene visually distinct from the others — vary the setting, lighting, and composition
+WORLD CONSISTENCY RULES:
+- Decide on ONE consistent world/setting for the story (e.g. a meadow village, an enchanted forest, a space station) and keep it present across all 6 pages — the environment should feel like one continuous place, not 6 different locations
+- Recurring characters (a rabbit friend, a dragon, a neighbour) introduced in the text MUST appear in every subsequent page they are mentioned in
+
+ILLUSTRATION RULES — CRITICAL:
+- The illustration field must be a literal visual description of EXACTLY what is happening in the text field for that same page
+- Every character, creature, and object named in the text MUST appear in the illustration — if the text says "a fluffy rabbit hopped over", the illustration MUST include a fluffy rabbit
+- If the text says a neighbour heard something, show the neighbour in the scene
+- Always specify the child's age accurately: ${ageNum <= 2 ? "a tiny baby toddler" : ageNum <= 4 ? "a small preschooler" : ageNum <= 7 ? "a young child" : "an older child"}
+- Describe: the specific moment from the text, all characters present, the setting, emotion, and lighting
+- Each illustration should feel like a frame from the same animated film — consistent world, different moments
 
 Respond ONLY with this exact JSON, no markdown, no extra text:
 {"title":"A short punchy book title (max 5 words)","dedication":"A warm one-line dedication to ${name}","pages":[{"pageNum":1,"text":"Page text.","illustration":"Scene description."},{"pageNum":2,"text":"Page text.","illustration":"Scene description."},{"pageNum":3,"text":"Page text.","illustration":"Scene description."},{"pageNum":4,"text":"Page text.","illustration":"Scene description."},{"pageNum":5,"text":"Page text.","illustration":"Scene description."},{"pageNum":6,"text":"Page text.","illustration":"Scene description."}]}`

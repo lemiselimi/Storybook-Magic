@@ -3,9 +3,18 @@ import { fal } from "@fal-ai/client";
 export const maxDuration = 60;
 
 const NEGATIVE_PROMPT =
-  "standing still, stiff pose, static, symmetrical, arms at sides, neutral expression, " +
-  "centered portrait, rigid, formal pose, passport photo, school photo, stock photo pose, " +
-  "lifeless, boring composition, photorealistic, hyperrealistic, live action, real photograph, " +
+  // Composition rejects
+  "portrait, close-up, face close-up, head shot, bust shot, character filling entire frame, " +
+  "character larger than 50% of frame, zoomed in face, passport photo, school photo, " +
+  "centered portrait, flat background, empty background, plain background, character floating, " +
+  // Lighting rejects
+  "flat lighting, front lighting, studio lighting, overcast, grey sky, cool tones, blue tones, cold light, " +
+  // Pose rejects
+  "standing still, stiff pose, static, symmetrical, arms at sides, neutral expression, rigid, formal pose, " +
+  "lifeless, boring composition, stock photo pose, " +
+  // Style rejects
+  "photorealistic, hyperrealistic, live action, real photograph, 2D, cartoon flat, anime, sketch, " +
+  // Safety rejects
   "text, watermark, words, letters, logos, branded clothing, " +
   "nudity, nude, naked, topless, bare chest, shirtless, no shirt, bare torso, exposed chest, " +
   "bare shoulders, exposed midriff, sleeveless, tank top, crop top, swimsuit, swimwear, bikini, " +

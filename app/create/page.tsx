@@ -69,7 +69,16 @@ const TOTAL_STEPS     = 5;
 
 // LoRA uses trigger word TOK — all prompts must start with "a photo of TOK"
 const CLOTHING = " Fully dressed at all times in age-appropriate adventure clothing — long-sleeved top, full-length trousers or skirt, shoes or boots. No bare skin visible below the neckline or above the wrist. No logos, no brand names, no text, no character prints, no emblems on clothing.";
-const SCENE_QUALITY = "dynamic action pose full of energy and movement, Disney Pixar 3D animated film style, smooth rounded stylized character design, large expressive eyes, vivid saturated colours, painterly magical atmosphere, cinematic warm volumetric lighting, soft depth of field, wide cinematic framing, child as hero figure, no text, no words, no logos, no branded clothing.";
+
+// Reusable style token — prepended to every page prompt for visual consistency across all 6 pages
+const STYLE_TOKEN =
+  "wide cinematic shot, character occupies 35-45% of frame, fully integrated into richly detailed environment, never a portrait or close-up. " +
+  "Warm golden-hour lighting, soft directional sunlight, visible glowing rim light wrapping around character, no flat or front-lit scenes. " +
+  "Warm harmonized colour palette throughout — amber, honey gold, soft orange, warm shadow tones, no cool blues or cold greys. " +
+  "Strong depth layering: detailed foreground elements, character in midground, expansive atmospheric background with soft bokeh haze, no empty or flat backgrounds. " +
+  "Pixar Disney cinematic 3D animation aesthetic, smooth stylized character, painterly magical atmosphere, dynamic action pose, large expressive eyes, child as hero figure. " +
+  "No text, no words, no logos, no branded clothing.";
+
 const SAFETY = "The child is completely and fully clothed in an age-appropriate adventure outfit at all times — long-sleeved top, full-length trousers or skirt, shoes. Absolutely no bare chest, no bare torso, no shirtless, no sleeveless, no exposed midriff, no bare arms or legs. Background contains only nature, animals, and magical storybook elements. Safe for young children.";
 
 // Injects gender, age, and explicit clothing description into every prompt at generation time.
@@ -107,161 +116,161 @@ const SCENE_PROMPTS_BY_THEME: Record<string, string[]> = {
     "a photo of TOK, leaning excitedly forward with one arm outstretched and fingers spread, " +
     "reaching toward a swirling magical stone archway portal glowing with golden sparkles, " +
     "one foot lifted mid-step, mouth open in amazement, golden sparkles landing on their hand, " +
-    "magical garden at golden hour, fireflies swirling all around. " + SCENE_QUALITY + " " + SAFETY,
+    "magical garden at golden hour, fireflies swirling all around. " + STYLE_TOKEN + " " + SAFETY,
 
     "a photo of TOK, spinning with arms spread wide and head tilted back laughing with delight, " +
     "caught mid-spin with hair and clothes in motion, surrounded by enormous glowing enchanted trees, " +
-    "bioluminescent mushrooms below, fireflies and magical particles swirling all around. " + SCENE_QUALITY + " " + SAFETY,
+    "bioluminescent mushrooms below, fireflies and magical particles swirling all around. " + STYLE_TOKEN + " " + SAFETY,
 
     "a photo of TOK, kneeling in a field of tall grass with both arms raised high and fingers spread, " +
     "reaching up toward a single enormous glowing star falling from the night sky, " +
     "head tilted back, eyes wide, shooting comets and stars everywhere above, " +
-    "pine tree silhouettes on the horizon. " + SCENE_QUALITY + " " + SAFETY,
+    "pine tree silhouettes on the horizon. " + STYLE_TOKEN + " " + SAFETY,
 
     "a photo of TOK, crouching very low to the ground with one hand gently extended palm-up " +
     "toward a tiny glowing creature peeking out from under a mossy rock, " +
     "face close to the ground, expression soft and caring, " +
-    "giant colourful mushrooms towering above, magical dappled forest light filtering through trees. " + SCENE_QUALITY + " " + SAFETY,
+    "giant colourful mushrooms towering above, magical dappled forest light filtering through trees. " + STYLE_TOKEN + " " + SAFETY,
 
     "a photo of TOK, leaping upward with both arms raised high above their head holding a glowing rainbow crystal, " +
     "caught at the peak of a joyful jump, face lit up with triumph, " +
     "brilliant rainbow light beams exploding outward from the crystal in all directions, " +
-    "dark magical forest clearing at night below. " + SCENE_QUALITY + " " + SAFETY,
+    "dark magical forest clearing at night below. " + STYLE_TOKEN + " " + SAFETY,
 
     "a photo of TOK, dancing and spinning with arms raised in pure joy, " +
     "caught mid-spin with a huge laugh, hair and clothes swirling with motion, " +
     "joyful glowing rabbits, deer and fireflies dancing all around, " +
-    "warm golden magical light flooding the scene, stars and tree canopy above. " + SCENE_QUALITY + " " + SAFETY,
+    "warm golden magical light flooding the scene, stars and tree canopy above. " + STYLE_TOKEN + " " + SAFETY,
   ],
 
   dragon: [
     "a photo of TOK, crouching low with one hand gently extended palm-up toward a tiny shy baby dragon " +
     "peeking around a mossy boulder, the dragon's eyes glowing soft amber, " +
-    "misty magical forest clearing at dusk, golden light filtering through ancient trees. " + SCENE_QUALITY + " " + SAFETY,
+    "misty magical forest clearing at dusk, golden light filtering through ancient trees. " + STYLE_TOKEN + " " + SAFETY,
 
     "a photo of TOK, standing with arms spread wide laughing with delight as a friendly young dragon " +
     "playfully blows a tiny puff of colourful smoke rings around them, " +
-    "both caught in a moment of pure joy together, sunny mountain meadow behind them. " + SCENE_QUALITY + " " + SAFETY,
+    "both caught in a moment of pure joy together, sunny mountain meadow behind them. " + STYLE_TOKEN + " " + SAFETY,
 
     "a photo of TOK, climbing with excitement onto the back of a large friendly dragon, " +
     "one hand gripping a neck spike, one foot lifted mid-climb, huge grin on their face, " +
-    "the dragon turning its head with a warm expression, misty mountain peaks below. " + SCENE_QUALITY + " " + SAFETY,
+    "the dragon turning its head with a warm expression, misty mountain peaks below. " + STYLE_TOKEN + " " + SAFETY,
 
     "a photo of TOK, riding on the back of a soaring dragon high above the clouds, " +
     "arms thrown wide open in pure exhilaration, hair and clothes streaming in the wind, " +
-    "enormous white clouds and a golden sunset all around them, tiny villages far below. " + SCENE_QUALITY + " " + SAFETY,
+    "enormous white clouds and a golden sunset all around them, tiny villages far below. " + STYLE_TOKEN + " " + SAFETY,
 
     "a photo of TOK, standing side by side with a dragon facing a dark storm cloud, " +
     "one arm raised high and pointing forward with determined courage, " +
-    "the dragon rearing up beside them with glowing wings spread wide, lightning crackling behind. " + SCENE_QUALITY + " " + SAFETY,
+    "the dragon rearing up beside them with glowing wings spread wide, lightning crackling behind. " + STYLE_TOKEN + " " + SAFETY,
 
     "a photo of TOK, dancing and laughing in a meadow as a dragon breathes spectacular rainbow fire " +
     "in a great arc overhead, colourful sparks and glowing embers raining down like confetti, " +
-    "other friendly dragons watching and cheering from the hillside behind. " + SCENE_QUALITY + " " + SAFETY,
+    "other friendly dragons watching and cheering from the hillside behind. " + STYLE_TOKEN + " " + SAFETY,
   ],
 
   space: [
     "a photo of TOK, sitting in a rocket cockpit pressing a glowing red launch button with both hands, " +
     "face lit with excitement and anticipation, instrument panels glowing all around, " +
-    "through the cockpit window a star-filled sky and the curve of Earth below. " + SCENE_QUALITY + " " + SAFETY,
+    "through the cockpit window a star-filled sky and the curve of Earth below. " + STYLE_TOKEN + " " + SAFETY,
 
     "a photo of TOK, floating weightless inside a space station, arms spread wide laughing with delight, " +
     "hair floating upward in zero gravity, spinning slowly with a huge grin, " +
-    "Earth visible through a large circular porthole behind them, stars stretching to infinity. " + SCENE_QUALITY + " " + SAFETY,
+    "Earth visible through a large circular porthole behind them, stars stretching to infinity. " + STYLE_TOKEN + " " + SAFETY,
 
     "a photo of TOK, in a spacesuit floating outside the spacecraft, one arm outstretched pointing " +
     "toward a spectacular glowing planet with colourful rings directly ahead, " +
-    "mouth open in amazement, the Milky Way a brilliant band of light behind them. " + SCENE_QUALITY + " " + SAFETY,
+    "mouth open in amazement, the Milky Way a brilliant band of light behind them. " + STYLE_TOKEN + " " + SAFETY,
 
     "a photo of TOK, face to face with small friendly glowing alien creatures floating in space, " +
     "both hands extended gently toward them, the aliens reaching back curiously with tiny glowing fingers, " +
-    "a swirling purple and gold nebula filling the background sky. " + SCENE_QUALITY + " " + SAFETY,
+    "a swirling purple and gold nebula filling the background sky. " + STYLE_TOKEN + " " + SAFETY,
 
     "a photo of TOK, both arms raised high reaching toward fading stars that burst back to brilliant life " +
     "wherever their hands touch, golden light radiating outward from each fingertip, " +
-    "the dark galaxy transforming into a field of blazing stars all around them. " + SCENE_QUALITY + " " + SAFETY,
+    "the dark galaxy transforming into a field of blazing stars all around them. " + STYLE_TOKEN + " " + SAFETY,
 
     "a photo of TOK, floating peacefully back toward Earth in a spacesuit, arms open wide, " +
     "smiling with quiet pride, a spectacular newly-lit galaxy of warm golden stars stretching " +
-    "in every direction behind them, Earth glowing blue and beautiful far below. " + SCENE_QUALITY + " " + SAFETY,
+    "in every direction behind them, Earth glowing blue and beautiful far below. " + STYLE_TOKEN + " " + SAFETY,
   ],
 
   ocean: [
     "a photo of TOK, standing on the edge of a sun-drenched coral reef rock, " +
     "arms raised overhead ready to leap into crystal-clear glowing turquoise water below, " +
-    "tropical fish visible beneath the surface, golden sunlight sparkling everywhere. " + SCENE_QUALITY + " " + SAFETY,
+    "tropical fish visible beneath the surface, golden sunlight sparkling everywhere. " + STYLE_TOKEN + " " + SAFETY,
 
     "a photo of TOK, floating underwater surrounded by a swirling school of brilliant tropical fish, " +
     "arms spread wide with wonder, hair flowing gently upward, " +
-    "towering colourful coral formations all around, shafts of sunlight piercing the water from above. " + SCENE_QUALITY + " " + SAFETY,
+    "towering colourful coral formations all around, shafts of sunlight piercing the water from above. " + STYLE_TOKEN + " " + SAFETY,
 
     "a photo of TOK, face to face underwater with a giant friendly sea turtle, " +
     "both hands gently resting on its ancient shell, smiling in amazement, " +
-    "glowing bioluminescent jellyfish floating peacefully around them in the deep blue water. " + SCENE_QUALITY + " " + SAFETY,
+    "glowing bioluminescent jellyfish floating peacefully around them in the deep blue water. " + STYLE_TOKEN + " " + SAFETY,
 
     "a photo of TOK, swimming toward a glowing underwater cave entrance, " +
     "one arm outstretched reaching for a softly pulsing golden treasure chest at the cave mouth, " +
-    "magical light streaming from inside, colourful sea creatures peeking out curiously from the rocks. " + SCENE_QUALITY + " " + SAFETY,
+    "magical light streaming from inside, colourful sea creatures peeking out curiously from the rocks. " + STYLE_TOKEN + " " + SAFETY,
 
     "a photo of TOK, gently unwrapping seaweed from a baby dolphin caught in the shallows, " +
     "kneeling in the warm water with careful focused hands, the dolphin looking up with soft grateful eyes, " +
-    "golden sunset light turning the water to liquid amber and rose. " + SCENE_QUALITY + " " + SAFETY,
+    "golden sunset light turning the water to liquid amber and rose. " + STYLE_TOKEN + " " + SAFETY,
 
     "a photo of TOK, riding joyfully on the back of a leaping dolphin through sparkling ocean waves, " +
     "arms thrown wide open and laughing with pure delight, " +
-    "other dolphins leaping alongside them, a brilliant rainbow arching over a golden sunset sky. " + SCENE_QUALITY + " " + SAFETY,
+    "other dolphins leaping alongside them, a brilliant rainbow arching over a golden sunset sky. " + STYLE_TOKEN + " " + SAFETY,
   ],
 
   jungle: [
     "a photo of TOK, stepping with wide-eyed wonder beneath a towering jungle archway of twisted roots " +
     "and enormous tropical leaves, colourful parrots and tiny monkeys watching curiously from the branches, " +
-    "shafts of golden light cutting through the canopy above, flowers blooming everywhere. " + SCENE_QUALITY + " " + SAFETY,
+    "shafts of golden light cutting through the canopy above, flowers blooming everywhere. " + STYLE_TOKEN + " " + SAFETY,
 
     "a photo of TOK, standing with arms spread wide as a dozen brightly-coloured tropical birds " +
     "land on their outstretched arms and shoulders, laughing with delight, " +
-    "playful monkeys hanging from the branches all around, a waterfall glowing in the background. " + SCENE_QUALITY + " " + SAFETY,
+    "playful monkeys hanging from the branches all around, a waterfall glowing in the background. " + STYLE_TOKEN + " " + SAFETY,
 
     "a photo of TOK, kneeling as a procession of animals — lions, elephants, deer — bow their heads " +
     "respectfully before them in a sun-dappled jungle clearing, " +
-    "a monkey carefully placing a crown of tropical flowers on their head. " + SCENE_QUALITY + " " + SAFETY,
+    "a monkey carefully placing a crown of tropical flowers on their head. " + STYLE_TOKEN + " " + SAFETY,
 
     "a photo of TOK, standing proudly on a mossy rock in the heart of the jungle with arms raised high, " +
     "surveying their animal kingdom below — elephants, zebras, and parrots gathered in the clearing, " +
-    "golden afternoon light flooding the scene through a break in the canopy. " + SCENE_QUALITY + " " + SAFETY,
+    "golden afternoon light flooding the scene through a break in the canopy. " + STYLE_TOKEN + " " + SAFETY,
 
     "a photo of TOK, carefully freeing a small bird whose wing is caught in a vine, " +
     "kneeling with gentle focused hands, the tiny bird looking up trustingly, " +
-    "surrounding animals watching in respectful silence, soft dappled forest light all around. " + SCENE_QUALITY + " " + SAFETY,
+    "surrounding animals watching in respectful silence, soft dappled forest light all around. " + STYLE_TOKEN + " " + SAFETY,
 
     "a photo of TOK, dancing in the middle of a jungle celebration, animals dancing all around them, " +
     "elephants swaying, monkeys clapping, parrots swooping overhead in circles, " +
-    "the entire jungle alive with warm golden light, fireflies and flower petals raining down. " + SCENE_QUALITY + " " + SAFETY,
+    "the entire jungle alive with warm golden light, fireflies and flower petals raining down. " + STYLE_TOKEN + " " + SAFETY,
   ],
 
   superpower: [
     "a photo of TOK, staring in amazement at their own hands as they begin to glow with warm golden light, " +
     "tiny sparks floating up from their fingertips, eyes wide with wonder and discovery, " +
-    "standing in a sunlit park, golden bokeh light swirling around them. " + SCENE_QUALITY + " " + SAFETY,
+    "standing in a sunlit park, golden bokeh light swirling around them. " + STYLE_TOKEN + " " + SAFETY,
 
     "a photo of TOK, arms outstretched with golden light radiating from their hands, " +
     "catching a stack of tumbling books in mid-air and holding them suspended with a focused expression, " +
-    "a child in the background watching in amazement, bright school hallway setting. " + SCENE_QUALITY + " " + SAFETY,
+    "a child in the background watching in amazement, bright school hallway setting. " + STYLE_TOKEN + " " + SAFETY,
 
     "a photo of TOK, standing in the centre of a playground with golden light beaming from their palms, " +
     "fixing a broken swing that glows and becomes new again, laughing children looking on in wonder, " +
-    "warm golden afternoon light flooding the scene. " + SCENE_QUALITY + " " + SAFETY,
+    "warm golden afternoon light flooding the scene. " + STYLE_TOKEN + " " + SAFETY,
 
     "a photo of TOK, facing a dark storm cloud with one arm raised, expression fierce and determined, " +
     "golden light from their hand pushing the storm back, sunlight breaking through around them, " +
-    "townsfolk watching from behind with hopeful expressions. " + SCENE_QUALITY + " " + SAFETY,
+    "townsfolk watching from behind with hopeful expressions. " + STYLE_TOKEN + " " + SAFETY,
 
     "a photo of TOK, standing tall with arms raised high, a spectacular burst of golden light " +
     "exploding outward from their whole body in all directions, " +
-    "flowers blooming instantly around their feet, birds taking flight from the golden shockwave. " + SCENE_QUALITY + " " + SAFETY,
+    "flowers blooming instantly around their feet, birds taking flight from the golden shockwave. " + STYLE_TOKEN + " " + SAFETY,
 
     "a photo of TOK, standing humbly and smiling as neighbours and friends cheer and applaud all around, " +
     "golden sparkles still floating gently from their hands, sunflowers blooming at their feet, " +
-    "a warm sunny street celebration with banners and balloons in every direction. " + SCENE_QUALITY + " " + SAFETY,
+    "a warm sunny street celebration with banners and balloons in every direction. " + STYLE_TOKEN + " " + SAFETY,
   ],
 };
 
@@ -648,7 +657,7 @@ export default function StorybookCreator() {
         // Build prompts from Claude's illustration descriptions + story text as context
         const storyScenePrompts = (storyData.pages || []).map((pg: any) =>
           pg.illustration
-            ? `a photo of TOK, ${pg.illustration} Scene context: ${(pg.text || "").substring(0, 120)} ${SCENE_QUALITY} ${SAFETY}`
+            ? `a photo of TOK, ${pg.illustration} Scene context: ${(pg.text || "").substring(0, 120)} ${STYLE_TOKEN} ${SAFETY}`
             : themePrompts[0]
         );
 
@@ -794,7 +803,7 @@ export default function StorybookCreator() {
         const fullThemePrompts = SCENE_PROMPTS_BY_THEME[_theme] ?? SCENE_PROMPTS_BY_THEME.adventure;
         const fullStoryPrompts = (storyData?.pages || []).map((pg: any) =>
           pg.illustration
-            ? `a photo of TOK, ${pg.illustration} Scene context: ${(pg.text || "").substring(0, 120)} ${SCENE_QUALITY} ${SAFETY}`
+            ? `a photo of TOK, ${pg.illustration} Scene context: ${(pg.text || "").substring(0, 120)} ${STYLE_TOKEN} ${SAFETY}`
             : fullThemePrompts[0]
         );
 
@@ -876,7 +885,7 @@ export default function StorybookCreator() {
       const illustrationDesc = story?.pages?.[pageIdx]?.illustration;
       const storyText = story?.pages?.[pageIdx]?.text || "";
       const basePrompt = illustrationDesc
-        ? `a photo of TOK, ${illustrationDesc} Scene context: ${storyText.substring(0, 120)} ${SCENE_QUALITY} ${SAFETY}`
+        ? `a photo of TOK, ${illustrationDesc} Scene context: ${storyText.substring(0, 120)} ${STYLE_TOKEN} ${SAFETY}`
         : (SCENE_PROMPTS_BY_THEME[theme] ?? SCENE_PROMPTS_BY_THEME.adventure)[pageIdx];
       const prompt = buildGenderedPrompt(basePrompt, childGender, childAge, hairColor, eyeColor);
       const seed = Math.floor(Math.random() * 2_147_483_647);

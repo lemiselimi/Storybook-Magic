@@ -613,8 +613,8 @@ export default function LandingPage() {
               </div>
               <p style={{ color: MUTED, fontSize: 14, lineHeight: 1.7, margin: "0 0 16px", maxWidth: 280 }}>Personalised AI storybooks starring your child. Created with love, treasured for years.</p>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <span style={{ fontSize: 16 }}>🇬🇧</span>
-                <span style={{ color: MUTED, fontSize: 13 }}>Made with love in London</span>
+                <span style={{ fontSize: 16 }}>🇺🇸</span>
+                <span style={{ color: MUTED, fontSize: 13 }}>Made with love in the US</span>
               </div>
             </div>
 

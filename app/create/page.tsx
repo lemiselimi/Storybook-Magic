@@ -1139,13 +1139,13 @@ export default function StorybookCreator() {
 
   // ── Shared dark-page frame (dedication + closing) ─────────────────────────────
   const DarkFrame = ({ children }: { children: React.ReactNode }) => (
-    <div style={{ borderRadius: isMobile ? 16 : 20, overflow: "hidden", boxShadow: "0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,215,0,0.18)", animation: "fadeUp 0.4s ease both", background: "linear-gradient(160deg, #0d071e 0%, #2D1B69 50%, #0d071e 100%)", minHeight: isMobile ? 420 : 560, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", padding: isMobile ? 32 : 60 }}>
+    <div style={{ borderRadius: isMobile ? 16 : 20, overflow: "hidden", boxShadow: "0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(232,192,122,0.18)", animation: "fadeUp 0.4s ease both", background: "linear-gradient(160deg, #0d071e 0%, #2D1B69 50%, #0d071e 100%)", minHeight: isMobile ? 420 : 560, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", padding: isMobile ? 32 : 60 }}>
       {/* Double gold border */}
-      <div style={{ position: "absolute", inset: isMobile ? 16 : 24, border: "1.5px solid rgba(255,215,0,0.35)", borderRadius: 10, pointerEvents: "none" }} />
-      <div style={{ position: "absolute", inset: isMobile ? 24 : 36, border: "0.5px solid rgba(255,215,0,0.15)", borderRadius: 6, pointerEvents: "none" }} />
+      <div style={{ position: "absolute", inset: isMobile ? 16 : 24, border: "1.5px solid rgba(232,192,122,0.35)", borderRadius: 10, pointerEvents: "none" }} />
+      <div style={{ position: "absolute", inset: isMobile ? 24 : 36, border: "0.5px solid rgba(232,192,122,0.15)", borderRadius: 6, pointerEvents: "none" }} />
       {/* Corner sparkles */}
       {(["6%,6%", "88%,6%", "6%,88%", "88%,88%"] as const).map((pos, i) => (
-        <span key={i} style={{ position: "absolute", left: pos.split(",")[0], top: pos.split(",")[1], color: "rgba(255,215,0,0.5)", fontSize: isMobile ? 14 : 18, lineHeight: 1 }}>✦</span>
+        <span key={i} style={{ position: "absolute", left: pos.split(",")[0], top: pos.split(",")[1], color: "rgba(232,192,122,0.5)", fontSize: isMobile ? 14 : 18, lineHeight: 1 }}>✦</span>
       ))}
       <div style={{ position: "relative", zIndex: 1, textAlign: "center", maxWidth: 500 }}>{children}</div>
     </div>
@@ -1162,14 +1162,14 @@ export default function StorybookCreator() {
             <img src={pageImages[0]} alt="Book cover" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top" }} />
           )}
           <div style={{ position: "absolute", top: 16, left: 0, right: 0, display: "flex", justifyContent: "center", zIndex: 2 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 5, background: "rgba(255,215,0,0.92)", borderRadius: 50, padding: "5px 16px" }}>
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="#1a0a2e" aria-hidden="true"><path d="M12 1l2.39 7.61L22 12l-7.61 2.39L12 22l-2.39-7.61L2 12l7.61-2.39z"/></svg>
-              <span style={{ color: "#1a0a2e", fontWeight: 800, fontSize: 11, letterSpacing: "0.06em" }}>My Tiny Tales</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 5, background: "rgba(232,192,122,0.92)", borderRadius: 50, padding: "5px 16px" }}>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="#0F0B1F" aria-hidden="true"><path d="M12 1l2.39 7.61L22 12l-7.61 2.39L12 22l-2.39-7.61L2 12l7.61-2.39z"/></svg>
+              <span style={{ color: "#0F0B1F", fontWeight: 800, fontSize: 11, letterSpacing: "0.06em" }}>My Tiny Tales</span>
             </div>
           </div>
           <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(to top, rgba(5,2,15,0.97) 0%, rgba(5,2,15,0.72) 40%, transparent 100%)", padding: isMobile ? "56px 22px 22px" : "90px 36px 28px", zIndex: 2 }}>
             <h1 style={{ fontFamily: "var(--font-playfair, Georgia, serif)", color: "white", fontSize: isMobile ? "1.65rem" : "2.4rem", fontWeight: 900, margin: "0 0 6px", lineHeight: 1.15, textShadow: "0 2px 20px rgba(0,0,0,0.8)", wordBreak: "break-word" }}>{story.title}</h1>
-            <p style={{ color: "rgba(255,215,0,0.75)", fontFamily: "Georgia, serif", fontStyle: "italic", fontSize: isMobile ? "0.82rem" : "0.95rem", margin: 0, letterSpacing: "0.03em" }}>{THEMES.find((t: any) => t.id === theme)?.subtitle ?? story.dedication}</p>
+            <p style={{ color: "rgba(232,192,122,0.75)", fontFamily: "Georgia, serif", fontStyle: "italic", fontSize: isMobile ? "0.82rem" : "0.95rem", margin: 0, letterSpacing: "0.03em" }}>{THEMES.find((t: any) => t.id === theme)?.subtitle ?? story.dedication}</p>
           </div>
         </div>
       );
@@ -1178,11 +1178,11 @@ export default function StorybookCreator() {
       return (
         <div style={{ position: 'relative', minHeight: isMobile ? 420 : 560, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: isMobile ? '52px 32px' : '72px 64px', background: '#07041A' }}>
           <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 55%, rgba(80,40,160,0.28) 0%, transparent 65%)', pointerEvents: 'none' }} />
-          <p style={{ position: 'relative', color: 'rgba(255,215,0,0.4)', fontSize: isMobile ? 10 : 11, fontWeight: 700, letterSpacing: '0.32em', textTransform: 'uppercase', margin: '0 0 20px', fontFamily: 'Georgia, serif' }}>A story created for</p>
+          <p style={{ position: 'relative', color: 'rgba(232,192,122,0.4)', fontSize: isMobile ? 10 : 11, fontWeight: 700, letterSpacing: '0.32em', textTransform: 'uppercase', margin: '0 0 20px', fontFamily: 'Georgia, serif' }}>A story created for</p>
           <h1 style={{ position: 'relative', fontFamily: 'var(--font-playfair, Georgia, serif)', color: 'white', fontSize: isMobile ? '3.2rem' : '5rem', fontWeight: 900, margin: 0, letterSpacing: '-0.03em', lineHeight: 0.95 }}>{capName}</h1>
-          <div style={{ position: 'relative', width: 52, height: 2, background: 'rgba(255,215,0,0.45)', borderRadius: 1, margin: isMobile ? '22px auto' : '30px auto' }} />
+          <div style={{ position: 'relative', width: 52, height: 2, background: 'rgba(232,192,122,0.45)', borderRadius: 1, margin: isMobile ? '22px auto' : '30px auto' }} />
           <p style={{ position: 'relative', fontFamily: 'Georgia, serif', color: 'rgba(255,255,255,0.58)', fontSize: isMobile ? 14 : 17, lineHeight: 1.85, fontStyle: 'italic', maxWidth: 400, margin: '0 auto' }}>&ldquo;May every adventure remind you how loved, brave, and magical you are.&rdquo;</p>
-          <p style={{ position: 'relative', color: 'rgba(255,215,0,0.22)', fontFamily: 'Georgia, serif', fontSize: 11, letterSpacing: '0.24em', margin: isMobile ? '28px 0 0' : '36px 0 0' }}>My Tiny Tales</p>
+          <p style={{ position: 'relative', color: 'rgba(232,192,122,0.22)', fontFamily: 'Georgia, serif', fontSize: 11, letterSpacing: '0.24em', margin: isMobile ? '28px 0 0' : '36px 0 0' }}>My Tiny Tales</p>
         </div>
       );
     }
@@ -1197,9 +1197,9 @@ export default function StorybookCreator() {
         {bgImg && <img src={bgImg} alt='' style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.35 }} />}
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(5,2,15,0.55) 0%, rgba(5,2,15,0.88) 100%)' }} />
         <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: isMobile ? 420 : 560, padding: isMobile ? '52px 28px' : '72px 64px', textAlign: 'center' }}>
-          <p style={{ color: 'rgba(255,215,0,0.3)', fontSize: 11, fontWeight: 700, letterSpacing: '0.3em', margin: '0 0 14px', fontFamily: 'Georgia, serif' }}>❖ &nbsp; ❖ &nbsp; ❖</p>
-          <h2 style={{ fontFamily: 'var(--font-playfair, Georgia, serif)', color: '#ffd700', fontSize: isMobile ? '3.2rem' : '4.8rem', fontWeight: 900, letterSpacing: '-0.02em', lineHeight: 1, margin: '0 0 8px', textShadow: '0 0 60px rgba(255,215,0,0.45)' }}>The End</h2>
-          <div style={{ width: 48, height: 1, background: 'rgba(255,215,0,0.4)', margin: isMobile ? '18px auto' : '22px auto' }} />
+          <p style={{ color: 'rgba(232,192,122,0.3)', fontSize: 11, fontWeight: 700, letterSpacing: '0.3em', margin: '0 0 14px', fontFamily: 'Georgia, serif' }}>❖ &nbsp; ❖ &nbsp; ❖</p>
+          <h2 style={{ fontFamily: 'var(--font-playfair, Georgia, serif)', color: '#E8C07A', fontSize: isMobile ? '3.2rem' : '4.8rem', fontWeight: 900, letterSpacing: '-0.02em', lineHeight: 1, margin: '0 0 8px', textShadow: '0 0 60px rgba(232,192,122,0.45)' }}>The End</h2>
+          <div style={{ width: 48, height: 1, background: 'rgba(232,192,122,0.4)', margin: isMobile ? '18px auto' : '22px auto' }} />
           <p style={{ fontFamily: 'Georgia, serif', color: 'rgba(255,255,255,0.62)', fontSize: isMobile ? 13 : 16, lineHeight: 1.9, fontStyle: 'italic', maxWidth: 420, margin: '0 auto 24px' }}>{closingText}</p>
           <p style={{ color: 'rgba(255,255,255,0.2)', fontFamily: 'Georgia, serif', fontSize: 11, fontStyle: 'italic', margin: 0 }}>Created with love &middot; {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
         </div>
@@ -1210,12 +1210,12 @@ export default function StorybookCreator() {
   // ── Mascot ────────────────────────────────────────────────────────────────────
   const Mascot = ({ msg }: { msg: string }) => (
     <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 22 }}>
-      <div style={{ width: 44, height: 44, borderRadius: "50%", background: "linear-gradient(135deg, #6040c0, #9060e0)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, animation: "float 3s ease-in-out infinite", boxShadow: "0 4px 16px rgba(96,64,192,0.45)" }}>
+      <div style={{ width: 44, height: 44, borderRadius: "50%", background: "linear-gradient(135deg, #3d2d80, #6848b0)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, animation: "float 3s ease-in-out infinite", boxShadow: "0 4px 16px rgba(104,72,176,0.4)" }}>
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <line x1="3" y1="21" x2="21" y2="3"/>
           <line x1="15" y1="9" x2="19" y2="5"/>
           <line x1="5" y1="19" x2="9" y2="15"/>
-          <circle cx="19.5" cy="4.5" r="1.5" fill="rgba(255,215,0,0.9)" stroke="none"/>
+          <circle cx="19.5" cy="4.5" r="1.5" fill="rgba(232,192,122,0.9)" stroke="none"/>
         </svg>
       </div>
       <div style={{ background: "rgba(255,255,255,0.09)", border: "1px solid rgba(255,255,255,0.14)", backdropFilter: "blur(8px)", borderRadius: "18px 18px 18px 4px", padding: "12px 16px", maxWidth: 380 }}>
@@ -1234,7 +1234,7 @@ export default function StorybookCreator() {
             key={c.id}
             onClick={() => onSelect(c.id)}
             title={c.label}
-            style={{ position: "relative", width: 52, height: 52, borderRadius: "50%", background: c.hex, border: `3px solid ${selected === c.id ? "#ffd700" : "rgba(255,255,255,0.15)"}`, cursor: "pointer", boxShadow: selected === c.id ? "0 0 0 3px rgba(255,215,0,0.3), 0 4px 12px rgba(0,0,0,0.3)" : "0 2px 6px rgba(0,0,0,0.3)", transition: "all 0.15s ease", padding: 0, flexShrink: 0 }}
+            style={{ position: "relative", width: 52, height: 52, borderRadius: "50%", background: c.hex, border: `3px solid ${selected === c.id ? "#E8C07A" : "rgba(255,255,255,0.15)"}`, cursor: "pointer", boxShadow: selected === c.id ? "0 0 0 3px rgba(232,192,122,0.3), 0 4px 12px rgba(0,0,0,0.3)" : "0 2px 6px rgba(0,0,0,0.3)", transition: "all 0.15s ease", padding: 0, flexShrink: 0 }}
             aria-label={c.label}
           >
             {selected === c.id && (
@@ -1245,7 +1245,7 @@ export default function StorybookCreator() {
       </div>
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 6 }}>
         {colors.map(c => (
-          <div key={c.id} style={{ width: 52, textAlign: "center", color: selected === c.id ? "#ffd700" : "rgba(255,255,255,0.3)", fontSize: 9, fontWeight: selected === c.id ? 700 : 400, transition: "color 0.15s" }}>{c.label}</div>
+          <div key={c.id} style={{ width: 52, textAlign: "center", color: selected === c.id ? "#E8C07A" : "rgba(255,255,255,0.3)", fontSize: 9, fontWeight: selected === c.id ? 700 : 400, transition: "color 0.15s" }}>{c.label}</div>
         ))}
       </div>
     </div>
@@ -1253,16 +1253,15 @@ export default function StorybookCreator() {
 
   // ── Render ────────────────────────────────────────────────────────────────────
   return (
-    <div style={{ minHeight: "100vh", background: "linear-gradient(160deg, #1a0a2e 0%, #2d1b4e 45%, #1a3a2e 100%)", fontFamily: "'Segoe UI', sans-serif", display: "flex", flexDirection: "column", alignItems: "center", padding: isMobile ? "20px 12px 50px" : "36px 16px 70px", position: "relative", overflow: "hidden" }}>
+    <div style={{ minHeight: "100vh", background: "#0F0B1F", fontFamily: "var(--font-inter, sans-serif)", display: "flex", flexDirection: "column", alignItems: "center", padding: isMobile ? "20px 12px 50px" : "36px 16px 70px", position: "relative", overflow: "hidden" }}>
       {/* Aurora blobs */}
-      <div style={{ position: "fixed", top: "-20%", left: "-15%", width: 700, height: 700, borderRadius: "50%", background: "radial-gradient(circle, rgba(80,50,160,0.45) 0%, transparent 70%)", filter: "blur(90px)", pointerEvents: "none", zIndex: 0 }} />
-      <div style={{ position: "fixed", bottom: "-20%", right: "-15%", width: 800, height: 800, borderRadius: "50%", background: "radial-gradient(circle, rgba(80,20,120,0.35) 0%, transparent 70%)", filter: "blur(110px)", pointerEvents: "none", zIndex: 0 }} />
+      <div style={{ position: "fixed", top: "-20%", left: "-15%", width: 700, height: 700, borderRadius: "50%", background: "radial-gradient(circle, rgba(232,192,122,0.07) 0%, transparent 70%)", filter: "blur(90px)", pointerEvents: "none", zIndex: 0 }} />
+      <div style={{ position: "fixed", bottom: "-20%", right: "-15%", width: 800, height: 800, borderRadius: "50%", background: "radial-gradient(circle, rgba(167,139,250,0.05) 0%, transparent 70%)", filter: "blur(110px)", pointerEvents: "none", zIndex: 0 }} />
       <div style={{ position: "relative", zIndex: 1, width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
       <style>{`
         @keyframes float     { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
         @keyframes fadeUp    { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
         @keyframes fadeIn    { from{opacity:0} to{opacity:1} }
-        @keyframes shimmer   { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
         @keyframes slideInFwd  { from{opacity:0;transform:translateX(44px)}  to{opacity:1;transform:translateX(0)} }
         @keyframes slideInBack { from{opacity:0;transform:translateX(-44px)} to{opacity:1;transform:translateX(0)} }
         @keyframes spin      { to{transform:rotate(360deg)} }
@@ -1273,10 +1272,10 @@ export default function StorybookCreator() {
         .book-flip-card.flipping-back { transition: transform 0.6s ease-in-out; transform: rotateY(180deg); }
         .book-face { backface-visibility: hidden; -webkit-backface-visibility: hidden; display: block; }
         .book-face-back { transform: rotateY(180deg); }
-        input::placeholder{color:rgba(255,255,255,0.25);}
-        input:focus{border-color:rgba(255,215,0,0.5)!important;outline:none;}
-        input[type=range]{-webkit-appearance:none;appearance:none;height:6px;border-radius:3px;background:rgba(255,255,255,0.15);outline:none;cursor:pointer;}
-        input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:#ffd700;cursor:pointer;border:2px solid white;box-shadow:0 2px 10px rgba(0,0,0,0.3);}
+        input::placeholder{color:rgba(245,240,224,0.25);}
+        input:focus{border-color:rgba(232,192,122,0.55)!important;outline:none;}
+        input[type=range]{-webkit-appearance:none;appearance:none;height:6px;border-radius:3px;background:rgba(255,255,255,0.12);outline:none;cursor:pointer;}
+        input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:#E8C07A;cursor:pointer;border:2px solid #0F0B1F;box-shadow:0 2px 10px rgba(0,0,0,0.4);}
         .scene-wrap .regen-btn{opacity:0;transition:opacity 0.2s;}
         .scene-wrap:hover .regen-btn{opacity:1;}
         .theme-card{transition:transform 0.15s ease,box-shadow 0.15s ease;}
@@ -1341,11 +1340,11 @@ export default function StorybookCreator() {
       {/* Logo */}
       <div style={{ textAlign: "center", marginBottom: isMobile ? 18 : 24, animation: "fadeUp 0.5s ease both", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
         <div style={{ animation: "float 3s ease-in-out infinite" }}>
-          <svg width={isMobile ? 28 : 34} height={isMobile ? 28 : 34} viewBox="0 0 24 24" fill="#ffd700" stroke="none" aria-hidden="true">
+          <svg width={isMobile ? 22 : 26} height={isMobile ? 22 : 26} viewBox="0 0 24 24" fill="#E8C07A" stroke="none" aria-hidden="true" style={{ filter: "drop-shadow(0 0 6px rgba(232,192,122,0.55))" }}>
             <path d="M12 1l2.39 7.61L22 12l-7.61 2.39L12 22l-2.39-7.61L2 12l7.61-2.39z"/>
           </svg>
         </div>
-        <h1 style={{ margin: 0, fontSize: isMobile ? 20 : 26, fontWeight: 800, background: "linear-gradient(90deg, #ffd700, #ff9a9e, #a18cd1, #ffd700)", backgroundSize: "300% 100%", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", animation: "shimmer 4s ease infinite" }}>My Tiny Tales</h1>
+        <a href="/" style={{ margin: 0, fontSize: isMobile ? 20 : 24, fontWeight: 600, color: "#F5F0E0", fontFamily: "var(--font-fraunces, Georgia, serif)", textDecoration: "none", letterSpacing: "-0.3px" }}>My Tiny Tales</a>
       </div>
 
       {/* ══ ONBOARDING ══════════════════════════════════════════════════════════ */}
@@ -1393,7 +1392,7 @@ export default function StorybookCreator() {
                   onDrop={handleDrop}
                   onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
                   onDragLeave={() => setDragOver(false)}
-                  style={{ background: dragOver ? "rgba(255,215,0,0.04)" : "rgba(255,255,255,0.03)", border: `2px dashed ${dragOver ? "#ffd700" : photos.length > 0 ? "rgba(76,175,80,0.4)" : "rgba(255,255,255,0.15)"}`, borderRadius: 22, padding: "20px", transition: "all 0.2s" }}
+                  style={{ background: dragOver ? "rgba(232,192,122,0.04)" : "rgba(255,255,255,0.03)", border: `2px dashed ${dragOver ? "#E8C07A" : photos.length > 0 ? "rgba(76,175,80,0.4)" : "rgba(255,255,255,0.15)"}`, borderRadius: 22, padding: "20px", transition: "all 0.2s" }}
                 >
                   {/* Counter */}
                   <div style={{ textAlign: "center", marginBottom: 14 }}>
@@ -1450,7 +1449,7 @@ export default function StorybookCreator() {
                 </div>
 
                 {photos.length >= 1 && (
-                  <button onClick={() => goToStep(2)} style={{ width: "100%", marginTop: 20, padding: "17px", borderRadius: 16, border: "none", background: "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 17, fontWeight: 700, cursor: "pointer", animation: "fadeUp 0.35s ease both" }}>
+                  <button onClick={() => goToStep(2)} style={{ width: "100%", marginTop: 20, padding: "17px", borderRadius: 16, border: "none", background: "linear-gradient(135deg, #E8C07A, #D4A24C)", color: "#0F0B1F", fontSize: 17, fontWeight: 700, cursor: "pointer", animation: "fadeUp 0.35s ease both" }}>
                     Continue →
                   </button>
                 )}
@@ -1466,10 +1465,10 @@ export default function StorybookCreator() {
                   <ColorPicker label="Eye colour"  colors={EYE_COLORS}  selected={eyeColor}  onSelect={setEyeColor}  />
                 </div>
                 <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
-                  <button onClick={() => goToStep(1)} style={{ padding: "14px 20px", borderRadius: 14, border: "1px solid rgba(255,255,255,0.12)", background: "transparent", color: "rgba(255,255,255,0.5)", fontSize: 14, cursor: "pointer" }}>← Back</button>
+                  <button onClick={() => goToStep(1)} style={{ padding: "14px 20px", borderRadius: 14, border: "1px solid rgba(245,240,224,0.18)", background: "transparent", color: "rgba(245,240,224,0.45)", fontSize: 14, cursor: "pointer" }}>← Back</button>
                   <button
                     onClick={() => goToStep(3)}
-                    style={{ flex: 1, padding: "16px", borderRadius: 14, border: "none", background: "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 16, fontWeight: 700, cursor: "pointer" }}
+                    style={{ flex: 1, padding: "16px", borderRadius: 14, border: "none", background: "linear-gradient(135deg, #E8C07A, #D4A24C)", color: "#0F0B1F", fontSize: 16, fontWeight: 700, cursor: "pointer" }}
                   >
                     Looks perfect! →
                   </button>
@@ -1492,16 +1491,16 @@ export default function StorybookCreator() {
                     <label style={{ color: "rgba(255,255,255,0.45)", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: 9 }}>Boy or Girl?</label>
                     <div style={{ display: "flex", gap: 12 }}>
                       {[{ id: "boy", emoji: "👦", label: "Boy" }, { id: "girl", emoji: "👧", label: "Girl" }].map(g => (
-                        <div key={g.id} onClick={() => setChildGender(g.id as "boy" | "girl" | "neutral")} style={{ flex: 1, padding: "18px 12px", borderRadius: 16, cursor: "pointer", textAlign: "center", border: `2px solid ${childGender === g.id ? "#ffd700" : "rgba(255,255,255,0.1)"}`, background: childGender === g.id ? "rgba(255,215,0,0.1)" : "rgba(255,255,255,0.03)", transition: "all 0.15s", boxShadow: childGender === g.id ? "0 0 16px rgba(255,215,0,0.15)" : "none" }}>
+                        <div key={g.id} onClick={() => setChildGender(g.id as "boy" | "girl" | "neutral")} style={{ flex: 1, padding: "18px 12px", borderRadius: 16, cursor: "pointer", textAlign: "center", border: `2px solid ${childGender === g.id ? "#E8C07A" : "rgba(255,255,255,0.1)"}`, background: childGender === g.id ? "rgba(232,192,122,0.1)" : "rgba(255,255,255,0.03)", transition: "all 0.15s", boxShadow: childGender === g.id ? "0 0 16px rgba(232,192,122,0.15)" : "none" }}>
                           <div style={{ fontSize: 36, marginBottom: 6 }}>{g.emoji}</div>
-                          <div style={{ color: childGender === g.id ? "#ffd700" : "rgba(255,255,255,0.6)", fontWeight: 700, fontSize: 15 }}>{g.label}</div>
+                          <div style={{ color: childGender === g.id ? "#E8C07A" : "rgba(255,255,255,0.6)", fontWeight: 700, fontSize: 15 }}>{g.label}</div>
                         </div>
                       ))}
                     </div>
                   </div>
                   <div>
                     <label style={{ color: "rgba(255,255,255,0.45)", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: 9 }}>
-                      Age — <span style={{ color: "#ffd700", fontSize: 17, fontWeight: 700 }}>{childAge} years old</span>
+                      Age — <span style={{ color: "#E8C07A", fontSize: 17, fontWeight: 700 }}>{childAge} years old</span>
                     </label>
                     <input type="range" min={1} max={12} step={1} value={childAge} onChange={(e) => setChildAge(Number(e.target.value))} style={{ width: "100%" }} />
                     <div style={{ display: "flex", justifyContent: "space-between", marginTop: 5 }}>
@@ -1511,8 +1510,8 @@ export default function StorybookCreator() {
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
-                  <button onClick={() => goToStep(2)} style={{ padding: "14px 20px", borderRadius: 14, border: "1px solid rgba(255,255,255,0.12)", background: "transparent", color: "rgba(255,255,255,0.5)", fontSize: 14, cursor: "pointer" }}>← Back</button>
-                  <button onClick={() => goToStep(4)} disabled={!childName.trim()} style={{ flex: 1, padding: "15px", borderRadius: 14, border: "none", background: childName.trim() ? "linear-gradient(135deg, #ffd700, #ff9a9e)" : "rgba(255,255,255,0.08)", color: childName.trim() ? "#1a0a2e" : "rgba(255,255,255,0.3)", fontSize: 16, fontWeight: 700, cursor: childName.trim() ? "pointer" : "not-allowed", transition: "all 0.2s" }}>
+                  <button onClick={() => goToStep(2)} style={{ padding: "14px 20px", borderRadius: 14, border: "1px solid rgba(245,240,224,0.18)", background: "transparent", color: "rgba(245,240,224,0.45)", fontSize: 14, cursor: "pointer" }}>← Back</button>
+                  <button onClick={() => goToStep(4)} disabled={!childName.trim()} style={{ flex: 1, padding: "15px", borderRadius: 14, border: "none", background: childName.trim() ? "linear-gradient(135deg, #E8C07A, #D4A24C)" : "rgba(255,255,255,0.08)", color: childName.trim() ? "#0F0B1F" : "rgba(255,255,255,0.3)", fontSize: 16, fontWeight: 700, cursor: childName.trim() ? "pointer" : "not-allowed", transition: "all 0.2s" }}>
                     {childName.trim() ? `Pick ${childName}'s adventure →` : "Enter a name to continue →"}
                   </button>
                 </div>
@@ -1526,18 +1525,18 @@ export default function StorybookCreator() {
 
                 <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: 14 }}>
                   {THEMES.map((t) => (
-                    <div key={t.id} className="theme-card" onClick={() => setTheme(t.id)} style={{ position: "relative", padding: "22px 18px 18px", borderRadius: 20, cursor: "pointer", border: `2px solid ${theme === t.id ? "#ffd700" : "rgba(255,255,255,0.1)"}`, background: theme === t.id ? "rgba(255,215,0,0.08)" : "rgba(255,255,255,0.04)", boxShadow: theme === t.id ? "0 0 24px rgba(255,215,0,0.18)" : "0 2px 8px rgba(0,0,0,0.2)" }}>
+                    <div key={t.id} className="theme-card" onClick={() => setTheme(t.id)} style={{ position: "relative", padding: "22px 18px 18px", borderRadius: 20, cursor: "pointer", border: `2px solid ${theme === t.id ? "#E8C07A" : "rgba(255,255,255,0.1)"}`, background: theme === t.id ? "rgba(232,192,122,0.08)" : "rgba(255,255,255,0.04)", boxShadow: theme === t.id ? "0 0 24px rgba(232,192,122,0.18)" : "0 2px 8px rgba(0,0,0,0.2)" }}>
                       {t.popular && <div style={{ position: "absolute", top: -10, right: 12, background: "linear-gradient(135deg, #ff6b6b, #ee5a24)", color: "white", fontSize: 9, fontWeight: 800, padding: "3px 10px", borderRadius: 20, letterSpacing: "0.06em" }}>MOST POPULAR</div>}
                       <div style={{ fontSize: 44, marginBottom: 11 }}>{t.emoji}</div>
-                      <div style={{ color: theme === t.id ? "#ffd700" : "white", fontWeight: 700, fontSize: 16, marginBottom: 3 }}>{t.title}</div>
-                      <div style={{ color: theme === t.id ? "rgba(255,215,0,0.65)" : "rgba(255,255,255,0.35)", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 9 }}>{t.subtitle}</div>
+                      <div style={{ color: theme === t.id ? "#E8C07A" : "white", fontWeight: 700, fontSize: 16, marginBottom: 3 }}>{t.title}</div>
+                      <div style={{ color: theme === t.id ? "rgba(232,192,122,0.65)" : "rgba(255,255,255,0.35)", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 9 }}>{t.subtitle}</div>
                       <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, lineHeight: 1.6 }}>{t.desc}</div>
                     </div>
                   ))}
                 </div>
                 <div style={{ display: "flex", gap: 10, marginTop: 22 }}>
-                  <button onClick={() => goToStep(3)} style={{ padding: "14px 20px", borderRadius: 14, border: "1px solid rgba(255,255,255,0.12)", background: "transparent", color: "rgba(255,255,255,0.5)", fontSize: 14, cursor: "pointer" }}>← Back</button>
-                  <button onClick={() => goToStep(5)} style={{ flex: 1, padding: "16px", borderRadius: 14, border: "none", background: "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>
+                  <button onClick={() => goToStep(3)} style={{ padding: "14px 20px", borderRadius: 14, border: "1px solid rgba(245,240,224,0.18)", background: "transparent", color: "rgba(245,240,224,0.45)", fontSize: 14, cursor: "pointer" }}>← Back</button>
+                  <button onClick={() => goToStep(5)} style={{ flex: 1, padding: "16px", borderRadius: 14, border: "none", background: "linear-gradient(135deg, #E8C07A, #D4A24C)", color: "#0F0B1F", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>
                     Preview your story →
                   </button>
                 </div>
@@ -1555,17 +1554,17 @@ export default function StorybookCreator() {
                   <div style={{ textAlign: "center", padding: isMobile ? "56px 20px" : "72px 32px", background: "rgba(255,255,255,0.06)", backdropFilter: "blur(12px)", borderRadius: 28, border: "1px solid rgba(255,255,255,0.12)", boxShadow: "0 8px 48px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08)" }}>
                     {/* Mobile keep-tab-open notice */}
                     {isMobile && (
-                      <div style={{ background: "rgba(255,215,0,0.1)", border: "1px solid rgba(255,215,0,0.25)", borderRadius: 10, padding: "8px 14px", marginBottom: 24, display: "flex", alignItems: "center", gap: 8 }}>
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffd700" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                        <p style={{ color: "rgba(255,215,0,0.85)", fontSize: 12, margin: 0, textAlign: "left" }}>Keep this tab open while we create your book</p>
+                      <div style={{ background: "rgba(232,192,122,0.1)", border: "1px solid rgba(232,192,122,0.25)", borderRadius: 10, padding: "8px 14px", marginBottom: 24, display: "flex", alignItems: "center", gap: 8 }}>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#E8C07A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <p style={{ color: "rgba(232,192,122,0.85)", fontSize: 12, margin: 0, textAlign: "left" }}>Keep this tab open while we create your book</p>
                       </div>
                     )}
-                    <div style={{ width: 80, height: 80, borderRadius: "50%", background: trainingFailed ? "linear-gradient(135deg, #804040, #c06060)" : "linear-gradient(135deg, #6040c0, #c060e0)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", animation: "float 2s ease-in-out infinite", boxShadow: trainingFailed ? "0 8px 32px rgba(192,64,64,0.5)" : "0 8px 32px rgba(96,64,192,0.5)" }}>
-                      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <div style={{ width: 80, height: 80, borderRadius: "50%", background: trainingFailed ? "linear-gradient(135deg, #804040, #c06060)" : "linear-gradient(135deg, #E8C07A, #D4A24C)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", animation: "float 2s ease-in-out infinite", boxShadow: trainingFailed ? "0 8px 32px rgba(192,64,64,0.5)" : "0 8px 32px rgba(232,192,122,0.35)" }}>
+                      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#0F0B1F" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <line x1="3" y1="21" x2="21" y2="3"/>
                         <line x1="15" y1="9" x2="19" y2="5"/>
                         <line x1="5" y1="19" x2="9" y2="15"/>
-                        <circle cx="19.5" cy="4.5" r="1.5" fill="rgba(255,215,0,0.9)" stroke="none"/>
+                        <circle cx="19.5" cy="4.5" r="1.5" fill="rgba(15,11,31,0.6)" stroke="none"/>
                       </svg>
                     </div>
                     <h2 style={{ color: "white", fontSize: isMobile ? 20 : 24, fontWeight: 700, margin: "0 0 6px" }}>
@@ -1576,7 +1575,7 @@ export default function StorybookCreator() {
                         Takes 3–4 minutes — we&apos;re painting every illustration to look just like {childName || "your child"}
                       </p>
                     )}
-                    <p style={{ color: trainingFailed ? "rgba(255,180,100,0.9)" : "rgba(255,215,0,0.9)", fontSize: 15, fontWeight: 600, margin: "0 0 8px", minHeight: 24 }}>{previewMsg}</p>
+                    <p style={{ color: trainingFailed ? "rgba(255,180,100,0.9)" : "rgba(232,192,122,0.9)", fontSize: 15, fontWeight: 600, margin: "0 0 8px", minHeight: 24 }}>{previewMsg}</p>
                     {/* Tab-backgrounded warning */}
                     {tabHidden && (
                       <div style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(255,160,0,0.12)", border: "1px solid rgba(255,160,0,0.35)", borderRadius: 10, padding: "9px 14px", margin: "0 0 12px", maxWidth: 320, marginLeft: "auto", marginRight: "auto" }}>
@@ -1587,14 +1586,14 @@ export default function StorybookCreator() {
                     {!trainingFailed && previewDone > 0 && (
                       <div style={{ maxWidth: 240, margin: "12px auto 20px" }}>
                         <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: 99, height: 6, overflow: "hidden" }}>
-                          <div style={{ height: "100%", borderRadius: 99, background: "linear-gradient(90deg, #ffd700, #ff9a9e)", width: `${(previewDone / 7) * 100}%`, transition: "width 0.5s ease" }} />
+                          <div style={{ height: "100%", borderRadius: 99, background: "linear-gradient(90deg, #E8C07A, #D4A24C)", width: `${(previewDone / 7) * 100}%`, transition: "width 0.5s ease" }} />
                         </div>
                         <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginTop: 6 }}>{previewDone} of 7 scenes</p>
                       </div>
                     )}
                     {!trainingFailed && (
                       <div style={{ display: "flex", justifyContent: "center", gap: 8 }}>
-                        {[0, 1, 2].map(i => <div key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: "#ffd700", animation: "pulseDot 1s ease-in-out infinite", animationDelay: `${i * 0.2}s` }} />)}
+                        {[0, 1, 2].map(i => <div key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: "#E8C07A", animation: "pulseDot 1s ease-in-out infinite", animationDelay: `${i * 0.2}s` }} />)}
                       </div>
                     )}
                   </div>
@@ -1608,7 +1607,7 @@ export default function StorybookCreator() {
                     </div>
                     <h2 style={{ color: "white", fontSize: isMobile ? 20 : 24, fontWeight: 700, margin: "0 0 10px" }}>Free preview limit reached</h2>
                     <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 15, margin: "0 0 24px" }}>You've used 5 free previews in 24 hours. Purchase once to unlock unlimited generations.</p>
-                    <button onClick={() => handlePurchase("digital")} disabled={!!checkoutLoading} style={{ padding: "15px 36px", borderRadius: 16, border: "none", background: checkoutLoading ? "rgba(255,215,0,0.5)" : "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 16, fontWeight: 800, cursor: checkoutLoading ? "not-allowed" : "pointer" }}>
+                    <button onClick={() => handlePurchase("digital")} disabled={!!checkoutLoading} style={{ padding: "15px 36px", borderRadius: 16, border: "none", background: checkoutLoading ? "rgba(232,192,122,0.5)" : "linear-gradient(135deg, #E8C07A, #D4A24C)", color: "#0F0B1F", fontSize: 16, fontWeight: 800, cursor: checkoutLoading ? "not-allowed" : "pointer" }}>
                       {checkoutLoading === "digital" ? "Redirecting..." : "Unlock My Book — $17.99 →"}
                     </button>
                   </div>
@@ -1625,10 +1624,10 @@ export default function StorybookCreator() {
                         <img src={previewCoverUrl} alt="Book cover" style={{ width: "100%", height: isMobile ? 180 : 220, objectFit: "cover", display: "block" }} />
                         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.82) 40%, rgba(0,0,0,0.15) 100%)" }} />
                         <div style={{ position: "absolute", bottom: 16, left: 18, right: 18 }}>
-                          <div style={{ color: "#ffd700", fontWeight: 800, fontSize: isMobile ? 16 : 19, textShadow: "0 2px 8px rgba(0,0,0,0.6)", marginBottom: 3 }}>{previewStory.title}</div>
+                          <div style={{ color: "#E8C07A", fontWeight: 800, fontSize: isMobile ? 16 : 19, textShadow: "0 2px 8px rgba(0,0,0,0.6)", marginBottom: 3 }}>{previewStory.title}</div>
                           <div style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, fontStyle: "italic" }}>{previewStory.dedication}</div>
                         </div>
-                        <div style={{ position: "absolute", top: 10, right: 10, background: "rgba(255,215,0,0.95)", borderRadius: 8, padding: "3px 9px", fontSize: 10, fontWeight: 700, color: "#1a0a2e" }}>✨ Cover</div>
+                        <div style={{ position: "absolute", top: 10, right: 10, background: "rgba(232,192,122,0.95)", borderRadius: 8, padding: "3px 9px", fontSize: 10, fontWeight: 700, color: "#0F0B1F" }}>✨ Cover</div>
                       </div>
                     )}
 
@@ -1651,7 +1650,7 @@ export default function StorybookCreator() {
                             <div style={{ flex: isMobile ? undefined : "0 0 45%", aspectRatio: isMobile ? "4/2.5" : undefined, minHeight: isMobile ? undefined : 180, background: "#1a1a2e", position: "relative", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
                               {img && img !== "__failed__" && <img src={img} alt={`Page ${page.pageNum}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
                               <div style={{ position: "absolute", top: 8, left: 8, background: "rgba(0,0,0,0.55)", borderRadius: 8, padding: "2px 8px", color: "rgba(255,255,255,0.8)", fontSize: 10, fontWeight: 700 }}>Page {page.pageNum}</div>
-                              <div style={{ position: "absolute", top: 8, right: 8, background: "rgba(255,215,0,0.95)", borderRadius: 8, padding: "2px 8px", color: "#1a0a2e", fontSize: 10, fontWeight: 700 }}>✨ AI Scene</div>
+                              <div style={{ position: "absolute", top: 8, right: 8, background: "rgba(232,192,122,0.95)", borderRadius: 8, padding: "2px 8px", color: "#0F0B1F", fontSize: 10, fontWeight: 700 }}>✨ AI Scene</div>
                             </div>
                             <div style={{ flex: 1, padding: "18px 20px", background: "#fff8f0", display: "flex", alignItems: "center" }}>
                               <p style={{ fontFamily: "Georgia, serif", fontSize: isMobile ? 14 : 15, lineHeight: 1.8, color: "#3d2b1f", margin: 0 }}>{page.text}</p>
@@ -1678,9 +1677,9 @@ export default function StorybookCreator() {
                             );
                           })}
                         </div>
-                        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "rgba(26,10,46,0.78)", borderRadius: 14, backdropFilter: "blur(4px)" }}>
-                          <div style={{ width: 48, height: 48, borderRadius: "50%", background: "rgba(255,215,0,0.12)", border: "1px solid rgba(255,215,0,0.25)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffd700" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "rgba(15,11,31,0.78)", borderRadius: 14, backdropFilter: "blur(4px)" }}>
+                          <div style={{ width: 48, height: 48, borderRadius: "50%", background: "rgba(232,192,122,0.12)", border: "1px solid rgba(232,192,122,0.25)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E8C07A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                           </div>
                           <p style={{ color: "white", fontWeight: 700, fontSize: 15, margin: "0 0 4px", textAlign: "center" }}>Pages 3–6 are waiting!</p>
                           <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, margin: 0 }}>Unlock your full story below</p>
@@ -1703,7 +1702,7 @@ export default function StorybookCreator() {
                         <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
                           <input value={leadEmail} onChange={e => setLeadEmail(e.target.value)} type="email" placeholder="your@email.com"
                             style={{ padding: "9px 12px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.08)", color: "white", fontSize: 13, width: 180 }} />
-                          <button onClick={submitLeadEmail} disabled={leadSending || !leadEmail} style={{ padding: "9px 16px", borderRadius: 10, border: "none", background: leadEmail ? "linear-gradient(135deg, #ffd700, #ff9a9e)" : "rgba(255,255,255,0.1)", color: leadEmail ? "#1a0a2e" : "rgba(255,255,255,0.3)", fontWeight: 700, fontSize: 13, cursor: leadEmail ? "pointer" : "not-allowed", whiteSpace: "nowrap" }}>
+                          <button onClick={submitLeadEmail} disabled={leadSending || !leadEmail} style={{ padding: "9px 16px", borderRadius: 10, border: "none", background: leadEmail ? "linear-gradient(135deg, #E8C07A, #D4A24C)" : "rgba(255,255,255,0.1)", color: leadEmail ? "#0F0B1F" : "rgba(255,255,255,0.3)", fontWeight: 700, fontSize: 13, cursor: leadEmail ? "pointer" : "not-allowed", whiteSpace: "nowrap" }}>
                             {leadSending ? "…" : "Send →"}
                           </button>
                         </div>
@@ -1711,15 +1710,15 @@ export default function StorybookCreator() {
                     </div>
 
                     {/* CTAs */}
-                    <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,215,0,0.2)", borderRadius: 22, padding: isMobile ? 18 : 24 }}>
-                      <p style={{ color: "rgba(255,215,0,0.9)", fontSize: 13, fontWeight: 700, textAlign: "center", margin: "0 0 4px", letterSpacing: "0.04em" }}>Your story is being crafted with care</p>
+                    <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(232,192,122,0.2)", borderRadius: 22, padding: isMobile ? 18 : 24 }}>
+                      <p style={{ color: "rgba(232,192,122,0.9)", fontSize: 13, fontWeight: 700, textAlign: "center", margin: "0 0 4px", letterSpacing: "0.04em" }}>Your story is being crafted with care</p>
                       <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, textAlign: "center", margin: "0 0 18px" }}>6 personalised cinematic 3D-illustrated pages starring {childName || "your child"}</p>
                       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                        <button onClick={() => handlePurchase("digital")} disabled={!!checkoutLoading} style={{ width: "100%", padding: "17px", borderRadius: 16, border: "none", background: checkoutLoading === "digital" ? "rgba(255,215,0,0.5)" : "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 17, fontWeight: 800, cursor: checkoutLoading ? "not-allowed" : "pointer" }}>
+                        <button onClick={() => handlePurchase("digital")} disabled={!!checkoutLoading} style={{ width: "100%", padding: "17px", borderRadius: 16, border: "none", background: checkoutLoading === "digital" ? "rgba(232,192,122,0.5)" : "linear-gradient(135deg, #E8C07A, #D4A24C)", color: "#0F0B1F", fontSize: 17, fontWeight: 800, cursor: checkoutLoading ? "not-allowed" : "pointer" }}>
                           {checkoutLoading === "digital" ? "Redirecting..." : PAYMENTS_ENABLED ? "Get Digital Book — $17.99 →" : "✨ Create My Storybook!"}
                         </button>
                         {PAYMENTS_ENABLED && (
-                          <button onClick={() => handlePurchase("print")} disabled={!!checkoutLoading} style={{ width: "100%", padding: "15px", borderRadius: 16, border: "2px solid rgba(255,215,0,0.35)", background: "rgba(255,215,0,0.07)", color: "#ffd700", fontSize: 16, fontWeight: 700, cursor: checkoutLoading ? "not-allowed" : "pointer" }}>
+                          <button onClick={() => handlePurchase("print")} disabled={!!checkoutLoading} style={{ width: "100%", padding: "15px", borderRadius: 16, border: "2px solid rgba(232,192,122,0.35)", background: "rgba(232,192,122,0.07)", color: "#E8C07A", fontSize: 16, fontWeight: 700, cursor: checkoutLoading ? "not-allowed" : "pointer" }}>
                             {checkoutLoading === "print" ? "Redirecting..." : "Print + Digital — $37.99"}
                           </button>
                         )}
@@ -1746,12 +1745,12 @@ export default function StorybookCreator() {
       {/* ══ GENERATING ══════════════════════════════════════════════════════════ */}
       {mainStep === "generating" && (
         <div style={{ textAlign: "center", animation: "fadeUp 0.5s ease both", maxWidth: 400, width: "100%", padding: "0 16px" }}>
-          <div style={{ width: 88, height: 88, borderRadius: "50%", background: "linear-gradient(135deg, #6040c0, #c060e0)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", animation: "float 2s ease-in-out infinite", boxShadow: "0 8px 40px rgba(96,64,192,0.5)" }}>
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <div style={{ width: 88, height: 88, borderRadius: "50%", background: "linear-gradient(135deg, #E8C07A, #D4A24C)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", animation: "float 2s ease-in-out infinite", boxShadow: "0 8px 40px rgba(232,192,122,0.35)" }}>
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#0F0B1F" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <line x1="3" y1="21" x2="21" y2="3"/>
               <line x1="15" y1="9" x2="19" y2="5"/>
               <line x1="5" y1="19" x2="9" y2="15"/>
-              <circle cx="19.5" cy="4.5" r="1.5" fill="rgba(255,215,0,0.9)" stroke="none"/>
+              <circle cx="19.5" cy="4.5" r="1.5" fill="rgba(15,11,31,0.6)" stroke="none"/>
             </svg>
           </div>
           <h2 style={{ color: "white", fontSize: 22, fontWeight: 700, margin: "0 0 10px" }}>Creating your magical book...</h2>
@@ -1760,13 +1759,13 @@ export default function StorybookCreator() {
           {scenesCompleted > 0 && (
             <div style={{ maxWidth: 260, margin: "0 auto 24px" }}>
               <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: 99, height: 8, overflow: "hidden" }}>
-                <div style={{ height: "100%", borderRadius: 99, background: "linear-gradient(90deg, #ffd700, #ff9a9e)", width: `${(scenesCompleted / 7) * 100}%`, transition: "width 0.4s ease" }} />
+                <div style={{ height: "100%", borderRadius: 99, background: "linear-gradient(90deg, #E8C07A, #D4A24C)", width: `${(scenesCompleted / 7) * 100}%`, transition: "width 0.4s ease" }} />
               </div>
-              <p style={{ color: "rgba(255,215,0,0.7)", fontSize: 12, marginTop: 7 }}>{scenesCompleted} of 7 illustrations painted</p>
+              <p style={{ color: "rgba(232,192,122,0.7)", fontSize: 12, marginTop: 7 }}>{scenesCompleted} of 7 illustrations painted</p>
             </div>
           )}
           <div style={{ display: "flex", justifyContent: "center", gap: 8 }}>
-            {[0, 1, 2].map(i => <div key={i} style={{ width: 9, height: 9, borderRadius: "50%", background: "#ffd700", animation: "pulseDot 1s ease-in-out infinite", animationDelay: `${i * 0.2}s` }} />)}
+            {[0, 1, 2].map(i => <div key={i} style={{ width: 9, height: 9, borderRadius: "50%", background: "#E8C07A", animation: "pulseDot 1s ease-in-out infinite", animationDelay: `${i * 0.2}s` }} />)}
           </div>
         </div>
       )}
@@ -1775,8 +1774,8 @@ export default function StorybookCreator() {
       {mainStep === "book" && story && (
         <div style={{ width: "100%", maxWidth: isMobile ? "100%" : 880, animation: "fadeUp 0.5s ease both" }}>
           {falError    && <div style={{ background: "rgba(255,100,100,0.09)", border: "1px solid rgba(255,100,100,0.25)", borderRadius: 10, padding: "9px 14px", marginBottom: 12, color: "#ffaaaa", fontSize: 13, textAlign: "center" }}>⚠️ {falError}</div>}
-          {isSharedView && <div style={{ background: "rgba(255,215,0,0.07)", border: "1px solid rgba(255,215,0,0.2)", borderRadius: 10, padding: "8px 14px", marginBottom: 12, color: "rgba(255,215,0,0.8)", fontSize: 13, textAlign: "center" }}>📖 Viewing a shared storybook</div>}
-          {isDemo && <div style={{ background: "rgba(255,215,0,0.12)", border: "1px solid rgba(255,215,0,0.35)", borderRadius: 10, padding: "8px 14px", marginBottom: 12, color: "#ffd700", fontSize: 13, textAlign: "center", fontWeight: 600 }}>⚡ Demo Mode — no credits used · <a href="/create" style={{ color: "#ffd700", textDecoration: "underline", cursor: "pointer" }} onClick={e => { e.preventDefault(); resetAll(); }}>Create your own</a></div>}
+          {isSharedView && <div style={{ background: "rgba(232,192,122,0.07)", border: "1px solid rgba(232,192,122,0.2)", borderRadius: 10, padding: "8px 14px", marginBottom: 12, color: "rgba(232,192,122,0.8)", fontSize: 13, textAlign: "center" }}>📖 Viewing a shared storybook</div>}
+          {isDemo && <div style={{ background: "rgba(232,192,122,0.12)", border: "1px solid rgba(232,192,122,0.35)", borderRadius: 10, padding: "8px 14px", marginBottom: 12, color: "#E8C07A", fontSize: 13, textAlign: "center", fontWeight: 600 }}>⚡ Demo Mode — no credits used · <a href="/create" style={{ color: "#E8C07A", textDecoration: "underline", cursor: "pointer" }} onClick={e => { e.preventDefault(); resetAll(); }}>Create your own</a></div>}
 
           {/* ── Book frame with 3D page-turn flip ─────────────────────────── */}
           <div style={{ perspective: "2000px", perspectiveOrigin: "50% 50%", position: "relative" }}>
@@ -1806,24 +1805,24 @@ export default function StorybookCreator() {
             <button onClick={() => navigate(Math.max(-2, currentPage - 1))} disabled={currentPage === -2} style={{ padding: isMobile ? "10px 16px" : "11px 22px", borderRadius: 11, border: "1px solid rgba(255,255,255,0.18)", background: "rgba(255,255,255,0.07)", color: "white", fontSize: 14, cursor: currentPage === -2 ? "not-allowed" : "pointer", opacity: currentPage === -2 ? 0.3 : 1 }}>← Prev</button>
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
               {/* Cover dot */}
-              <div onClick={() => navigate(-2)} title="Cover" style={{ width: currentPage === -2 ? 10 : 6, height: currentPage === -2 ? 10 : 6, borderRadius: "50%", background: currentPage === -2 ? "#ffd700" : "rgba(255,255,255,0.2)", cursor: "pointer", transition: "all 0.2s" }} />
+              <div onClick={() => navigate(-2)} title="Cover" style={{ width: currentPage === -2 ? 10 : 6, height: currentPage === -2 ? 10 : 6, borderRadius: "50%", background: currentPage === -2 ? "#E8C07A" : "rgba(255,255,255,0.2)", cursor: "pointer", transition: "all 0.2s" }} />
               {/* Dedication dot */}
-              <div onClick={() => navigate(-1)} title="Dedication" style={{ width: currentPage === -1 ? 10 : 6, height: currentPage === -1 ? 10 : 6, borderRadius: "50%", background: currentPage === -1 ? "#ffd700" : "rgba(255,255,255,0.2)", cursor: "pointer", transition: "all 0.2s" }} />
+              <div onClick={() => navigate(-1)} title="Dedication" style={{ width: currentPage === -1 ? 10 : 6, height: currentPage === -1 ? 10 : 6, borderRadius: "50%", background: currentPage === -1 ? "#E8C07A" : "rgba(255,255,255,0.2)", cursor: "pointer", transition: "all 0.2s" }} />
               {/* Page dots */}
               {story.pages.map((_: any, i: number) => (
-                <div key={i} onClick={() => navigate(i)} title={`Page ${i + 1}`} style={{ width: currentPage === i ? 10 : 6, height: currentPage === i ? 10 : 6, borderRadius: "50%", background: currentPage === i ? "#ffd700" : "rgba(255,255,255,0.2)", cursor: "pointer", transition: "all 0.2s" }} />
+                <div key={i} onClick={() => navigate(i)} title={`Page ${i + 1}`} style={{ width: currentPage === i ? 10 : 6, height: currentPage === i ? 10 : 6, borderRadius: "50%", background: currentPage === i ? "#E8C07A" : "rgba(255,255,255,0.2)", cursor: "pointer", transition: "all 0.2s" }} />
               ))}
               {/* Closing dot */}
-              <div onClick={() => navigate(totalPages)} title="The End" style={{ width: currentPage === totalPages ? 10 : 6, height: currentPage === totalPages ? 10 : 6, borderRadius: "50%", background: currentPage === totalPages ? "#ffd700" : "rgba(255,255,255,0.2)", cursor: "pointer", transition: "all 0.2s" }} />
+              <div onClick={() => navigate(totalPages)} title="The End" style={{ width: currentPage === totalPages ? 10 : 6, height: currentPage === totalPages ? 10 : 6, borderRadius: "50%", background: currentPage === totalPages ? "#E8C07A" : "rgba(255,255,255,0.2)", cursor: "pointer", transition: "all 0.2s" }} />
             </div>
-            <button onClick={() => navigate(Math.min(totalPages, currentPage + 1))} disabled={currentPage >= totalPages} style={{ padding: isMobile ? "10px 16px" : "11px 22px", borderRadius: 11, border: "none", background: "linear-gradient(135deg, #F5A623, #ffb347)", color: "#1a0a2e", fontSize: 14, fontWeight: 600, cursor: currentPage >= totalPages ? "not-allowed" : "pointer", opacity: currentPage >= totalPages ? 0.4 : 1 }}>Next →</button>
+            <button onClick={() => navigate(Math.min(totalPages, currentPage + 1))} disabled={currentPage >= totalPages} style={{ padding: isMobile ? "10px 16px" : "11px 22px", borderRadius: 11, border: "none", background: "linear-gradient(135deg, #F5A623, #ffb347)", color: "#0F0B1F", fontSize: 14, fontWeight: 600, cursor: currentPage >= totalPages ? "not-allowed" : "pointer", opacity: currentPage >= totalPages ? 0.4 : 1 }}>Next →</button>
           </div>
 
           {/* ── Print order status banner ── */}
           {printFulfilling && (
-            <div style={{ margin: "12px auto 0", maxWidth: 900, background: "rgba(255,215,0,0.08)", border: "1px solid rgba(255,215,0,0.25)", borderRadius: 14, padding: "14px 20px", display: "flex", alignItems: "center", gap: 12 }}>
-              <div style={{ width: 18, height: 18, border: "2.5px solid rgba(255,215,0,0.2)", borderTop: "2.5px solid #ffd700", borderRadius: "50%", animation: "spin 0.9s linear infinite", flexShrink: 0 }} />
-              <p style={{ color: "rgba(255,215,0,0.85)", fontSize: 14, margin: 0 }}>
+            <div style={{ margin: "12px auto 0", maxWidth: 900, background: "rgba(232,192,122,0.08)", border: "1px solid rgba(232,192,122,0.25)", borderRadius: 14, padding: "14px 20px", display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ width: 18, height: 18, border: "2.5px solid rgba(232,192,122,0.2)", borderTop: "2.5px solid #E8C07A", borderRadius: "50%", animation: "spin 0.9s linear infinite", flexShrink: 0 }} />
+              <p style={{ color: "rgba(232,192,122,0.85)", fontSize: 14, margin: 0 }}>
                 Generating your print files and submitting to our print partner — this takes about 30 seconds…
               </p>
             </div>
@@ -1842,7 +1841,7 @@ export default function StorybookCreator() {
             <div style={{ margin: "12px auto 0", maxWidth: 900, background: "rgba(255,80,80,0.08)", border: "1px solid rgba(255,80,80,0.25)", borderRadius: 14, padding: "14px 20px" }}>
               <p style={{ color: "rgba(255,180,180,0.9)", fontSize: 13, margin: "0 0 6px", fontWeight: 600 }}>Print order issue</p>
               <p style={{ color: "rgba(255,180,180,0.7)", fontSize: 13, margin: "0 0 8px" }}>{printOrderError}</p>
-              <a href="mailto:hello@mytinytales.studio" style={{ color: "#ffd700", fontSize: 12 }}>Contact us →</a>
+              <a href="mailto:hello@mytinytales.studio" style={{ color: "#E8C07A", fontSize: 12 }}>Contact us →</a>
             </div>
           )}
 
@@ -1857,7 +1856,7 @@ export default function StorybookCreator() {
           )}
 
           <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 16, flexWrap: "wrap" }}>
-            <button onClick={isMobile ? undefined : printBook} style={{ padding: "10px 20px", borderRadius: 11, border: "none", background: isMobile ? "rgba(255,255,255,0.15)" : "linear-gradient(135deg, #F5A623, #ffb347)", color: isMobile ? "rgba(255,255,255,0.4)" : "#1a0a2e", fontSize: 13, fontWeight: 700, cursor: isMobile ? "default" : "pointer", display: "flex", alignItems: "center", gap: 6, opacity: isMobile ? 0.5 : 1 }}>
+            <button onClick={isMobile ? undefined : printBook} style={{ padding: "10px 20px", borderRadius: 11, border: "none", background: isMobile ? "rgba(255,255,255,0.15)" : "linear-gradient(135deg, #F5A623, #ffb347)", color: isMobile ? "rgba(255,255,255,0.4)" : "#0F0B1F", fontSize: 13, fontWeight: 700, cursor: isMobile ? "default" : "pointer", display: "flex", alignItems: "center", gap: 6, opacity: isMobile ? 0.5 : 1 }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
               Save PDF
             </button>
@@ -1889,7 +1888,7 @@ export default function StorybookCreator() {
                   finally { setKontextLoading(false); }
                 }}
                 disabled={kontextLoading}
-                style={{ padding: "10px 18px", borderRadius: 11, border: "1px solid rgba(255,215,0,0.4)", background: "rgba(244,196,48,0.12)", color: "#ffd700", fontSize: 13, fontWeight: 600, cursor: kontextLoading ? "not-allowed" : "pointer", opacity: kontextLoading ? 0.6 : 1 }}
+                style={{ padding: "10px 18px", borderRadius: 11, border: "1px solid rgba(232,192,122,0.4)", background: "rgba(244,196,48,0.12)", color: "#E8C07A", fontSize: 13, fontWeight: 600, cursor: kontextLoading ? "not-allowed" : "pointer", opacity: kontextLoading ? 0.6 : 1 }}
               >
                 {kontextLoading ? "⏳ Generating 3 scenes…" : "🧪 Test Kontext (3 scenes)"}
               </button>
@@ -1904,7 +1903,7 @@ export default function StorybookCreator() {
                 value={kontextImageUrl}
                 onChange={e => setKontextImageUrl(e.target.value)}
                 placeholder="Paste a photo URL to test with (optional — defaults to sample portrait)"
-                style={{ flex: 1, padding: "9px 14px", borderRadius: 10, border: "1px solid rgba(255,215,0,0.25)", background: "rgba(255,255,255,0.06)", color: "white", fontSize: 13, outline: "none" }}
+                style={{ flex: 1, padding: "9px 14px", borderRadius: 10, border: "1px solid rgba(232,192,122,0.25)", background: "rgba(255,255,255,0.06)", color: "white", fontSize: 13, outline: "none" }}
               />
               {kontextImageUrl && (
                 <button onClick={() => setKontextImageUrl("")} style={{ padding: "9px 12px", borderRadius: 10, border: "none", background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)", fontSize: 12, cursor: "pointer" }}>✕</button>
@@ -1914,9 +1913,9 @@ export default function StorybookCreator() {
 
           {/* Kontext test results (demo only) */}
           {isDemo && kontextResults && (
-            <div style={{ margin: "16px auto 0", maxWidth: 900, background: "rgba(255,255,255,0.06)", borderRadius: 16, padding: "24px", border: "1px solid rgba(255,215,0,0.2)" }}>
+            <div style={{ margin: "16px auto 0", maxWidth: 900, background: "rgba(255,255,255,0.06)", borderRadius: 16, padding: "24px", border: "1px solid rgba(232,192,122,0.2)" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-                <p style={{ color: "#ffd700", fontWeight: 700, fontSize: 14, margin: 0 }}>🧪 fal-ai/flux-pro/kontext — 3-scene consistency test</p>
+                <p style={{ color: "#E8C07A", fontWeight: 700, fontSize: 14, margin: 0 }}>🧪 fal-ai/flux-pro/kontext — 3-scene consistency test</p>
                 <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 12 }}>Pixar-style prompt, same reference photo</span>
               </div>
               {kontextResults === "error" ? (
@@ -1937,7 +1936,7 @@ export default function StorybookCreator() {
                     {(kontextResults as { scene: string; url: string }[]).map((r, i) => (
                       <div key={i}>
                         <p style={{ color: "rgba(255,255,255,0.45)", fontSize: 11, margin: "0 0 8px", lineHeight: 1.5 }}>
-                          <span style={{ color: "#ffd700", fontWeight: 700 }}>Scene {i + 1}:</span> {r.scene.slice(0, 60)}…
+                          <span style={{ color: "#E8C07A", fontWeight: 700 }}>Scene {i + 1}:</span> {r.scene.slice(0, 60)}…
                         </p>
                         <img src={r.url} alt={`Scene ${i + 1}`} style={{ width: "100%", borderRadius: 10, display: "block" }} />
                       </div>
@@ -1951,13 +1950,13 @@ export default function StorybookCreator() {
           {/* New Book confirmation modal */}
           {showNewBookConfirm && (
             <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }} onClick={() => setShowNewBookConfirm(false)}>
-              <div style={{ background: "linear-gradient(160deg, #1a0a2e, #2d1b4e)", borderRadius: 20, padding: "32px 28px", maxWidth: 380, width: "100%", border: "1px solid rgba(255,215,0,0.2)", boxShadow: "0 32px 80px rgba(0,0,0,0.6)", textAlign: "center" }} onClick={e => e.stopPropagation()}>
+              <div style={{ background: "rgba(20,16,45,0.98)", borderRadius: 20, padding: "32px 28px", maxWidth: 380, width: "100%", border: "1px solid rgba(232,192,122,0.2)", boxShadow: "0 32px 80px rgba(0,0,0,0.6)", textAlign: "center" }} onClick={e => e.stopPropagation()}>
                 <div style={{ fontSize: 40, marginBottom: 14 }}>📖</div>
                 <h3 style={{ color: "white", fontWeight: 700, fontSize: 18, margin: "0 0 10px" }}>Start a new book?</h3>
                 <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 14, margin: "0 0 24px", lineHeight: 1.6 }}>Your current book will be lost.</p>
                 <div style={{ display: "flex", gap: 10 }}>
                   <button onClick={() => setShowNewBookConfirm(false)} style={{ flex: 1, padding: "12px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.18)", background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.7)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
-                  <button onClick={resetAll} style={{ flex: 1, padding: "12px", borderRadius: 12, border: "none", background: "linear-gradient(135deg, #ffd700, #ff9a9e)", color: "#1a0a2e", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Yes, start over</button>
+                  <button onClick={resetAll} style={{ flex: 1, padding: "12px", borderRadius: 12, border: "none", background: "linear-gradient(135deg, #E8C07A, #D4A24C)", color: "#0F0B1F", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Yes, start over</button>
                 </div>
               </div>
             </div>
@@ -1974,15 +1973,15 @@ export default function StorybookCreator() {
             {coverImageUrl && <img crossOrigin="anonymous" src={coverImageUrl} alt="cover" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top" }} />}
             {/* Top branding */}
             <div style={{ position: "absolute", top: 28, left: 0, right: 0, display: "flex", justifyContent: "center", zIndex: 2 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255,215,0,0.92)", borderRadius: 50, padding: "6px 20px" }}>
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="#1a0a2e" aria-hidden="true"><path d="M12 1l2.39 7.61L22 12l-7.61 2.39L12 22l-2.39-7.61L2 12l7.61-2.39z"/></svg>
-                <span style={{ color: "#1a0a2e", fontWeight: 800, fontSize: 12, letterSpacing: "0.06em" }}>My Tiny Tales</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(232,192,122,0.92)", borderRadius: 50, padding: "6px 20px" }}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="#0F0B1F" aria-hidden="true"><path d="M12 1l2.39 7.61L22 12l-7.61 2.39L12 22l-2.39-7.61L2 12l7.61-2.39z"/></svg>
+                <span style={{ color: "#0F0B1F", fontWeight: 800, fontSize: 12, letterSpacing: "0.06em" }}>My Tiny Tales</span>
               </div>
             </div>
             {/* Bottom gradient + title */}
             <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(to top, rgba(5,2,15,0.97) 0%, rgba(5,2,15,0.72) 40%, transparent 100%)", padding: "100px 80px 48px", zIndex: 2 }}>
               <div style={{ color: "white", fontSize: 52, fontWeight: 900, fontFamily: "Georgia, serif", lineHeight: 1.1, marginBottom: 10, textShadow: "0 2px 24px rgba(0,0,0,0.8)" }}>{story.title}</div>
-              <div style={{ color: "rgba(255,215,0,0.75)", fontStyle: "italic", fontSize: 18, fontFamily: "Georgia, serif" }}>{THEMES.find(t => t.id === theme)?.subtitle ?? story.dedication}</div>
+              <div style={{ color: "rgba(232,192,122,0.75)", fontStyle: "italic", fontSize: 18, fontFamily: "Georgia, serif" }}>{THEMES.find(t => t.id === theme)?.subtitle ?? story.dedication}</div>
             </div>
           </div>
 
@@ -1993,15 +1992,15 @@ export default function StorybookCreator() {
           <div className="print-page" style={{ position: "relative", background: "#07041A", alignItems: "center", justifyContent: "center", flexDirection: "column" }}>
             <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse at 50% 55%, rgba(80,40,160,0.3) 0%, transparent 65%)", pointerEvents: "none" }} />
             <div style={{ position: "relative", textAlign: "center", maxWidth: 700, padding: "0 80px" }}>
-              <p style={{ color: "rgba(255,215,0,0.4)", fontSize: 12, fontWeight: 700, letterSpacing: "0.32em", textTransform: "uppercase", margin: "0 0 24px", fontFamily: "Georgia, serif" }}>A story created for</p>
+              <p style={{ color: "rgba(232,192,122,0.4)", fontSize: 12, fontWeight: 700, letterSpacing: "0.32em", textTransform: "uppercase", margin: "0 0 24px", fontFamily: "Georgia, serif" }}>A story created for</p>
               <h1 style={{ fontFamily: "Georgia, serif", color: "white", fontSize: 80, fontWeight: 900, margin: 0, letterSpacing: "-0.03em", lineHeight: 0.9 }}>
                 {childName ? childName.charAt(0).toUpperCase() + childName.slice(1).toLowerCase() : "You"}
               </h1>
-              <div style={{ width: 60, height: 2, background: "rgba(255,215,0,0.45)", borderRadius: 1, margin: "32px auto" }} />
+              <div style={{ width: 60, height: 2, background: "rgba(232,192,122,0.45)", borderRadius: 1, margin: "32px auto" }} />
               <p style={{ fontFamily: "Georgia, serif", color: "rgba(255,255,255,0.6)", fontSize: 20, lineHeight: 1.85, fontStyle: "italic", margin: 0 }}>
                 &ldquo;May every adventure remind you how loved, brave, and magical you are.&rdquo;
               </p>
-              <p style={{ color: "rgba(255,215,0,0.22)", fontFamily: "Georgia, serif", fontSize: 13, letterSpacing: "0.24em", margin: "40px 0 0" }}>My Tiny Tales</p>
+              <p style={{ color: "rgba(232,192,122,0.22)", fontFamily: "Georgia, serif", fontSize: 13, letterSpacing: "0.24em", margin: "40px 0 0" }}>My Tiny Tales</p>
             </div>
           </div>
 
@@ -2023,9 +2022,9 @@ export default function StorybookCreator() {
                 {bgImgPrint && <img crossOrigin="anonymous" src={bgImgPrint} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.3 }} />}
                 <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(5,2,15,0.5) 0%, rgba(5,2,15,0.9) 100%)" }} />
                 <div style={{ position: "relative", textAlign: "center", maxWidth: 720, padding: "0 80px" }}>
-                  <p style={{ color: "rgba(255,215,0,0.3)", fontSize: 13, letterSpacing: "0.3em", margin: "0 0 16px", fontFamily: "Georgia, serif" }}>❖ &nbsp; ❖ &nbsp; ❖</p>
-                  <h2 style={{ fontFamily: "Georgia, serif", color: "#ffd700", fontSize: 72, fontWeight: 900, letterSpacing: "-0.02em", lineHeight: 1, margin: "0 0 8px", textShadow: "0 0 60px rgba(255,215,0,0.4)" }}>The End</h2>
-                  <div style={{ width: 60, height: 1, background: "rgba(255,215,0,0.4)", margin: "24px auto" }} />
+                  <p style={{ color: "rgba(232,192,122,0.3)", fontSize: 13, letterSpacing: "0.3em", margin: "0 0 16px", fontFamily: "Georgia, serif" }}>❖ &nbsp; ❖ &nbsp; ❖</p>
+                  <h2 style={{ fontFamily: "Georgia, serif", color: "#E8C07A", fontSize: 72, fontWeight: 900, letterSpacing: "-0.02em", lineHeight: 1, margin: "0 0 8px", textShadow: "0 0 60px rgba(232,192,122,0.4)" }}>The End</h2>
+                  <div style={{ width: 60, height: 1, background: "rgba(232,192,122,0.4)", margin: "24px auto" }} />
                   <p style={{ fontFamily: "Georgia, serif", color: "rgba(255,255,255,0.65)", fontSize: 20, lineHeight: 1.9, fontStyle: "italic", margin: "0 0 28px" }}>{closingText}</p>
                   <p style={{ color: "rgba(255,255,255,0.22)", fontFamily: "Georgia, serif", fontSize: 13, fontStyle: "italic", margin: 0 }}>
                     Created with love · {new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}

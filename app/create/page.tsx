@@ -331,6 +331,26 @@ const gtagEvent = (event: string, params?: object) => {
   }
 };
 
+// Fetch with AbortController timeout — prevents hanged connections on mobile
+const fetchWithTimeout = (url: string, opts: RequestInit, ms = 90_000): Promise<Response> => {
+  const ctrl = new AbortController();
+  const id = setTimeout(() => ctrl.abort(), ms);
+  return fetch(url, { ...opts, signal: ctrl.signal }).finally(() => clearTimeout(id));
+};
+
+// Capped concurrency — runs task array with at most `cap` in-flight at once
+const runCapped = async (fns: Array<() => Promise<void>>, cap: number): Promise<void> => {
+  const queue = [...fns];
+  await Promise.all(
+    Array.from({ length: Math.min(cap, queue.length) }, async () => {
+      while (queue.length) {
+        const fn = queue.shift()!;
+        await fn().catch(() => {});
+      }
+    })
+  );
+};
+
 export default function StorybookCreator() {
   // ── Flow state ───────────────────────────────────────────────────────────────
   const [onboardingStep, setOnboardingStep] = useState(1);
@@ -380,6 +400,7 @@ export default function StorybookCreator() {
 
   // ── UI ────────────────────────────────────────────────────────────────────────
   const [falError,         setFalError]         = useState<string | null>(null);
+  const [generationError,  setGenerationError]  = useState<string | null>(null);
   const [loadingMsg,       setLoadingMsg]       = useState("");
   const [checkoutLoading,  setCheckoutLoading]  = useState<string | null>(null);
   const [pdfLoading,       setPdfLoading]       = useState(false); // kept for compat
@@ -590,28 +611,30 @@ export default function StorybookCreator() {
     setPreviewMsg("Writing your story...");
     setPreviewDone(0);
     setPreviewImages(Array(6).fill(null));
+    setGenerationError(null);
     acquireWakeLock();
     setPreviewCoverUrl(null);
     setLoraUrl(null);
 
     const selectedTheme = THEMES.find(t => t.id === theme);
+    // Use fewer concurrent requests on mobile — prevents connection saturation
+    const sceneConcurrency = window.innerWidth < 680 ? 2 : 4;
 
     try {
-      // Story + LoRA training in parallel (both independent — saves 5-10s)
       setPreviewMsg("Writing your story & training your character...");
       const [storyRes, trainRes] = await Promise.all([
-        fetch("/api/story", {
+        fetchWithTimeout("/api/story", {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             childName, childAge: String(childAge), gender: childGender, hairColor, eyeColor,
             theme: `${selectedTheme?.title} - ${selectedTheme?.subtitle}: ${selectedTheme?.desc}`,
           }),
-        }).then(r => r.json()),
+        }, 60_000).then(r => r.json()),
         photosBase64.length > 0
-          ? fetch("/api/train-lora", {
+          ? fetchWithTimeout("/api/train-lora", {
               method: "POST", headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ photosBase64 }),
-            }).then(r => r.json())
+            }, 60_000).then(r => r.json())
           : Promise.resolve(null),
       ]);
 
@@ -625,20 +648,26 @@ export default function StorybookCreator() {
       const storyData = storyRes?.pages ? storyRes : getFallbackStory(childName);
       setPreviewStory(storyData);
 
-      // ── Poll for LoRA completion ───────────────────────────────────────────────
+      // ── Poll for LoRA completion ──────────────────────────────────────────────
       let trainedLoraUrl: string | null = null;
       if (trainRes?.jobId) {
-        // Poll until complete (max 5 min, 5s intervals)
         let attempts = 0;
         let trainJobFailed = false;
         while (!trainedLoraUrl && attempts < 60) {
-          await new Promise<void>(resolve => setTimeout(resolve, 5000));
+          // Adaptive interval: shorter when tab re-gains focus, standard 5 s otherwise
+          const interval = document.hidden ? 8_000 : 5_000;
+          await new Promise<void>(resolve => {
+            const id = setTimeout(resolve, interval);
+            // Resolve immediately when tab becomes visible so polling doesn't freeze
+            const onVisible = () => { if (!document.hidden) { clearTimeout(id); resolve(); } };
+            document.addEventListener("visibilitychange", onVisible, { once: true });
+          });
           attempts++;
           try {
-            const checkRes = await fetch("/api/check-lora", {
+            const checkRes = await fetchWithTimeout("/api/check-lora", {
               method: "POST", headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ jobId: trainRes.jobId }),
-            }).then(r => r.json());
+            }, 25_000).then(r => r.json());
             if (checkRes.status === "COMPLETED" && checkRes.loraUrl) {
               trainedLoraUrl = checkRes.loraUrl;
             } else if (checkRes.status === "FAILED") {
@@ -646,9 +675,7 @@ export default function StorybookCreator() {
               break;
             }
           } catch {}
-          if (!trainedLoraUrl) {
-            setPreviewMsg(TRAINING_MESSAGES[attempts % TRAINING_MESSAGES.length]);
-          }
+          if (!trainedLoraUrl) setPreviewMsg(TRAINING_MESSAGES[attempts % TRAINING_MESSAGES.length]);
         }
         if (trainedLoraUrl) {
           setLoraUrl(trainedLoraUrl);
@@ -657,7 +684,6 @@ export default function StorybookCreator() {
             localStorage.setItem("sb_lora_ts", String(Date.now()));
           } catch {}
         } else {
-          // Training failed or timed out — flag it so the UI can explain
           setTrainingFailed(true);
           const reason = trainJobFailed ? "Character training failed" : "Character training timed out";
           setPreviewMsg(`${reason} — your story is ready but without personalised illustrations.`);
@@ -668,16 +694,15 @@ export default function StorybookCreator() {
 
       if (trainedLoraUrl && storyData.pages) {
         let done = 0;
-        const total = 7; // 1 cover + 6 pages
+        const total = 7;
         const themePrompts = SCENE_PROMPTS_BY_THEME[theme] ?? SCENE_PROMPTS_BY_THEME.adventure;
-
         const bookSeed = Math.floor(Math.random() * 2_147_483_647);
 
         const callScene = async (prompt: string) => {
-          const res = await fetch("/api/generate-scene", {
+          const res = await fetchWithTimeout("/api/generate-scene", {
             method: "POST", headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ loraUrl: trainedLoraUrl, prompt: buildGenderedPrompt(prompt, childGender, childAge, hairColor, eyeColor), seed: bookSeed }),
-          }).then(r => r.json());
+          }, 95_000).then(r => r.json());
           return res;
         };
 
@@ -704,20 +729,23 @@ export default function StorybookCreator() {
           setPreviewMsg(done < total ? `${done} of ${total} scenes ready...` : "All illustrations ready!");
         };
 
-        // Build prompts from Claude's illustration descriptions + story text as context
         const storyScenePrompts = (storyData.pages || []).map((pg: any) =>
           pg.illustration
             ? `a photo of TOK, ${pg.illustration} Scene context: ${(pg.text || "").substring(0, 120)} ${STYLE_TOKEN} ${SAFETY}`
             : themePrompts[0]
         );
 
-        // All 7 scenes in parallel — cover + 6 story scenes
-        await Promise.all([
-          handleScene(COVER_PROMPT, -1),
-          ...storyScenePrompts.map((p: string, idx: number) => handleScene(p, idx)),
-        ]);
+        // Cap concurrency: 2 on mobile (avoids connection saturation), 4 on desktop
+        await runCapped([
+          () => handleScene(COVER_PROMPT, -1),
+          ...storyScenePrompts.map((p: string, idx: number) => () => handleScene(p, idx)),
+        ], sceneConcurrency);
       }
-    } catch { setPreviewStory(getFallbackStory(childName)); }
+    } catch (err: any) {
+      const msg = err?.name === "AbortError" ? "Connection timed out — please check your signal and try again." : "Something went wrong — please try again.";
+      setGenerationError(msg);
+      setPreviewStory(getFallbackStory(childName));
+    }
 
     setPreviewStatus("done");
     releaseWakeLock();
@@ -790,8 +818,10 @@ export default function StorybookCreator() {
     }
 
     // Full generation from scratch
-    setMainStep("generating"); setFalError(null);
+    setMainStep("generating"); setFalError(null); setGenerationError(null);
     setPageImages(Array(6).fill(null)); setCoverImageUrl(null); setScenesCompleted(0); setIsSharedView(false);
+
+    const sceneConcurrency = window.innerWidth < 680 ? 2 : 4;
 
     try {
       let storyData = _savedStory;
@@ -799,33 +829,38 @@ export default function StorybookCreator() {
       if (!storyData) {
         const sel = THEMES.find(t => t.id === _theme);
         setLoadingMsg("Writing your story...");
-        const res = await fetch("/api/story", {
+        const res = await fetchWithTimeout("/api/story", {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ childName: _name, childAge: String(_age), gender: _gender, hairColor: _hair, eyeColor: _eye, theme: `${sel?.title} - ${sel?.subtitle}` }),
-        }).then(r => r.json());
+        }, 60_000).then(r => r.json());
         storyData = res?.pages ? res : getFallbackStory(_name);
       }
 
       setStory(storyData);
 
-      // Re-train LoRA if we have photos but no loraUrl (e.g. training failed before purchase)
+      // Re-train LoRA if we have photos but no loraUrl
       let activeLoraUrl = _loraUrl;
       if (_photosBase64.length > 0 && !activeLoraUrl && storyData?.pages) {
         setLoadingMsg("Training your character... (~2-3 min)");
-        const trainRes = await fetch("/api/train-lora", {
+        const trainRes = await fetchWithTimeout("/api/train-lora", {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ photosBase64: _photosBase64 }),
-        }).then(r => r.json());
+        }, 60_000).then(r => r.json());
         if (trainRes.jobId) {
           let attempts = 0;
           while (!activeLoraUrl && attempts < 60) {
-            await new Promise<void>(resolve => setTimeout(resolve, 5000));
+            const interval = document.hidden ? 8_000 : 5_000;
+            await new Promise<void>(resolve => {
+              const id = setTimeout(resolve, interval);
+              const onVisible = () => { if (!document.hidden) { clearTimeout(id); resolve(); } };
+              document.addEventListener("visibilitychange", onVisible, { once: true });
+            });
             attempts++;
             try {
-              const checkRes = await fetch("/api/check-lora", {
+              const checkRes = await fetchWithTimeout("/api/check-lora", {
                 method: "POST", headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ jobId: trainRes.jobId }),
-              }).then(r => r.json());
+              }, 25_000).then(r => r.json());
               if (checkRes.status === "COMPLETED" && checkRes.loraUrl) {
                 activeLoraUrl = checkRes.loraUrl;
                 setLoraUrl(activeLoraUrl);
@@ -844,10 +879,10 @@ export default function StorybookCreator() {
         const bookSeed2 = Math.floor(Math.random() * 2_147_483_647);
 
         const callScene2 = async (prompt: string) => {
-          const res = await fetch("/api/generate-scene", {
+          const res = await fetchWithTimeout("/api/generate-scene", {
             method: "POST", headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ loraUrl: activeLoraUrl, prompt: buildGenderedPrompt(prompt, _gender, _age, _hair, _eye), seed: bookSeed2 }),
-          }).then(r => r.json());
+          }, 95_000).then(r => r.json());
           return res;
         };
 
@@ -879,15 +914,17 @@ export default function StorybookCreator() {
           setScenesCompleted(p => p + 1);
         };
 
-        await Promise.all([
-          handleScene2(COVER_PROMPT, -1),
-          ...fullStoryPrompts.map((p: string, idx: number) => handleScene2(p, idx)),
-        ]);
+        await runCapped([
+          () => handleScene2(COVER_PROMPT, -1),
+          ...fullStoryPrompts.map((p: string, idx: number) => () => handleScene2(p, idx)),
+        ], sceneConcurrency);
       }
 
       setCurrentPage(-2); setDisplayedPage(-2); setMainStep("book");
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      const msg = err?.name === "AbortError" ? "Connection timed out — check your signal and try again." : "Something went wrong — please try again.";
+      setGenerationError(msg);
       setStory(getFallbackStory(_name)); setCurrentPage(-2); setDisplayedPage(-2); setMainStep("book");
     }
   };
@@ -1036,7 +1073,7 @@ export default function StorybookCreator() {
     setPageImages(Array(6).fill(null)); setScenesCompleted(0);
     setChildGender("boy"); setChildName(""); setChildAge(5); setTheme("adventure");
     setIsSharedView(false); setRegeneratingPage(null); setFalError(null); setIsDemo(false); setShowNewBookConfirm(false);
-    setDisplayedPage(-2); setFlipBack(null); setIsFlipping(false);
+    setDisplayedPage(-2); setFlipBack(null); setIsFlipping(false); setGenerationError(null);
   };
 
   const totalPages = story?.pages?.length ?? 6;
@@ -1774,6 +1811,7 @@ export default function StorybookCreator() {
       {mainStep === "book" && story && (
         <div style={{ width: "100%", maxWidth: isMobile ? "100%" : 880, animation: "fadeUp 0.5s ease both" }}>
           {falError    && <div style={{ background: "rgba(255,100,100,0.09)", border: "1px solid rgba(255,100,100,0.25)", borderRadius: 10, padding: "9px 14px", marginBottom: 12, color: "#ffaaaa", fontSize: 13, textAlign: "center" }}>⚠️ {falError}</div>}
+          {generationError && <div style={{ background: "rgba(255,100,100,0.09)", border: "1px solid rgba(255,100,100,0.25)", borderRadius: 10, padding: "9px 14px", marginBottom: 12, color: "#ffaaaa", fontSize: 13, textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, flexWrap: "wrap" }}>⚠️ {generationError} <button onClick={() => { setGenerationError(null); setOnboardingStep(5); setMainStep("onboarding"); previewStarted.current = false; }} style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 8, padding: "4px 12px", color: "white", fontSize: 12, cursor: "pointer" }}>Try again</button></div>}
           {isSharedView && <div style={{ background: "rgba(232,192,122,0.07)", border: "1px solid rgba(232,192,122,0.2)", borderRadius: 10, padding: "8px 14px", marginBottom: 12, color: "rgba(232,192,122,0.8)", fontSize: 13, textAlign: "center" }}>📖 Viewing a shared storybook</div>}
           {isDemo && <div style={{ background: "rgba(232,192,122,0.12)", border: "1px solid rgba(232,192,122,0.35)", borderRadius: 10, padding: "8px 14px", marginBottom: 12, color: "#E8C07A", fontSize: 13, textAlign: "center", fontWeight: 600 }}>⚡ Demo Mode — no credits used · <a href="/create" style={{ color: "#E8C07A", textDecoration: "underline", cursor: "pointer" }} onClick={e => { e.preventDefault(); resetAll(); }}>Create your own</a></div>}
 

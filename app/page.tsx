@@ -579,7 +579,7 @@ export default function LandingPage() {
           </div>
         ))}
         <div className="reveal" style={{ maxWidth: 600, margin: "0 auto", position: "relative", zIndex: 1 }}>
-          <div style={{ marginBottom: 18, animation: "float 4s ease-in-out infinite" }}><SparkSVG size={isMobile ? 40 : 52} color={GOLD} glow /></div>
+          <div style={{ marginBottom: 18, animation: (isMobile || reducedMotion) ? "none" : "float 4s ease-in-out infinite" }}><SparkSVG size={isMobile ? 40 : 52} color={GOLD} glow /></div>
           <h2 style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: isMobile ? 32 : 48, fontWeight: 600, color: TEXT, margin: "0 0 18px", lineHeight: 1.12, letterSpacing: "-0.6px" }}>
             Give Them a Story Only{" "}
             <span style={{ background: `linear-gradient(90deg, ${GOLD}, ${GOLD_WARM}, ${GOLD})`, backgroundSize: "200% 100%", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", animation: "shimmer 3s ease infinite" }}>

@@ -40,9 +40,9 @@ function CheckSVG({ size = 14, color = GOLD }: { size?: number; color?: string }
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 const EXAMPLES = [
-  { tag: "The Big Adventure", title: "A Real Hero", caption: "Your child as the hero — brave, kind, and unforgettable", img: "/examples/example-1.jfif", quote: '"Loki was a real hero! He learned that being brave and kind saves the day. What an amazing adventure!"', child: "Loki, Age 4 — Adventure theme" },
-  { tag: "To The Stars",       title: "She Reached the Stars", caption: "Every page packed with heart — your child's real face in every scene", img: "/examples/example-2.jfif", quote: '"Aria blasted off into the cosmos and discovered that the bravest explorers carry kindness in their hearts."', child: "Aria, Age 6 — Space theme" },
-  { tag: "Dragon Tamer",       title: "The Dragon Needed Him", caption: "Cinematic Disney-style illustrations made just for them", img: "/examples/example-3.jfif", quote: '"Only Noah had what it took. He walked right up to the great dragon and said: I\'m here to help."', child: "Noah, Age 5 — Dragon theme" },
+  { tag: "The Big Adventure", title: "A Real Hero", caption: "Your child as the hero — brave, kind, and unforgettable", img: "/examples/example-1.webp", quote: '"Loki was a real hero! He learned that being brave and kind saves the day. What an amazing adventure!"', child: "Loki, Age 4 — Adventure theme" },
+  { tag: "To The Stars",       title: "She Reached the Stars", caption: "Every page packed with heart — your child's real face in every scene", img: "/examples/example-2.webp", quote: '"Aria blasted off into the cosmos and discovered that the bravest explorers carry kindness in their hearts."', child: "Aria, Age 6 — Space theme" },
+  { tag: "Dragon Tamer",       title: "The Dragon Needed Him", caption: "Cinematic Disney-style illustrations made just for them", img: "/examples/example-3.webp", quote: '"Only Noah had what it took. He walked right up to the great dragon and said: I\'m here to help."', child: "Noah, Age 5 — Dragon theme" },
 ];
 
 const STEPS = [
@@ -233,12 +233,14 @@ export default function LandingPage() {
           HERO
       ════════════════════════════════════════════════════ */}
       <section style={{ minHeight: "90vh", display: "flex", alignItems: "center", justifyContent: "center", padding: isMobile ? "100px 24px 64px" : "120px 48px 80px", position: "relative", overflow: "hidden" }}>
-        {/* Aurora blobs */}
-        <div aria-hidden="true" style={{ position: "absolute", top: "-25%", left: "-15%", width: 800, height: 800, borderRadius: "50%", background: "radial-gradient(circle, rgba(100,70,200,0.4) 0%, transparent 70%)", filter: "blur(100px)", pointerEvents: "none" }} />
-        <div aria-hidden="true" style={{ position: "absolute", bottom: "-25%", right: "-15%", width: 900, height: 900, borderRadius: "50%", background: "radial-gradient(circle, rgba(80,40,160,0.28) 0%, transparent 70%)", filter: "blur(120px)", pointerEvents: "none" }} />
+        {/* Aurora blobs — skip on mobile (GPU-expensive blur) */}
+        {!isMobile && <>
+          <div aria-hidden="true" style={{ position: "absolute", top: "-25%", left: "-15%", width: 800, height: 800, borderRadius: "50%", background: "radial-gradient(circle, rgba(100,70,200,0.4) 0%, transparent 70%)", filter: "blur(100px)", pointerEvents: "none" }} />
+          <div aria-hidden="true" style={{ position: "absolute", bottom: "-25%", right: "-15%", width: 900, height: 900, borderRadius: "50%", background: "radial-gradient(circle, rgba(80,40,160,0.28) 0%, transparent 70%)", filter: "blur(120px)", pointerEvents: "none" }} />
+        </>}
 
-        {/* Gold SVG sparkles with glow */}
-        {(["10%,15%", "85%,10%", "90%,75%", "6%,80%"] as const).map((pos, i) => (
+        {/* Sparkles — skip on mobile */}
+        {!isMobile && (["10%,15%", "85%,10%", "90%,75%", "6%,80%"] as const).map((pos, i) => (
           <div key={i} aria-hidden="true" style={{ position: "absolute", left: pos.split(",")[0], top: pos.split(",")[1], animation: `sparkleAni ${2.8 + i * 0.6}s ease-in-out infinite`, animationDelay: `${i * 0.5}s`, pointerEvents: "none" }}>
             <SparkSVG size={[18, 12, 22, 14][i]} color={GOLD} glow />
           </div>
@@ -318,7 +320,7 @@ export default function LandingPage() {
               {/* Glow */}
               <div aria-hidden="true" style={{ position: "absolute", inset: -40, borderRadius: 40, background: `radial-gradient(ellipse, rgba(232,192,122,0.18) 0%, transparent 70%)`, filter: "blur(28px)", pointerEvents: "none" }} />
               <div style={{ width: 340, height: 440, borderRadius: 20, overflow: "hidden", boxShadow: "0 40px 80px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.07)", position: "relative" }}>
-                <img src="/examples/example-1.jfif" alt="Sample storybook page" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", animation: reducedMotion ? "none" : "kenBurns 20s ease-in-out infinite alternate", display: "block" }} />
+                <img src="/examples/example-1.webp" alt="Sample storybook page" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", animation: reducedMotion ? "none" : "kenBurns 20s ease-in-out infinite alternate", display: "block" }} />
               </div>
               {/* Floating badge — bottom left */}
               <div style={{ position: "absolute", bottom: 30, left: -32, background: SURFACE, backdropFilter: "blur(16px)", border: `1px solid ${SURF_BDR}`, borderRadius: 14, padding: "10px 16px", display: "flex", alignItems: "center", gap: 8, animation: `badgeFloat 4s ease-in-out infinite`, boxShadow: "0 8px 24px rgba(0,0,0,0.35)" }}>
@@ -414,7 +416,7 @@ export default function LandingPage() {
           <div style={{ position: "relative" }}>
             <div key={exIdx} style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${SURF_BDR}`, backdropFilter: "blur(16px)", borderRadius: 20, overflow: "hidden", display: "flex", flexDirection: isMobile ? "column" : "row", animation: "slideEx 0.3s ease both", minHeight: isMobile ? undefined : 320, boxShadow: "0 24px 64px rgba(0,0,0,0.4)" }}>
               <div style={{ flex: isMobile ? undefined : "0 0 48%", minHeight: isMobile ? 220 : 320, position: "relative", overflow: "hidden" }}>
-                <img src={ex.img} alt={ex.title} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", display: "block" }} />
+                <img src={ex.img} alt={ex.title} loading="lazy" decoding="async" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", display: "block" }} />
               </div>
               {!isMobile && <div style={{ width: 4, background: `linear-gradient(to right, rgba(232,192,122,0.12), rgba(232,192,122,0.04), transparent)`, flexShrink: 0 }} />}
               <div style={{ flex: 1, padding: isMobile ? "28px 24px" : "40px 36px", display: "flex", flexDirection: "column", justifyContent: "center", gap: 16 }}>
@@ -513,7 +515,7 @@ export default function LandingPage() {
 
               {/* 3D book mockup inside the card */}
               <div style={{ display: "flex", justifyContent: "center", marginBottom: 22 }}>
-                <BookMockup3D coverImg="/examples/example-1.jfif" width={120} height={163} animate={false} />
+                <BookMockup3D coverImg="/examples/example-1.webp" width={120} height={163} animate={false} />
               </div>
 
               <ul style={{ listStyle: "none", padding: 0, margin: "0 0 28px", display: "flex", flexDirection: "column", gap: 12, flex: 1 }}>
@@ -571,13 +573,14 @@ export default function LandingPage() {
           FINAL CTA
       ════════════════════════════════════════════════════ */}
       <section style={{ padding: isMobile ? "80px 24px" : "112px 48px", textAlign: "center", position: "relative", overflow: "hidden", borderTop: `1px solid ${SURF_BDR}` }}>
-        <div aria-hidden="true" style={{ position: "absolute", top: "20%", left: "10%", width: 600, height: 600, borderRadius: "50%", background: "radial-gradient(circle, rgba(120,80,200,0.2) 0%, transparent 70%)", filter: "blur(80px)", pointerEvents: "none" }} />
-        {/* Sparkles */}
-        {["12%,22%", "83%,28%", "42%,78%"].map((pos, i) => (
-          <div key={i} aria-hidden="true" style={{ position: "absolute", left: pos.split(",")[0], top: pos.split(",")[1], animation: `sparkleAni ${3 + i * 0.8}s ease-in-out infinite`, animationDelay: `${i * 0.4}s`, opacity: 0.18, pointerEvents: "none" }}>
-            <SparkSVG size={[28, 18, 22][i]} color={GOLD} glow />
-          </div>
-        ))}
+        {!isMobile && <>
+          <div aria-hidden="true" style={{ position: "absolute", top: "20%", left: "10%", width: 600, height: 600, borderRadius: "50%", background: "radial-gradient(circle, rgba(120,80,200,0.2) 0%, transparent 70%)", filter: "blur(80px)", pointerEvents: "none" }} />
+          {["12%,22%", "83%,28%", "42%,78%"].map((pos, i) => (
+            <div key={i} aria-hidden="true" style={{ position: "absolute", left: pos.split(",")[0], top: pos.split(",")[1], animation: `sparkleAni ${3 + i * 0.8}s ease-in-out infinite`, animationDelay: `${i * 0.4}s`, opacity: 0.18, pointerEvents: "none" }}>
+              <SparkSVG size={[28, 18, 22][i]} color={GOLD} glow />
+            </div>
+          ))}
+        </>}
         <div className="reveal" style={{ maxWidth: 600, margin: "0 auto", position: "relative", zIndex: 1 }}>
           <div style={{ marginBottom: 18, animation: (isMobile || reducedMotion) ? "none" : "float 4s ease-in-out infinite" }}><SparkSVG size={isMobile ? 40 : 52} color={GOLD} glow /></div>
           <h2 style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: isMobile ? 32 : 48, fontWeight: 600, color: TEXT, margin: "0 0 18px", lineHeight: 1.12, letterSpacing: "-0.6px" }}>

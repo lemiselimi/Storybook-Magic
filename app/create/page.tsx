@@ -698,23 +698,35 @@ export default function StorybookCreator() {
         const themePrompts = SCENE_PROMPTS_BY_THEME[theme] ?? SCENE_PROMPTS_BY_THEME.adventure;
         const bookSeed = Math.floor(Math.random() * 2_147_483_647);
 
-        const callScene = async (prompt: string) => {
-          const res = await fetchWithTimeout("/api/generate-scene", {
+        const callScene = async (prompt: string): Promise<string | null> => {
+          const submitRes = await fetchWithTimeout("/api/generate-scene", {
             method: "POST", headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ loraUrl: trainedLoraUrl, prompt: buildGenderedPrompt(prompt, childGender, childAge, hairColor, eyeColor), seed: bookSeed }),
-          }, 95_000).then(r => r.json());
-          return res;
+          }, 30_000).then(r => r.json());
+          if (!submitRes.jobId) return null;
+          // Poll until the scene is ready
+          for (let a = 0; a < 40; a++) {
+            const interval = document.hidden ? 6_000 : 4_000;
+            await new Promise<void>(res => {
+              const id = setTimeout(res, interval);
+              const onVis = () => { if (!document.hidden) { clearTimeout(id); res(); } };
+              document.addEventListener("visibilitychange", onVis, { once: true });
+            });
+            try {
+              const check = await fetchWithTimeout("/api/check-scene", {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ jobId: submitRes.jobId }),
+              }, 20_000).then(r => r.json());
+              if (check.status === "COMPLETED" && check.url) return check.url;
+              if (check.status === "FAILED") return null;
+            } catch {}
+          }
+          return null;
         };
 
         const handleScene = async (prompt: string, idx: number) => {
           let url: string | null = null;
-          try {
-            const res = await callScene(prompt);
-            url = res.url ?? null;
-            if (!url) url = (await callScene(prompt)).url ?? null;
-          } catch {
-            try { url = (await callScene(prompt)).url ?? null; } catch {}
-          }
+          try { url = await callScene(prompt); } catch {}
           if (idx === -1) {
             if (url) setPreviewCoverUrl(`/api/proxy?url=${encodeURIComponent(url)}`);
           } else {
@@ -769,16 +781,23 @@ export default function StorybookCreator() {
     const themePrompts = SCENE_PROMPTS_BY_THEME[theme] ?? SCENE_PROMPTS_BY_THEME.adventure;
     for (const idx of failedIdxs) {
       try {
-        const res = await fetch("/api/generate-scene", {
+        const sub = await fetchWithTimeout("/api/generate-scene", {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ loraUrl, prompt: buildGenderedPrompt(themePrompts[idx], childGender, childAge, hairColor, eyeColor) }),
-        }).then(r => r.json());
-        if (res.url) {
-          setPreviewImages(prev => {
-            const n = [...prev];
-            n[idx] = `/api/proxy?url=${encodeURIComponent(res.url)}`;
-            return n;
-          });
+        }, 30_000).then(r => r.json());
+        if (sub.jobId) {
+          for (let a = 0; a < 40; a++) {
+            await new Promise<void>(r => setTimeout(r, 4_000));
+            const check = await fetchWithTimeout("/api/check-scene", {
+              method: "POST", headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ jobId: sub.jobId }),
+            }, 20_000).then(r => r.json());
+            if (check.status === "COMPLETED" && check.url) {
+              setPreviewImages(prev => { const n = [...prev]; n[idx] = `/api/proxy?url=${encodeURIComponent(check.url)}`; return n; });
+              break;
+            }
+            if (check.status === "FAILED") break;
+          }
         }
       } catch {}
     }
@@ -878,12 +897,29 @@ export default function StorybookCreator() {
 
         const bookSeed2 = Math.floor(Math.random() * 2_147_483_647);
 
-        const callScene2 = async (prompt: string) => {
-          const res = await fetchWithTimeout("/api/generate-scene", {
+        const callScene2 = async (prompt: string): Promise<string | null> => {
+          const submitRes = await fetchWithTimeout("/api/generate-scene", {
             method: "POST", headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ loraUrl: activeLoraUrl, prompt: buildGenderedPrompt(prompt, _gender, _age, _hair, _eye), seed: bookSeed2 }),
-          }, 95_000).then(r => r.json());
-          return res;
+          }, 30_000).then(r => r.json());
+          if (!submitRes.jobId) return null;
+          for (let a = 0; a < 40; a++) {
+            const interval = document.hidden ? 6_000 : 4_000;
+            await new Promise<void>(res => {
+              const id = setTimeout(res, interval);
+              const onVis = () => { if (!document.hidden) { clearTimeout(id); res(); } };
+              document.addEventListener("visibilitychange", onVis, { once: true });
+            });
+            try {
+              const check = await fetchWithTimeout("/api/check-scene", {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ jobId: submitRes.jobId }),
+              }, 20_000).then(r => r.json());
+              if (check.status === "COMPLETED" && check.url) return check.url;
+              if (check.status === "FAILED") return null;
+            } catch {}
+          }
+          return null;
         };
 
         const fullThemePrompts = SCENE_PROMPTS_BY_THEME[_theme] ?? SCENE_PROMPTS_BY_THEME.adventure;
@@ -895,13 +931,7 @@ export default function StorybookCreator() {
 
         const handleScene2 = async (prompt: string, idx: number) => {
           let url: string | null = null;
-          try {
-            const res = await callScene2(prompt);
-            url = res.url ?? null;
-            if (!url) url = (await callScene2(prompt)).url ?? null;
-          } catch {
-            try { url = (await callScene2(prompt)).url ?? null; } catch {}
-          }
+          try { url = await callScene2(prompt); } catch {}
           if (idx === -1) {
             if (url) setCoverImageUrl(`/api/proxy?url=${encodeURIComponent(url)}`);
           } else {
@@ -992,11 +1022,24 @@ export default function StorybookCreator() {
         : (SCENE_PROMPTS_BY_THEME[theme] ?? SCENE_PROMPTS_BY_THEME.adventure)[pageIdx];
       const prompt = buildGenderedPrompt(basePrompt, childGender, childAge, hairColor, eyeColor);
       const seed = Math.floor(Math.random() * 2_147_483_647);
-      const res = await fetch("/api/generate-scene", {
+      const sub = await fetchWithTimeout("/api/generate-scene", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ loraUrl, prompt, seed }),
-      }).then(r => r.json());
-      if (res.url) setPageImages(prev => { const n = [...prev]; n[pageIdx] = `/api/proxy?url=${encodeURIComponent(res.url)}`; return n; });
+      }, 30_000).then(r => r.json());
+      if (sub.jobId) {
+        for (let a = 0; a < 40; a++) {
+          await new Promise<void>(r => setTimeout(r, 4_000));
+          const check = await fetchWithTimeout("/api/check-scene", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ jobId: sub.jobId }),
+          }, 20_000).then(r => r.json());
+          if (check.status === "COMPLETED" && check.url) {
+            setPageImages(prev => { const n = [...prev]; n[pageIdx] = `/api/proxy?url=${encodeURIComponent(check.url)}`; return n; });
+            break;
+          }
+          if (check.status === "FAILED") break;
+        }
+      }
     } catch (err) { console.error("Regenerate failed:", err); }
     setRegeneratingPage(null);
   };

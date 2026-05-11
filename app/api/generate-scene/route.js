@@ -1,6 +1,6 @@
 import { fal } from "@fal-ai/client";
 
-export const maxDuration = 60;
+export const maxDuration = 30; // Just submit — returns immediately
 
 const NEGATIVE_PROMPT =
   // Composition rejects
@@ -33,22 +33,6 @@ const NEGATIVE_PROMPT =
   "ugly, deformed, blurry, low quality, " +
   "multiple people, crowd, real people in background, urban background, scary, dark, violent";
 
-async function callLoRA(prompt, loraUrl, seed) {
-  const result = await fal.subscribe("fal-ai/flux-lora", {
-    input: {
-      prompt,
-      negative_prompt: NEGATIVE_PROMPT,
-      loras: [{ path: loraUrl, scale: 1.0 }],
-      num_inference_steps: 32,
-      guidance_scale: 6.0,
-      image_size: "landscape_4_3",
-      enable_safety_checker: true,
-      ...(seed != null ? { seed } : {}),
-    },
-  });
-  return result.data.images[0].url;
-}
-
 export async function POST(request) {
   fal.config({ credentials: process.env.FAL_API_KEY });
   try {
@@ -57,23 +41,23 @@ export async function POST(request) {
     if (!loraUrl) return Response.json({ error: "loraUrl required" }, { status: 400 });
     if (!prompt)  return Response.json({ error: "prompt required" },   { status: 400 });
 
-    console.log("Generate scene (LoRA):", prompt.substring(0, 80), seed != null ? `seed=${seed}` : "");
+    console.log("Submitting scene job:", prompt.substring(0, 80));
 
-    let url;
-    try {
-      url = await callLoRA(prompt, loraUrl, seed);
-    } catch (firstErr) {
-      console.warn("LoRA attempt 1 failed:", firstErr.message, "— retrying");
-      try {
-        url = await callLoRA(prompt, loraUrl, seed);
-      } catch (retryErr) {
-        console.error("LoRA retry failed:", retryErr.message);
-        return Response.json({ error: retryErr.message, failed: true }, { status: 500 });
-      }
-    }
+    const { request_id } = await fal.queue.submit("fal-ai/flux-lora", {
+      input: {
+        prompt,
+        negative_prompt: NEGATIVE_PROMPT,
+        loras: [{ path: loraUrl, scale: 1.0 }],
+        num_inference_steps: 32,
+        guidance_scale: 6.0,
+        image_size: "landscape_4_3",
+        enable_safety_checker: true,
+        ...(seed != null ? { seed } : {}),
+      },
+    });
 
-    console.log("Scene generated:", url?.substring(0, 80));
-    return Response.json({ url });
+    console.log("Scene job submitted, request_id:", request_id);
+    return Response.json({ jobId: request_id });
   } catch (err) {
     console.error("Generate scene error:", err.message);
     return Response.json({ error: err.message, failed: true }, { status: 500 });

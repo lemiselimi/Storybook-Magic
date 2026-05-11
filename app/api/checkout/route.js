@@ -18,6 +18,7 @@ export async function POST(request) {
       payment_method_types: ["card"],
       line_items: [{ price: priceId, quantity: 1 }],
       mode: "payment",
+      allow_promotion_codes: true,
       success_url: `${origin}/create?success=1&session_id={CHECKOUT_SESSION_ID}&ref=${ref}&plan=${plan}`,
       cancel_url: `${origin}/create?cancelled=1`,
       // Collect shipping address for print orders — Stripe shows address form at checkout

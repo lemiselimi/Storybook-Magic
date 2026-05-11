@@ -1,10 +1,10 @@
 import Stripe from "stripe";
 
-const PRICE_DIGITAL = process.env.STRIPE_PRICE_DIGITAL || "price_1TMvnV2LQoLokMlx6gqTBOke";
-const PRICE_PRINT   = process.env.STRIPE_PRICE_PRINT   || "price_1TMvoB2LQoLokMlxwL0e3Ng6";
+const PRICE_DIGITAL = process.env.STRIPE_PRICE_DIGITAL;
+const PRICE_PRINT   = process.env.STRIPE_PRICE_PRINT;
 
 export async function POST(request) {
-  if (!process.env.STRIPE_SECRET_KEY) {
+  if (!process.env.STRIPE_SECRET_KEY || !PRICE_DIGITAL || !PRICE_PRINT) {
     return Response.json({ error: "Payments not configured" }, { status: 503 });
   }
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);

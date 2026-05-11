@@ -1,3 +1,5 @@
+export const maxDuration = 30;
+
 const ALLOWED_HOSTS = [
   "v3b.fal.media",
   "fal.media",
@@ -25,7 +27,7 @@ export async function GET(request) {
     return new Response("Forbidden", { status: 403 });
   }
 
-  const response = await fetch(imageUrl);
+  const response = await fetch(imageUrl, { signal: AbortSignal.timeout(20_000) });
   const buffer = await response.arrayBuffer();
 
   return new Response(buffer, {

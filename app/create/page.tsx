@@ -1183,7 +1183,7 @@ export default function StorybookCreator() {
         <div style={{
           order: isMobile ? 1 : undefined,
           position: "relative",
-          minHeight: isMobile ? 200 : undefined,
+          height: isMobile ? 240 : undefined,
           background: "#f0ece0",
           display: "flex", alignItems: "center", justifyContent: "center",
           overflow: "hidden",

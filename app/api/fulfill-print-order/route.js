@@ -83,30 +83,33 @@ export async function POST(request) {
 
   try {
     // ── 1. Verify payment & get shipping address from Stripe ─────────────────
+    // shipping_details is auto-populated for sessions with shipping_address_collection —
+    // it is NOT an expandable property and must not be passed to expand[]
     const stripe  = new Stripe(process.env.STRIPE_SECRET_KEY);
-    const session = await stripe.checkout.sessions.retrieve(sessionId, {
-      expand: ["shipping_details"],
-    });
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
 
     if (session.payment_status !== "paid") {
       return Response.json({ error: "Payment not completed" }, { status: 402 });
     }
 
-    const shipping = session.shipping_details;
-    if (!shipping?.address) {
+    // shipping_details is the primary source; customer_details.address is the fallback
+    const shipping = session.shipping_details ?? null;
+    const address  = shipping?.address ?? session.customer_details?.address ?? null;
+
+    if (!address) {
       return Response.json({ error: "No shipping address on Stripe session — make sure shipping_address_collection is enabled for print orders" }, { status: 400 });
     }
 
     const contactEmail = session.customer_details?.email || "";
 
     const shippingAddress = {
-      name:         shipping.name || "",
-      street1:      shipping.address.line1 || "",
-      street2:      shipping.address.line2 || "",
-      city:         shipping.address.city || "",
-      state_code:   shipping.address.state || "",
-      postcode:     shipping.address.postal_code || "",
-      country_code: shipping.address.country || "US",
+      name:         shipping?.name || session.customer_details?.name || "",
+      street1:      address.line1 || "",
+      street2:      address.line2 || "",
+      city:         address.city || "",
+      state_code:   address.state || "",
+      postcode:     address.postal_code || "",
+      country_code: address.country || "US",
       email:        contactEmail,
       phone_number: session.customer_details?.phone || "",
     };
@@ -163,6 +166,21 @@ export async function POST(request) {
 
   } catch (err) {
     console.error("Fulfill print order error:", err.message);
+
+    // Alert admin on any failure
+    if (process.env.RESEND_API_KEY) {
+      fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          from:    "My Tiny Tales <hello@mytinytales.studio>",
+          to:      ["hello@mytinytales.studio"],
+          subject: `⚠️ Print order failed — ${body?.sessionId || "unknown session"}`,
+          html:    `<p><strong>Error:</strong> ${err.message}</p><p><strong>Session:</strong> ${body?.sessionId}</p><p>Check Vercel logs for full stack trace.</p>`,
+        }),
+      }).catch(e => console.error("Admin alert email failed:", e.message));
+    }
+
     return Response.json({ error: err.message }, { status: 500 });
   }
 }

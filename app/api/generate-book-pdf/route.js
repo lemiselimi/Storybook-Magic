@@ -184,10 +184,7 @@ export async function POST(request) {
     p3.drawText("how loved, brave, and magical you are.\"", { x: PS / 2 - 120, y: PS * 0.27, size: 12, font: iFont, color: WHITE, opacity: 0.6 });
     p3.drawText("My Tiny Tales", { x: PS / 2 - 38, y: PS * 0.13, size: 9, font: bFont, color: GOLD, opacity: 0.3 });
 
-    // Page 4: Blank before story
-    addBlank(CREAM);
-
-    // Pages 5–16: 6 story spreads — left page = text, right page = full-bleed illustration
+    // Pages 4–15: 6 story spreads — left page = text, right page = full-bleed illustration
     const pages = story?.pages || [];
     const CHAPTER_NAMES = ["One", "Two", "Three", "Four", "Five", "Six"];
     for (let i = 0; i < 6; i++) {
@@ -243,8 +240,8 @@ export async function POST(request) {
     p17.drawText(closingText, { x: (PS - closeW) / 2, y: PS * 0.38, size: 12, font: iFont, color: WHITE, opacity: 0.55 });
     p17.drawText("My Tiny Tales", { x: PS / 2 - 36, y: PS * 0.16, size: 9, font: bFont, color: GOLD, opacity: 0.28 });
 
-    // Pages 18–20: Pad to 20 pages total (minimum multiple of 4 above 17)
-    for (let i = 0; i < 3; i++) addBlank(CREAM);
+    // Page 16: Blank (inside back cover) — total 16 pages, multiple of 4
+    addBlank(CREAM);
 
     const interiorPdfBytes = await doc.save();
     console.log("PDF: interior built, uploading...");

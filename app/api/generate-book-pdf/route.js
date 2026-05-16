@@ -1,5 +1,8 @@
-import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
+import { PDFDocument, rgb } from "pdf-lib";
+import fontkit from "@pdf-lib/fontkit";
 import { fal } from "@fal-ai/client";
+import fs from "fs";
+import path from "path";
 
 export const maxDuration = 60;
 
@@ -38,9 +41,20 @@ async function embedImg(doc, bytes) {
   catch { return null; }
 }
 
-// Strip chars outside WinAnsi (StandardFonts can't encode them)
+// Load embedded font bytes from node_modules (deployed with the function)
+const FONT_DIR = path.join(process.cwd(), "node_modules");
+function loadFont(pkg, file) {
+  return fs.readFileSync(path.join(FONT_DIR, pkg, "files", file));
+}
+
+const BOLD_BYTES    = loadFont("@fontsource/lato",               "lato-latin-700-normal.woff2");
+const REGULAR_BYTES = loadFont("@fontsource/libre-baskerville",  "libre-baskerville-latin-400-normal.woff2");
+const ITALIC_BYTES  = loadFont("@fontsource/libre-baskerville",  "libre-baskerville-latin-400-italic.woff2");
+
+// With embedded fonts we can support full Unicode — no stripping needed,
+// but keep the helper for any legacy callers
 function toWinAnsi(str) {
-  return (str || "").replace(/[^\x00-\xFF]/g, "");
+  return (str || "");
 }
 
 function wrapText(text, maxChars = 60) {
@@ -80,9 +94,10 @@ export async function POST(request) {
     // ── COVER PDF — full wrap 17.25×8.75" ─────────────────────────────────────
     // Layout: back cover (left half, x 0–621) | front cover (right half, x 621–1242)
     const coverDoc  = await PDFDocument.create();
-    const cBoldFont = await coverDoc.embedFont(StandardFonts.HelveticaBold);
-    const cItalFont = await coverDoc.embedFont(StandardFonts.TimesRomanItalic);
-    const cNormFont = await coverDoc.embedFont(StandardFonts.TimesRoman);
+    coverDoc.registerFontkit(fontkit);
+    const cBoldFont = await coverDoc.embedFont(BOLD_BYTES);
+    const cItalFont = await coverDoc.embedFont(ITALIC_BYTES);
+    const cNormFont = await coverDoc.embedFont(REGULAR_BYTES);
 
     const coverPage = coverDoc.addPage([CW, CH]);
 
@@ -119,9 +134,10 @@ export async function POST(request) {
 
     // ── INTERIOR PDF — 12 pages at 8.75×8.75" each ────────────────────────────
     const doc   = await PDFDocument.create();
-    const hFont = await doc.embedFont(StandardFonts.HelveticaBold);
-    const bFont = await doc.embedFont(StandardFonts.TimesRoman);
-    const iFont = await doc.embedFont(StandardFonts.TimesRomanItalic);
+    doc.registerFontkit(fontkit);
+    const hFont = await doc.embedFont(BOLD_BYTES);
+    const bFont = await doc.embedFont(REGULAR_BYTES);
+    const iFont = await doc.embedFont(ITALIC_BYTES);
 
     // Page 1: Blank (inside front cover)
     const p1 = doc.addPage([PS, PS]);

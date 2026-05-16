@@ -11,6 +11,9 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.82.0",
     "@fal-ai/client": "^1.9.5",
+    "@fontsource/lato": "^5.2.7",
+    "@fontsource/libre-baskerville": "^5.2.10",
+    "@pdf-lib/fontkit": "^1.1.1",
     "@stripe/stripe-js": "^9.0.1",
     "@vercel/kv": "^3.0.0",
     "html2canvas": "^1.4.1",

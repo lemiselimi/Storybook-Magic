@@ -1129,39 +1129,31 @@ export default function StorybookCreator() {
     window.print();
   };
 
-  // ── Lulu print fulfillment — triggered after print payment ────────────────────
-  useEffect(() => {
-    if (!pendingPrintSession || mainStep !== "book" || !story || printFulfilledRef.current) return;
-    if (pageImages.filter(Boolean).length < 6) return; // wait for all scenes
+  // ── Lulu print fulfillment — triggered manually by customer after review ────────
+  const [showPrintConfirm, setShowPrintConfirm] = useState(false);
+
+  const sendToPrint = () => {
+    if (printFulfilledRef.current) return;
     printFulfilledRef.current = true;
+    setShowPrintConfirm(false);
     setPrintFulfilling(true);
 
-    const coverFalUrl  = coverImageUrl ? rawFalUrl(coverImageUrl) : null;
-    const pageFalUrls  = pageImages.map(u => (u && u !== "__failed__") ? rawFalUrl(u) : null);
+    const coverFalUrl = coverImageUrl ? rawFalUrl(coverImageUrl) : null;
+    const pageFalUrls = pageImages.map(u => (u && u !== "__failed__") ? rawFalUrl(u) : null);
 
     fetch("/api/fulfill-print-order", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        sessionId:   pendingPrintSession,
-        coverFalUrl,
-        pageFalUrls,
-        story,
-        childName,
-        theme,
-      }),
+      body: JSON.stringify({ sessionId: pendingPrintSession, coverFalUrl, pageFalUrls, story, childName, theme }),
     })
       .then(r => r.json())
       .then(res => {
-        if (res.ok) {
-          setPrintOrdered(true);
-        } else {
-          setPrintOrderError(res.error || "Print order failed — please contact us at hello@mytinytales.studio");
-        }
+        if (res.ok) setPrintOrdered(true);
+        else setPrintOrderError(res.error || "Print order failed — please contact us at hello@mytinytales.studio");
       })
       .catch(err => setPrintOrderError(err.message))
       .finally(() => setPrintFulfilling(false));
-  }, [pendingPrintSession, mainStep, story, pageImages, coverImageUrl, childName, theme]); // eslint-disable-line react-hooks/exhaustive-deps
+  };
 
   const resetAll = () => {
     setMainStep("onboarding"); setOnboardingStep(1); setStepDir("fwd");
@@ -1987,30 +1979,60 @@ export default function StorybookCreator() {
             <button onClick={() => navigate(Math.min(totalPages, currentPage + 1))} disabled={currentPage >= totalPages} style={{ padding: isMobile ? "10px 16px" : "11px 22px", borderRadius: 11, border: "none", background: "linear-gradient(135deg, #F5A623, #ffb347)", color: "#0F0B1F", fontSize: 14, fontWeight: 600, cursor: currentPage >= totalPages ? "not-allowed" : "pointer", opacity: currentPage >= totalPages ? 0.4 : 1 }}>Next →</button>
           </div>
 
-          {/* ── Print order status banner ── */}
+          {/* ── Print review / send banner ── */}
+          {pendingPrintSession && !printOrdered && !printFulfilling && !printOrderError && pageImages.filter(Boolean).length >= 6 && (
+            <div style={{ margin: "16px auto 0", maxWidth: 900, background: "linear-gradient(135deg, rgba(232,192,122,0.12), rgba(212,162,76,0.08))", border: "1px solid rgba(232,192,122,0.35)", borderRadius: 16, padding: isMobile ? "16px 18px" : "20px 28px" }}>
+              <p style={{ color: "#E8C07A", fontWeight: 700, fontSize: isMobile ? 15 : 16, margin: "0 0 6px" }}>Happy with your book?</p>
+              <p style={{ color: "rgba(245,240,224,0.7)", fontSize: 13, margin: "0 0 16px", lineHeight: 1.6 }}>
+                Review every page. Use the repaint button on any illustration you'd like to change. When you're satisfied with all pages, press <strong style={{ color: "#E8C07A" }}>Send to Print</strong>.
+              </p>
+              <button onClick={() => setShowPrintConfirm(true)} style={{ padding: "13px 28px", borderRadius: 50, border: "none", background: "linear-gradient(135deg, #E8C07A, #D4A24C)", color: "#0F0B1F", fontSize: 15, fontWeight: 800, cursor: "pointer" }}>
+                Send to Print →
+              </button>
+            </div>
+          )}
+
           {printFulfilling && (
-            <div style={{ margin: "12px auto 0", maxWidth: 900, background: "rgba(232,192,122,0.08)", border: "1px solid rgba(232,192,122,0.25)", borderRadius: 14, padding: "14px 20px", display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ margin: "16px auto 0", maxWidth: 900, background: "rgba(232,192,122,0.08)", border: "1px solid rgba(232,192,122,0.25)", borderRadius: 14, padding: "14px 20px", display: "flex", alignItems: "center", gap: 12 }}>
               <div style={{ width: 18, height: 18, border: "2.5px solid rgba(232,192,122,0.2)", borderTop: "2.5px solid #E8C07A", borderRadius: "50%", animation: "spin 0.9s linear infinite", flexShrink: 0 }} />
-              <p style={{ color: "rgba(232,192,122,0.85)", fontSize: 14, margin: 0 }}>
-                Generating your print files and submitting to our print partner — this takes about 30 seconds…
-              </p>
+              <p style={{ color: "rgba(232,192,122,0.85)", fontSize: 14, margin: 0 }}>Generating your print files and submitting to our print partner — this takes about 30 seconds…</p>
             </div>
           )}
+
           {printOrdered && (
-            <div style={{ margin: "12px auto 0", maxWidth: 900, background: "rgba(40,200,100,0.08)", border: "1px solid rgba(40,200,100,0.3)", borderRadius: 14, padding: "16px 24px" }}>
-              <p style={{ color: "rgba(180,255,200,0.95)", fontWeight: 700, fontSize: 15, margin: "0 0 4px" }}>
-                Your printed book is on its way!
-              </p>
-              <p style={{ color: "rgba(180,255,200,0.7)", fontSize: 13, margin: 0 }}>
-                Your order has been sent to our print partner (Lulu). You'll receive a shipping confirmation by email within 3–5 business days.
-              </p>
+            <div style={{ margin: "16px auto 0", maxWidth: 900, background: "rgba(40,200,100,0.08)", border: "1px solid rgba(40,200,100,0.3)", borderRadius: 14, padding: "16px 24px" }}>
+              <p style={{ color: "rgba(180,255,200,0.95)", fontWeight: 700, fontSize: 15, margin: "0 0 4px" }}>Your printed book is on its way!</p>
+              <p style={{ color: "rgba(180,255,200,0.7)", fontSize: 13, margin: 0 }}>Your order has been sent to our print partner. You'll receive a shipping confirmation by email within 3–5 business days.</p>
             </div>
           )}
+
           {printOrderError && (
-            <div style={{ margin: "12px auto 0", maxWidth: 900, background: "rgba(255,80,80,0.08)", border: "1px solid rgba(255,80,80,0.25)", borderRadius: 14, padding: "14px 20px" }}>
+            <div style={{ margin: "16px auto 0", maxWidth: 900, background: "rgba(255,80,80,0.08)", border: "1px solid rgba(255,80,80,0.25)", borderRadius: 14, padding: "14px 20px" }}>
               <p style={{ color: "rgba(255,180,180,0.9)", fontSize: 13, margin: "0 0 6px", fontWeight: 600 }}>Print order issue</p>
               <p style={{ color: "rgba(255,180,180,0.7)", fontSize: 13, margin: "0 0 8px" }}>{printOrderError}</p>
-              <a href="mailto:hello@mytinytales.studio" style={{ color: "#E8C07A", fontSize: 12 }}>Contact us →</a>
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                <button onClick={() => { printFulfilledRef.current = false; setPrintOrderError(null); setShowPrintConfirm(false); }} style={{ padding: "8px 18px", borderRadius: 10, border: "none", background: "rgba(232,192,122,0.2)", color: "#E8C07A", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Try again</button>
+                <a href="mailto:hello@mytinytales.studio" style={{ color: "#E8C07A", fontSize: 13, display: "flex", alignItems: "center" }}>Contact us →</a>
+              </div>
+            </div>
+          )}
+
+          {/* ── Send to Print confirmation modal ── */}
+          {showPrintConfirm && (
+            <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, backdropFilter: "blur(6px)" }} onClick={() => setShowPrintConfirm(false)}>
+              <div style={{ background: "#1A1530", border: "1px solid rgba(232,192,122,0.3)", borderRadius: 20, padding: isMobile ? "28px 24px" : "36px 40px", maxWidth: 460, width: "100%", textAlign: "center" }} onClick={e => e.stopPropagation()}>
+                <div style={{ width: 52, height: 52, borderRadius: "50%", background: "rgba(232,192,122,0.12)", border: "1px solid rgba(232,192,122,0.3)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E8C07A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.63 3.4 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.82a16 16 0 0 0 6.29 6.29l1.67-1.67a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                </div>
+                <h2 style={{ color: "#F5F0E0", fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: 22, fontWeight: 700, margin: "0 0 12px" }}>Send to print?</h2>
+                <p style={{ color: "rgba(245,240,224,0.6)", fontSize: 14, lineHeight: 1.7, margin: "0 0 28px" }}>
+                  Once confirmed, your book will be sent to our print partner and can't be changed. Make sure every page looks exactly how you want it.
+                </p>
+                <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+                  <button onClick={() => setShowPrintConfirm(false)} style={{ flex: 1, padding: "13px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.15)", background: "transparent", color: "rgba(245,240,224,0.7)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Go back</button>
+                  <button onClick={sendToPrint} style={{ flex: 1, padding: "13px", borderRadius: 12, border: "none", background: "linear-gradient(135deg, #E8C07A, #D4A24C)", color: "#0F0B1F", fontSize: 14, fontWeight: 800, cursor: "pointer" }}>Yes, send to print →</button>
+                </div>
+              </div>
             </div>
           )}
 

@@ -142,28 +142,34 @@ export async function POST(request) {
     const coverPdfBytes = await coverDoc.save();
     console.log("PDF: cover built");
 
-    // ── INTERIOR PDF — 12 pages at 8.75×8.75" each ────────────────────────────
+    // ── INTERIOR PDF — 24 pages (multiple of 4 for saddle stitch) ────────────────
+    // Structure: 4 front matter + 6×2 story spreads (text left, image right) + 2 back matter + 2 padding
+    // Page pairs when bound: (1,24)(2,23)(3,22)(4,21)(5,20)(6,19)(7,18)(8,17)(9,16)(10,15)(11,14)(12,13)
     const doc   = await PDFDocument.create();
     doc.registerFontkit(fontkit);
     const hFont = await doc.embedFont(BOLD_BYTES);
     const bFont = await doc.embedFont(REGULAR_BYTES);
     const iFont = await doc.embedFont(ITALIC_BYTES);
 
+    const addBlank = (bg = CREAM) => {
+      const p = doc.addPage([PS, PS]);
+      p.drawRectangle({ x: 0, y: 0, width: PS, height: PS, color: bg });
+    };
+
     // Page 1: Blank (inside front cover)
-    const p1 = doc.addPage([PS, PS]);
-    p1.drawRectangle({ x: 0, y: 0, width: PS, height: PS, color: CREAM });
+    addBlank(CREAM);
 
     // Page 2: Title page
     const p2 = doc.addPage([PS, PS]);
     p2.drawRectangle({ x: 0, y: 0, width: PS, height: PS, color: DARK });
     p2.drawText("My Tiny Tales presents", { x: PS / 2 - 80, y: PS * 0.72, size: 11, font: iFont, color: GOLD, opacity: 0.55 });
-    const tLines = wrapText(toWinAnsi(story?.title || "My Story"), 20);
+    const tLines = wrapText(story?.title || "My Story", 20);
     tLines.forEach((line, i) => {
       const w = hFont.widthOfTextAtSize(line, 30);
       p2.drawText(line, { x: (PS - w) / 2, y: PS * 0.56 - i * 34, size: 30, font: hFont, color: WHITE });
     });
     p2.drawRectangle({ x: PS / 2 - 36, y: PS * 0.42, width: 72, height: 1.5, color: GOLD, opacity: 0.5 });
-    const subText2 = toWinAnsi(`A story starring ${capName}`);
+    const subText2 = sanitize(`A story starring ${capName}`);
     const subW = iFont.widthOfTextAtSize(subText2, 13);
     p2.drawText(subText2, { x: (PS - subW) / 2, y: PS * 0.35, size: 13, font: iFont, color: GOLD, opacity: 0.7 });
 
@@ -179,72 +185,66 @@ export async function POST(request) {
     p3.drawText("My Tiny Tales", { x: PS / 2 - 38, y: PS * 0.13, size: 9, font: bFont, color: GOLD, opacity: 0.3 });
 
     // Page 4: Blank before story
-    const p4 = doc.addPage([PS, PS]);
-    p4.drawRectangle({ x: 0, y: 0, width: PS, height: PS, color: CREAM });
+    addBlank(CREAM);
 
-    // Pages 5–10: Story pages — full-bleed illustration, cream text band at bottom
+    // Pages 5–16: 6 story spreads — left page = text, right page = full-bleed illustration
     const pages = story?.pages || [];
+    const CHAPTER_NAMES = ["One", "Two", "Three", "Four", "Five", "Six"];
     for (let i = 0; i < 6; i++) {
-      const pg = doc.addPage([PS, PS]);
       const storyPage = pages[i];
       const sceneImg  = await embedImg(doc, pageBytes[i]);
 
-      const textBandH = PS * 0.30; // 30% at bottom for text
-      const imgH      = PS - textBandH;
+      // LEFT page — cream, text only
+      const textPg = doc.addPage([PS, PS]);
+      textPg.drawRectangle({ x: 0, y: 0, width: PS, height: PS, color: CREAM });
 
-      // Illustration (top portion)
-      if (sceneImg) {
-        pg.drawImage(sceneImg, { x: 0, y: textBandH, width: PS, height: imgH });
-      } else {
-        pg.drawRectangle({ x: 0, y: textBandH, width: PS, height: imgH, color: DARK });
-      }
+      // Chapter marker
+      textPg.drawRectangle({ x: M, y: PS - M - 1, width: 22, height: 1, color: BROWN, opacity: 0.35 });
+      const chLabel = sanitize(`Chapter ${CHAPTER_NAMES[i]}`);
+      textPg.drawText(chLabel, { x: M + 28, y: PS - M - 7, size: 8, font: bFont, color: BROWN, opacity: 0.5 });
 
-      // Cream text band
-      pg.drawRectangle({ x: 0, y: 0, width: PS, height: textBandH, color: CREAM });
-      // Thin gold rule separating image from text
-      pg.drawRectangle({ x: 0, y: textBandH - 1, width: PS, height: 1, color: GOLD, opacity: 0.3 });
-
-      // Story text
+      // Story text — centred vertically in the page
       if (storyPage?.text) {
-        const lines = wrapText(storyPage.text, 52);
-        lines.slice(0, 4).forEach((line, li) => {
-          pg.drawText(line, { x: M, y: textBandH - M - li * 16, size: 11, font: bFont, color: BROWN });
+        const lines = wrapText(storyPage.text, 32);
+        const lineH  = 22;
+        const blockH = lines.length * lineH;
+        const startY = (PS + blockH) / 2 - lineH;
+        lines.forEach((line, li) => {
+          textPg.drawText(line, { x: M, y: startY - li * lineH, size: 14, font: bFont, color: BROWN });
         });
       }
 
-      // Chapter label top-right of image
-      const chLabel = `Chapter ${i + 1}`;
-      const chW = bFont.widthOfTextAtSize(chLabel, 8);
-      pg.drawText(chLabel, { x: PS - M - chW, y: PS - M + 6, size: 8, font: bFont, color: GOLD, opacity: 0.6 });
+      // Page number at bottom
+      const pgNum = String((i + 1) * 2 - 1);
+      textPg.drawText(pgNum, { x: M, y: M - 16, size: 9, font: bFont, color: BROWN, opacity: 0.35 });
 
-      // Page number at bottom centre
-      const pgNum = String(i + 1);
-      const pgW   = bFont.widthOfTextAtSize(pgNum, 9);
-      pg.drawText(pgNum, { x: (PS - pgW) / 2, y: M - 18, size: 9, font: bFont, color: BROWN, opacity: 0.4 });
+      // RIGHT page — full-bleed illustration
+      const imgPg = doc.addPage([PS, PS]);
+      if (sceneImg) {
+        imgPg.drawImage(sceneImg, { x: 0, y: 0, width: PS, height: PS });
+      } else {
+        imgPg.drawRectangle({ x: 0, y: 0, width: PS, height: PS, color: DARK });
+      }
+      const pgNum2 = String((i + 1) * 2);
+      const pgW2   = bFont.widthOfTextAtSize(pgNum2, 9);
+      imgPg.drawText(pgNum2, { x: PS - M - pgW2, y: M - 16, size: 9, font: bFont, color: WHITE, opacity: 0.4 });
     }
     console.log("PDF: story pages built");
 
-    // Page 11: The End
-    const p11 = doc.addPage([PS, PS]);
-    const lastImg = await embedImg(doc, pageBytes[5]);
-    if (lastImg) {
-      p11.drawImage(lastImg, { x: 0, y: 0, width: PS, height: PS });
-      p11.drawRectangle({ x: 0, y: 0, width: PS, height: PS, color: DARK, opacity: 0.70 });
-    } else {
-      p11.drawRectangle({ x: 0, y: 0, width: PS, height: PS, color: DARK });
-    }
-    p11.drawText("*   *   *", { x: PS / 2 - 24, y: PS * 0.70, size: 11, font: bFont, color: GOLD, opacity: 0.45 });
+    // Page 17: The End
+    const p17 = doc.addPage([PS, PS]);
+    p17.drawRectangle({ x: 0, y: 0, width: PS, height: PS, color: DARK });
+    p17.drawText("*   *   *", { x: PS / 2 - 24, y: PS * 0.70, size: 11, font: bFont, color: GOLD, opacity: 0.45 });
     const endW = hFont.widthOfTextAtSize("The End", 48);
-    p11.drawText("The End", { x: (PS - endW) / 2, y: PS * 0.54, size: 48, font: hFont, color: GOLD });
-    p11.drawRectangle({ x: PS / 2 - 28, y: PS * 0.49, width: 56, height: 1, color: GOLD, opacity: 0.35 });
-    const closingText = toWinAnsi(`Created with love for ${capName}`);
+    p17.drawText("The End", { x: (PS - endW) / 2, y: PS * 0.54, size: 48, font: hFont, color: GOLD });
+    p17.drawRectangle({ x: PS / 2 - 28, y: PS * 0.49, width: 56, height: 1, color: GOLD, opacity: 0.35 });
+    const closingText = sanitize(`Created with love for ${capName}`);
     const closeW = iFont.widthOfTextAtSize(closingText, 12);
-    p11.drawText(closingText, { x: (PS - closeW) / 2, y: PS * 0.38, size: 12, font: iFont, color: WHITE, opacity: 0.55 });
-    p11.drawText("My Tiny Tales", { x: PS / 2 - 36, y: PS * 0.16, size: 9, font: bFont, color: GOLD, opacity: 0.28 });
+    p17.drawText(closingText, { x: (PS - closeW) / 2, y: PS * 0.38, size: 12, font: iFont, color: WHITE, opacity: 0.55 });
+    p17.drawText("My Tiny Tales", { x: PS / 2 - 36, y: PS * 0.16, size: 9, font: bFont, color: GOLD, opacity: 0.28 });
 
-    // Page 12: Blank (inside back cover)
-    const p12 = doc.addPage([PS, PS]);
-    p12.drawRectangle({ x: 0, y: 0, width: PS, height: PS, color: CREAM });
+    // Pages 18–24: Blank padding (need 24 total, multiple of 4)
+    for (let i = 0; i < 7; i++) addBlank(CREAM);
 
     const interiorPdfBytes = await doc.save();
     console.log("PDF: interior built, uploading...");

@@ -384,7 +384,10 @@ export default function StorybookCreator() {
   const [previewDone,    setPreviewDone]    = useState(0); // scenes completed count (out of 7)
   const [trainingFailed, setTrainingFailed] = useState(false);
   const [retryingScenes, setRetryingScenes] = useState(false);
-  const previewStarted = useRef(false);
+  const previewStarted  = useRef(false);
+  const bookSeedRef     = useRef<number | null>(null);      // shared seed: preview → full book
+  const loraUrlRef      = useRef<string | null>(null);      // mirrors loraUrl for use inside callbacks
+  const pendingStoryRef = useRef<Promise<any> | null>(null); // pre-warmed story promise
 
   // ── Full book ─────────────────────────────────────────────────────────────────
   const [story,           setStory]           = useState<any>(null);
@@ -465,6 +468,9 @@ export default function StorybookCreator() {
     document.addEventListener("visibilitychange", onVisibility);
     return () => document.removeEventListener("visibilitychange", onVisibility);
   }, [previewStatus, mainStep, scenesCompleted]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Keep loraUrlRef in sync so callbacks always see the latest value
+  useEffect(() => { loraUrlRef.current = loraUrl; }, [loraUrl]);
 
   // Restore LoRA URL from a previous session (valid for 6 hours)
   useEffect(() => {
@@ -564,6 +570,10 @@ export default function StorybookCreator() {
       if (prev.length >= 2) return prev;
       return [...prev, URL.createObjectURL(file)];
     });
+    // Photos changed — invalidate cached LoRA so we retrain with the new set
+    setLoraUrl(null);
+    try { localStorage.removeItem("sb_lora_url"); localStorage.removeItem("sb_lora_ts"); } catch {}
+
     compressImage(file)
       .then(b64 => {
         setPhotosBase64(prev => prev.length >= 2 ? prev : [...prev, b64]);
@@ -582,6 +592,8 @@ export default function StorybookCreator() {
   const removePhoto = (idx: number) => {
     setPhotos(prev => prev.filter((_, i) => i !== idx));
     setPhotosBase64(prev => prev.filter((_, i) => i !== idx));
+    setLoraUrl(null);
+    try { localStorage.removeItem("sb_lora_url"); localStorage.removeItem("sb_lora_ts"); } catch {}
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -614,29 +626,36 @@ export default function StorybookCreator() {
     setGenerationError(null);
     acquireWakeLock();
     setPreviewCoverUrl(null);
-    setLoraUrl(null);
+    // Do NOT clear loraUrl here — reuse cached URL if photos haven't changed
 
     const selectedTheme = THEMES.find(t => t.id === theme);
-    // Use fewer concurrent requests on mobile — prevents connection saturation
-    const sceneConcurrency = window.innerWidth < 680 ? 2 : 4;
+    // 3 on mobile (async queue means no blocking connections), 4 on desktop
+    const sceneConcurrency = window.innerWidth < 680 ? 3 : 4;
 
     try {
       setPreviewMsg("Writing your story & training your character...");
-      const [storyRes, trainRes] = await Promise.all([
-        fetchWithTimeout("/api/story", {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            childName, childAge: String(childAge), gender: childGender, hairColor, eyeColor,
-            theme: `${selectedTheme?.title} - ${selectedTheme?.subtitle}: ${selectedTheme?.desc}`,
-          }),
-        }, 60_000).then(r => r.json()),
-        photosBase64.length > 0
-          ? fetchWithTimeout("/api/train-lora", {
-              method: "POST", headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ photosBase64 }),
-            }, 60_000).then(r => r.json())
-          : Promise.resolve(null),
-      ]);
+
+      // Use the pre-warmed story promise if goToStep already fired it, otherwise fetch now
+      const storyPromise = pendingStoryRef.current
+        ?? fetchWithTimeout("/api/story", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              childName, childAge: String(childAge), gender: childGender, hairColor, eyeColor,
+              theme: `${selectedTheme?.title} - ${selectedTheme?.subtitle}: ${selectedTheme?.desc}`,
+            }),
+          }, 60_000).then(r => r.json());
+      pendingStoryRef.current = null;
+
+      // Skip training if a cached LoRA URL is still valid (photos haven't changed)
+      const cachedLora = loraUrlRef.current;
+      const trainPromise = photosBase64.length > 0 && !cachedLora
+        ? fetchWithTimeout("/api/train-lora", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ photosBase64 }),
+          }, 60_000).then(r => r.json())
+        : Promise.resolve(null);
+
+      const [storyRes, trainRes] = await Promise.all([storyPromise, trainPromise]);
 
       if (storyRes?.error === "limit_reached") {
         setPreviewMsg("Preview limit reached — please purchase to continue.");
@@ -649,7 +668,9 @@ export default function StorybookCreator() {
       setPreviewStory(storyData);
 
       // ── Poll for LoRA completion ──────────────────────────────────────────────
-      let trainedLoraUrl: string | null = null;
+      // Start from cached URL — if photos unchanged we skipped training entirely
+      let trainedLoraUrl: string | null = cachedLora;
+      if (!trainedLoraUrl && cachedLora) setPreviewMsg("Using your saved character...");
       if (trainRes?.jobId) {
         let attempts = 0;
         let trainJobFailed = false;
@@ -696,7 +717,9 @@ export default function StorybookCreator() {
         let done = 0;
         const total = 7;
         const themePrompts = SCENE_PROMPTS_BY_THEME[theme] ?? SCENE_PROMPTS_BY_THEME.adventure;
-        const bookSeed = Math.floor(Math.random() * 2_147_483_647);
+        // Stable seed shared with full book — same LoRA + same seed + same prompts = consistent character
+        if (!bookSeedRef.current) bookSeedRef.current = Math.floor(Math.random() * 2_147_483_647);
+        const bookSeed = bookSeedRef.current;
 
         const callScene = async (prompt: string): Promise<string | null> => {
           const submitRes = await fetchWithTimeout("/api/generate-scene", {
@@ -840,7 +863,7 @@ export default function StorybookCreator() {
     setMainStep("generating"); setFalError(null); setGenerationError(null);
     setPageImages(Array(6).fill(null)); setCoverImageUrl(null); setScenesCompleted(0); setIsSharedView(false);
 
-    const sceneConcurrency = window.innerWidth < 680 ? 2 : 4;
+    const sceneConcurrency = window.innerWidth < 680 ? 3 : 4;
 
     try {
       let storyData = _savedStory;
@@ -895,7 +918,8 @@ export default function StorybookCreator() {
       if (activeLoraUrl && storyData?.pages) {
         setLoadingMsg("Painting your illustrations... (~2 min)");
 
-        const bookSeed2 = Math.floor(Math.random() * 2_147_483_647);
+        // Reuse the preview seed for visual consistency — same seed + same LoRA = same character look
+        const bookSeed2 = bookSeedRef.current ?? Math.floor(Math.random() * 2_147_483_647);
 
         const callScene2 = async (prompt: string): Promise<string | null> => {
           const submitRes = await fetchWithTimeout("/api/generate-scene", {
@@ -988,6 +1012,18 @@ export default function StorybookCreator() {
   const goToStep = (newStep: number) => {
     setStepDir(newStep > onboardingStep ? "fwd" : "back");
     setOnboardingStep(newStep);
+    // Pre-warm Claude story generation the moment the user hits Generate
+    // so it runs in parallel with any LoRA training instead of sequentially
+    if (newStep === 5 && !pendingStoryRef.current) {
+      const sel = THEMES.find(t => t.id === theme);
+      pendingStoryRef.current = fetchWithTimeout("/api/story", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          childName, childAge: String(childAge), gender: childGender, hairColor, eyeColor,
+          theme: `${sel?.title} - ${sel?.subtitle}: ${sel?.desc}`,
+        }),
+      }, 60_000).then(r => r.json()).catch(() => null);
+    }
   };
 
   const navigate = (newPage: number) => {
@@ -1117,6 +1153,7 @@ export default function StorybookCreator() {
     setChildGender("boy"); setChildName(""); setChildAge(5); setTheme("adventure");
     setIsSharedView(false); setRegeneratingPage(null); setFalError(null); setIsDemo(false); setShowNewBookConfirm(false);
     setDisplayedPage(-2); setFlipBack(null); setIsFlipping(false); setGenerationError(null);
+    bookSeedRef.current = null; pendingStoryRef.current = null;
   };
 
   const totalPages = story?.pages?.length ?? 6;

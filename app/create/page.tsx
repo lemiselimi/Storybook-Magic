@@ -1779,43 +1779,73 @@ export default function StorybookCreator() {
                       </div>
                     )}
 
-                    {/* Pages 1 & 2 */}
-                    <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 18 }}>
+                    {/* Pages 1 & 2 — two-page book spread */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 24, marginBottom: 24 }}>
                       {previewStory.pages.slice(0, 2).map((page: any, idx: number) => {
                         const img = previewImages[idx];
+                        const chNum = CHAPTER_NAMES[page.pageNum - 1] || String(page.pageNum);
                         return (
-                          <div key={idx} style={{ background: "white", borderRadius: 16, overflow: "hidden", boxShadow: "0 8px 32px rgba(0,0,0,0.3)", display: "flex", flexDirection: isMobile ? "column" : "row" }}>
-                            <div style={{ flex: isMobile ? undefined : "0 0 45%", aspectRatio: isMobile ? "4/2.5" : undefined, minHeight: isMobile ? undefined : 180, background: "#1a1a2e", position: "relative", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-                              {img && img !== "__failed__" && <img src={img} alt={`Page ${page.pageNum}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
-                              <div style={{ position: "absolute", top: 8, left: 8, background: "rgba(0,0,0,0.55)", borderRadius: 8, padding: "2px 8px", color: "rgba(255,255,255,0.8)", fontSize: 10, fontWeight: 700 }}>Page {page.pageNum}</div>
-                              <div style={{ position: "absolute", top: 8, right: 8, background: "rgba(232,192,122,0.95)", borderRadius: 8, padding: "2px 8px", color: "#0F0B1F", fontSize: 10, fontWeight: 700 }}>✨ AI Scene</div>
+                          <div key={idx} style={{
+                            position: "relative",
+                            display: "grid",
+                            gridTemplateColumns: isMobile ? "1fr" : "40% 60%",
+                            background: "#fdfcf7",
+                            height: isMobile ? undefined : 400,
+                            overflow: "hidden",
+                            boxShadow: "0 8px 40px rgba(0,0,0,0.45)",
+                          }}>
+                            {/* Paper grain */}
+                            <div style={{ position: "absolute", inset: 0, zIndex: 3, pointerEvents: "none", backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E")`, opacity: 0.045 }} />
+                            {/* Gutter shadow */}
+                            {!isMobile && <div style={{ position: "absolute", top: 0, bottom: 0, left: "40%", width: 28, transform: "translateX(-50%)", zIndex: 2, pointerEvents: "none", background: "linear-gradient(to right, rgba(0,0,0,0.10) 0%, rgba(0,0,0,0.03) 50%, transparent 100%)" }} />}
+
+                            {/* Text page — left */}
+                            <div style={{ order: isMobile ? 2 : undefined, display: "flex", flexDirection: "column", justifyContent: "center", padding: isMobile ? "20px 20px 24px" : "48px 36px 48px 48px", zIndex: 1, background: "#fdfcf7" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 6 : 9, marginBottom: isMobile ? 10 : 20 }}>
+                                <div style={{ height: 1, width: isMobile ? 14 : 22, background: "rgba(120,80,30,0.35)", flexShrink: 0 }} />
+                                <span style={{ color: "rgba(120,80,30,0.65)", fontSize: isMobile ? 7 : 9, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase" as const, fontFamily: "Georgia, serif", whiteSpace: "nowrap" as const }}>Ch. {chNum}</span>
+                              </div>
+                              <p style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: isMobile ? 13 : 15.5, lineHeight: isMobile ? 1.7 : 1.85, color: "#2a1505", margin: 0, letterSpacing: "0.01em" }}>{page.text}</p>
+                              <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 6 : 9, marginTop: isMobile ? 12 : 26 }}>
+                                <div style={{ height: 1, width: isMobile ? 18 : 34, background: "rgba(120,80,30,0.22)", flexShrink: 0 }} />
+                                <span style={{ color: "rgba(120,80,30,0.38)", fontFamily: "Georgia, serif", fontSize: isMobile ? 7 : 9, letterSpacing: "0.14em" }}>— {page.pageNum} —</span>
+                              </div>
                             </div>
-                            <div style={{ flex: 1, padding: "18px 20px", background: "#fff8f0", display: "flex", alignItems: "center" }}>
-                              <p style={{ fontFamily: "Georgia, serif", fontSize: isMobile ? 14 : 15, lineHeight: 1.8, color: "#3d2b1f", margin: 0 }}>{page.text}</p>
+
+                            {/* Illustration — right, full bleed */}
+                            <div style={{ order: isMobile ? 1 : undefined, position: "relative", height: isMobile ? 240 : undefined, overflow: "hidden", background: "#1a1a2e" }}>
+                              {img && img !== "__failed__" ? (
+                                <img src={img} alt={`Page ${page.pageNum}`} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                              ) : (
+                                <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                  <div style={{ width: 28, height: 28, border: "3px solid rgba(255,255,255,0.12)", borderTop: "3px solid rgba(255,255,255,0.4)", borderRadius: "50%", animation: "spin 1.2s linear infinite" }} />
+                                </div>
+                              )}
                             </div>
                           </div>
                         );
                       })}
 
-                      {/* Locked pages 3-6 */}
+                      {/* Locked pages 3-6 — same spread style, blurred */}
                       <div style={{ position: "relative" }}>
-                        <div style={{ display: "flex", flexDirection: "column", gap: 10, filter: "blur(5px)", pointerEvents: "none", userSelect: "none" }}>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 12, filter: "blur(5px)", pointerEvents: "none", userSelect: "none" }}>
                           {previewStory.pages.slice(2).map((page: any, idx: number) => {
                             const img = previewImages[idx + 2];
                             return (
-                              <div key={idx} style={{ background: "white", borderRadius: 14, overflow: "hidden", height: 90, display: "flex" }}>
-                                <div style={{ flex: "0 0 40%", background: img ? "#1a1a2e" : PAGE_BACKGROUNDS[(idx + 2) % PAGE_BACKGROUNDS.length], position: "relative", overflow: "hidden" }}>
-                                  {img && img !== "__failed__" && <img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
+                              <div key={idx} style={{ display: "grid", gridTemplateColumns: "40% 60%", height: 90, overflow: "hidden", background: "#fdfcf7" }}>
+                                <div style={{ background: "#fdfcf7", padding: "14px 18px", display: "flex", flexDirection: "column" as const, justifyContent: "center", gap: 8 }}>
+                                  <div style={{ height: 8, background: "#d8cec4", borderRadius: 4, width: "70%" }} />
+                                  <div style={{ height: 8, background: "#d8cec4", borderRadius: 4, width: "90%" }} />
+                                  <div style={{ height: 8, background: "#d8cec4", borderRadius: 4, width: "55%" }} />
                                 </div>
-                                <div style={{ flex: 1, background: "#fff8f0", padding: "14px 16px" }}>
-                                  <div style={{ height: 10, background: "#e0d4c8", borderRadius: 5, marginBottom: 8, width: "80%" }} />
-                                  <div style={{ height: 10, background: "#e0d4c8", borderRadius: 5, width: "55%" }} />
+                                <div style={{ background: img ? "#1a1a2e" : PAGE_BACKGROUNDS[(idx + 2) % PAGE_BACKGROUNDS.length], position: "relative", overflow: "hidden" }}>
+                                  {img && img !== "__failed__" && <img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
                                 </div>
                               </div>
                             );
                           })}
                         </div>
-                        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "rgba(15,11,31,0.78)", borderRadius: 14, backdropFilter: "blur(4px)" }}>
+                        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "rgba(15,11,31,0.78)", backdropFilter: "blur(4px)" }}>
                           <div style={{ width: 48, height: 48, borderRadius: "50%", background: "rgba(232,192,122,0.12)", border: "1px solid rgba(232,192,122,0.25)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E8C07A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                           </div>

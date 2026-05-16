@@ -285,36 +285,36 @@ const SCENE_PROMPTS_BY_THEME: Record<string, string[]> = {
   ],
 
   worldcup: [
-    "a photo of TOK, standing at the tunnel entrance of a massive floodlit football stadium, " +
-    "fully dressed in a bright football kit with long socks and shin guards and boots, " +
+    "a photo of TOK, standing at the tunnel entrance of a massive floodlit soccer stadium, " +
+    "fully dressed in a white USA soccer jersey with red and blue trim, long white socks shin guards and cleats, " +
     "one hand on the tunnel wall, staring out wide-eyed at the roaring crowd and glowing green pitch ahead, " +
-    "confetti already floating through the air, team flags waving in every direction. " + STYLE_TOKEN + " " + SAFETY,
+    "American flags and red white and blue confetti filling the air, USA banners waving in every direction. " + STYLE_TOKEN + " " + SAFETY,
 
-    "a photo of TOK, mid-sprint down the wing of a sunlit football pitch, " +
-    "fully dressed in a bright football kit with long socks shin guards and boots, " +
+    "a photo of TOK, mid-sprint down the wing of a sunlit soccer pitch, " +
+    "fully dressed in a white USA soccer jersey with red and blue trim, long white socks shin guards and cleats, " +
     "ball at their feet, one arm pumping forward, hair and kit streaming in the wind, " +
-    "blurred defenders left behind, thousands of cheering fans filling the stadium stands behind them. " + STYLE_TOKEN + " " + SAFETY,
+    "blurred defenders left behind, thousands of cheering fans waving American flags in the packed stadium behind. " + STYLE_TOKEN + " " + SAFETY,
 
     "a photo of TOK, frozen at the peak of a powerful strike, one leg fully extended toward the ball, " +
-    "body leaning back with intense focus, fully dressed in a bright football kit with long socks and boots, " +
+    "body leaning back with intense focus, fully dressed in a white USA soccer jersey with red and blue trim long socks and cleats, " +
     "the ball curving into the top corner of the goal, the goalkeeper diving helplessly the other way, " +
-    "the net billowing dramatically as the stadium crowd erupts in a sea of colour behind. " + STYLE_TOKEN + " " + SAFETY,
+    "the net billowing as the crowd erupts and American flags wave wildly throughout the stadium. " + STYLE_TOKEN + " " + SAFETY,
 
     "a photo of TOK, sprinting with both arms raised high in wild celebration after scoring, " +
-    "mouth open in a huge roar of joy, fully dressed in a bright football kit with long socks and boots, " +
-    "teammates piling in from every direction to celebrate, golden confetti raining down from the floodlights above, " +
-    "the packed stadium a blaze of colour and movement behind them. " + STYLE_TOKEN + " " + SAFETY,
+    "mouth open in a huge roar of joy, fully dressed in a white USA soccer jersey with red and blue trim long socks and cleats, " +
+    "teammates in matching USA kits piling in from every direction, red white and blue confetti raining from the floodlights, " +
+    "the packed stadium a blaze of American flags and colour. " + STYLE_TOKEN + " " + SAFETY,
 
     "a photo of TOK, crouching intensely in goal, arms spread wide and eyes locked on the incoming penalty ball, " +
-    "fully dressed in a goalkeeper kit with long sleeves gloves long trousers and boots, " +
+    "fully dressed in a USA goalkeeper kit with long sleeves long trousers gloves and cleats in red white and blue, " +
     "diving full-stretch to tip the ball around the post at the last possible moment, " +
-    "the stadium crowd frozen in a single gasp, floodlights blazing overhead. " + STYLE_TOKEN + " " + SAFETY,
+    "the stadium crowd frozen in a single gasp, American flags everywhere in the stands. " + STYLE_TOKEN + " " + SAFETY,
 
     "a photo of TOK, standing on the podium of a packed World Cup final stadium, " +
-    "both arms raised high holding an enormous gleaming gold trophy above their head, " +
-    "fully dressed in a bright football kit with long socks and boots, " +
-    "golden confetti and ticker tape exploding from cannons all around, teammates cheering and lifting them, " +
-    "the entire stadium on its feet in a thunderous golden celebration. " + STYLE_TOKEN + " " + SAFETY,
+    "both arms raised high holding an enormous gleaming gold World Cup trophy above their head, " +
+    "fully dressed in a white USA soccer jersey with red and blue trim long socks and cleats, " +
+    "red white and blue confetti and ticker tape exploding in every direction, teammates in USA kits cheering, " +
+    "the entire stadium on its feet under a sky full of fireworks and American flags. " + STYLE_TOKEN + " " + SAFETY,
   ],
 };
 

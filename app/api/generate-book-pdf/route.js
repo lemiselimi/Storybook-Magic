@@ -34,7 +34,13 @@ async function embedImg(doc, bytes) {
   }
 }
 
+// Strip characters outside WinAnsi (0x00–0xFF) — StandardFonts can't encode them
+function toWinAnsi(str) {
+  return (str || "").replace(/[^\x00-\xFF]/g, "");
+}
+
 function wrapText(text, maxChars = 80) {
+  text = toWinAnsi(text);
   const words = (text || "").split(" ");
   const lines = [];
   let line = "";
@@ -64,9 +70,9 @@ export async function POST(request) {
   const { coverFalUrl, pageFalUrls, story, childName } = body;
 
   try {
-    const capName = childName
+    const capName = toWinAnsi(childName
       ? childName.charAt(0).toUpperCase() + childName.slice(1).toLowerCase()
-      : "You";
+      : "You");
 
     // ── Fetch all images in parallel ────────────────────────────────────────────
     console.log("PDF: fetching images...");
@@ -89,11 +95,11 @@ export async function POST(request) {
     }
     coverPage.drawRectangle({ x: 0, y: 0, width: PW, height: PH * 0.32, color: DARK, opacity: 0.94 });
     coverPage.drawText("My Tiny Tales", { x: 30, y: PH * 0.28, size: 11, font: boldFont, color: GOLD });
-    const titleLines = wrapText(story?.title || "My Story", 36);
+    const titleLines = wrapText(toWinAnsi(story?.title || "My Story"), 36);
     titleLines.forEach((line, i) => {
       coverPage.drawText(line, { x: 30, y: PH * 0.21 - i * 28, size: 26, font: boldFont, color: WHITE });
     });
-    const subText = (story?.dedication || `A story starring ${capName}`).substring(0, 70);
+    const subText = toWinAnsi(story?.dedication || `A story starring ${capName}`).substring(0, 70);
     coverPage.drawText(subText, { x: 30, y: PH * 0.07, size: 12, font: normFont, color: GOLD, opacity: 0.75 });
 
     const coverPdfBytes = await coverDoc.save();
@@ -112,7 +118,7 @@ export async function POST(request) {
     const p2 = doc.addPage([PW, PH]);
     drawDark(p2);
     p2.drawText("My Tiny Tales presents", { x: PW / 2 - 90, y: PH * 0.72, size: 12, font: iFont, color: GOLD, opacity: 0.55 });
-    const tLines = wrapText(story?.title || "My Story", 30);
+    const tLines = wrapText(toWinAnsi(story?.title || "My Story"), 30);
     tLines.forEach((line, i) => {
       const w = hFont.widthOfTextAtSize(line, 34);
       p2.drawText(line, { x: (PW - w) / 2, y: PH * 0.58 - i * 38, size: 34, font: hFont, color: WHITE });
@@ -127,8 +133,8 @@ export async function POST(request) {
     const nameW = hFont.widthOfTextAtSize(capName, 52);
     p3.drawText(capName, { x: (PW - nameW) / 2, y: PH * 0.47, size: 52, font: hFont, color: WHITE });
     p3.drawRectangle({ x: PW / 2 - 30, y: PH * 0.42, width: 60, height: 2, color: GOLD, opacity: 0.45 });
-    p3.drawText("\u201cMay every adventure remind you how loved, brave,", { x: PW / 2 - 170, y: PH * 0.33, size: 13, font: iFont, color: WHITE, opacity: 0.65 });
-    p3.drawText("and magical you are.\u201d", { x: PW / 2 - 70, y: PH * 0.25, size: 13, font: iFont, color: WHITE, opacity: 0.65 });
+    p3.drawText("\"May every adventure remind you how loved, brave,", { x: PW / 2 - 170, y: PH * 0.33, size: 13, font: iFont, color: WHITE, opacity: 0.65 });
+    p3.drawText("and magical you are.\"", { x: PW / 2 - 70, y: PH * 0.25, size: 13, font: iFont, color: WHITE, opacity: 0.65 });
     p3.drawText("My Tiny Tales", { x: PW / 2 - 44, y: PH * 0.12, size: 10, font: bFont, color: GOLD, opacity: 0.3 });
 
     // Page 4: Blank
@@ -175,7 +181,7 @@ export async function POST(request) {
     } else {
       drawDark(p11);
     }
-    p11.drawText("\u2756   \u2756   \u2756", { x: PW / 2 - 28, y: PH * 0.72, size: 12, font: bFont, color: GOLD, opacity: 0.4 });
+    p11.drawText("*   *   *", { x: PW / 2 - 28, y: PH * 0.72, size: 12, font: bFont, color: GOLD, opacity: 0.4 });
     const endW = hFont.widthOfTextAtSize("The End", 52);
     p11.drawText("The End", { x: (PW - endW) / 2, y: PH * 0.56, size: 52, font: hFont, color: GOLD });
     p11.drawRectangle({ x: PW / 2 - 32, y: PH * 0.5, width: 64, height: 1, color: GOLD, opacity: 0.4 });

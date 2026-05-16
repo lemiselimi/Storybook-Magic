@@ -51,21 +51,31 @@ const BOLD_BYTES    = loadFont("@fontsource/lato",               "lato-latin-700
 const REGULAR_BYTES = loadFont("@fontsource/libre-baskerville",  "libre-baskerville-latin-400-normal.woff2");
 const ITALIC_BYTES  = loadFont("@fontsource/libre-baskerville",  "libre-baskerville-latin-400-italic.woff2");
 
-// With embedded fonts we can support full Unicode — no stripping needed,
-// but keep the helper for any legacy callers
-function toWinAnsi(str) {
-  return (str || "");
+// Strip emoji and other characters Libre Baskerville can't render
+// (emoji are in ranges U+1F000+ and various other blocks)
+function sanitize(str) {
+  return (str || "")
+    .replace(/[\u{1F000}-\u{1FFFF}]/gu, "")  // emoji + pictographs
+    .replace(/[\u{2600}-\u{27BF}]/gu,   "")  // misc symbols, dingbats
+    .replace(/[\u{1F300}-\u{1F9FF}]/gu, "")  // more emoji blocks
+    .trim();
 }
 
+// Alias kept for call sites that use toWinAnsi
+const toWinAnsi = sanitize;
+
 function wrapText(text, maxChars = 60) {
-  text = toWinAnsi(text);
-  const words = text.split(" ");
+  const words = sanitize(text).split(" ").filter(Boolean);
   const lines = [];
   let line = "";
   for (const word of words) {
     const test = line ? `${line} ${word}` : word;
-    if (test.length > maxChars) { lines.push(line); line = word; }
-    else line = test;
+    if (test.length > maxChars) {
+      if (line) lines.push(line);
+      line = word;
+    } else {
+      line = test;
+    }
   }
   if (line) lines.push(line);
   return lines;

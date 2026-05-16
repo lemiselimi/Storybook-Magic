@@ -136,13 +136,14 @@ export async function POST(request) {
       ? childName.charAt(0).toUpperCase() + childName.slice(1).toLowerCase()
       : "a special child";
 
+    // Append timestamp so retries don't collide on Lulu's external_id uniqueness check
     const luluJob = await createLuluJob(token, {
       coverPdfUrl,
       interiorPdfUrl,
       shippingAddress,
       contactEmail,
       title:      `My Tiny Tales — ${capName}'s Story`,
-      externalId: sessionId,
+      externalId: `${sessionId}-${Date.now()}`,
     });
 
     console.log("Lulu print job created:", luluJob.id, "status:", luluJob.status);

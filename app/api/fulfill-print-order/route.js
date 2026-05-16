@@ -7,10 +7,8 @@ export const maxDuration = 60;
 const LULU_TOKEN_URL = "https://api.lulu.com/auth/realms/glasstree/protocol/openid-connect/token";
 const LULU_JOBS_URL  = "https://api.lulu.com/print-jobs/";
 
-// 11×8.5" landscape, full color, standard softcover (perfect bound)
-// Set LULU_PACKAGE_ID env var to override (e.g. for saddle-stitch or different size)
-// Look up valid IDs at: https://developers.lulu.com/api-reference/#get-all-print-job-specifications
-const DEFAULT_PACKAGE = "1100X0850FCSTDPB060UW444MXX";
+// 8.5×8.5" square, full color, premium, saddle stitch, 80lb coated white
+const DEFAULT_PACKAGE = "0850X0850.FC.PRE.SS.080CW444.MXX";
 
 async function getLuluToken() {
   const params = new URLSearchParams({

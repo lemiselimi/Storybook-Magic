@@ -243,8 +243,8 @@ export async function POST(request) {
     p17.drawText(closingText, { x: (PS - closeW) / 2, y: PS * 0.38, size: 12, font: iFont, color: WHITE, opacity: 0.55 });
     p17.drawText("My Tiny Tales", { x: PS / 2 - 36, y: PS * 0.16, size: 9, font: bFont, color: GOLD, opacity: 0.28 });
 
-    // Pages 18–24: Blank padding (need 24 total, multiple of 4)
-    for (let i = 0; i < 7; i++) addBlank(CREAM);
+    // Pages 18–20: Pad to 20 pages total (minimum multiple of 4 above 17)
+    for (let i = 0; i < 3; i++) addBlank(CREAM);
 
     const interiorPdfBytes = await doc.save();
     console.log("PDF: interior built, uploading...");

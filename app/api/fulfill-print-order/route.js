@@ -41,7 +41,7 @@ async function createLuluJob(token, { coverPdfUrl, interiorPdfUrl, shippingAddre
       quantity: 1,
     }],
     shipping_address: shippingAddress,
-    shipping_level:   "MAIL",
+    shipping_level:   "GROUND",
     production_delay: 120,
   };
 

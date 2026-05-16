@@ -524,23 +524,38 @@ export default function StorybookCreator() {
     const sessionId = params.get("session_id");
     const ref       = params.get("ref");
     if (success && sessionId && ref) {
-      const saved = sessionStorage.getItem(ref);
-      if (!saved) return;
-      sessionStorage.removeItem(ref);
-      const data = JSON.parse(saved);
       const plan = params.get("plan");
-      fetch(`/api/verify-session?session_id=${sessionId}`)
-        .then(r => r.json())
-        .then(result => {
-          if (!result.ok) return;
-          setChildName(data.childName || ""); setChildAge(data.childAge ?? 5);
-          setChildGender(data.childGender || "boy"); setTheme(data.theme || "adventure");
-          setHairColor(data.hairColor || "brown"); setEyeColor(data.eyeColor || "brown");
-          if (data.photosBase64?.length) setPhotosBase64(data.photosBase64);
-          if (data.coverFalUrl) setCoverImageUrl(`/api/proxy?url=${encodeURIComponent(data.coverFalUrl)}`);
-          if (plan === "print") setPendingPrintSession(sessionId);
-          setTimeout(() => generateFullBook(data), 50);
-        }).catch(console.error);
+
+      const applyBookData = (data: any, result: any) => {
+        if (!result.ok) return;
+        setChildName(data.childName || ""); setChildAge(data.childAge ?? 5);
+        setChildGender(data.childGender || "boy"); setTheme(data.theme || "adventure");
+        setHairColor(data.hairColor || "brown"); setEyeColor(data.eyeColor || "brown");
+        if (data.photosBase64?.length) setPhotosBase64(data.photosBase64);
+        if (data.coverFalUrl) setCoverImageUrl(`/api/proxy?url=${encodeURIComponent(data.coverFalUrl)}`);
+        if (plan === "print") setPendingPrintSession(sessionId);
+        setTimeout(() => generateFullBook(data), 50);
+      };
+
+      const loadAndApply = async () => {
+        // Fast path: sessionStorage (same tab, same session)
+        const saved = sessionStorage.getItem(ref);
+        let data: any = saved ? JSON.parse(saved) : null;
+        try { sessionStorage.removeItem(ref); } catch {}
+
+        // Fallback: KV (works after tab close, refresh, or new-tab redirect)
+        if (!data) {
+          const kvRes = await fetch(`/api/get-book-ref?ref=${ref}`).then(r => r.json()).catch(() => null);
+          if (kvRes?.ok) data = kvRes.data;
+        }
+
+        if (!data) { console.error("Book ref not found in sessionStorage or KV"); return; }
+
+        const result = await fetch(`/api/verify-session?session_id=${sessionId}`).then(r => r.json()).catch(() => ({}));
+        applyBookData(data, result);
+      };
+
+      loadAndApply().catch(console.error);
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -990,7 +1005,7 @@ export default function StorybookCreator() {
     setCheckoutLoading(plan);
     try {
       const ref = crypto.randomUUID();
-      sessionStorage.setItem(ref, JSON.stringify({
+      const bookData = {
         childName, childAge, childGender, theme, hairColor, eyeColor,
         story: previewStory,
         photosBase64: photosBase64,
@@ -998,7 +1013,13 @@ export default function StorybookCreator() {
         coverFalUrl: previewCoverUrl ? rawFalUrl(previewCoverUrl) : null,
         previewFalUrls: previewImages.map(u => u ? rawFalUrl(u) : null),
         plan,
-      }));
+      };
+      // Save to sessionStorage (fast path) and KV (durable fallback)
+      try { sessionStorage.setItem(ref, JSON.stringify(bookData)); } catch {}
+      await fetch("/api/save-book-ref", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ref, ...bookData }),
+      });
       const res = await fetch("/api/checkout", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ref, plan }),

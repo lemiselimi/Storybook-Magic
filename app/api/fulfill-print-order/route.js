@@ -1,4 +1,5 @@
 import Stripe from "stripe";
+import { kv } from "@vercel/kv";
 
 export const maxDuration = 60;
 
@@ -144,6 +145,14 @@ export async function POST(request) {
     });
 
     console.log("Lulu print job created:", luluJob.id, "status:", luluJob.status);
+
+    // Update KV order record with Lulu job ID
+    try {
+      const existing = await kv.get(`order:${sessionId}`) || {};
+      await kv.set(`order:${sessionId}`, { ...existing, status: "fulfilled", luluJobId: luluJob.id, fulfilledAt: new Date().toISOString() }, { ex: 2_592_000 });
+    } catch (kvErr) {
+      console.error("KV update failed (non-fatal):", kvErr.message);
+    }
 
     return Response.json({
       ok:         true,

@@ -12,6 +12,7 @@
     "@anthropic-ai/sdk": "^0.82.0",
     "@fal-ai/client": "^1.9.5",
     "@stripe/stripe-js": "^9.0.1",
+    "@vercel/kv": "^3.0.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",
     "jszip": "^3.10.1",

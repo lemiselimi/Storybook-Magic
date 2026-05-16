@@ -142,8 +142,8 @@ export async function POST(request) {
     const coverPdfBytes = await coverDoc.save();
     console.log("PDF: cover built");
 
-    // ── INTERIOR PDF — 24 pages (multiple of 4 for saddle stitch) ────────────────
-    // Structure: 4 front matter + 6×2 story spreads (text left, image right) + 2 back matter + 2 padding
+    // ── INTERIOR PDF — 16 pages (multiple of 4 for saddle stitch) ────────────────
+    // Structure: blank + title + dedication + 6×2 story spreads + The End
     // Page pairs when bound: (1,24)(2,23)(3,22)(4,21)(5,20)(6,19)(7,18)(8,17)(9,16)(10,15)(11,14)(12,13)
     const doc   = await PDFDocument.create();
     doc.registerFontkit(fontkit);
@@ -240,9 +240,7 @@ export async function POST(request) {
     p17.drawText(closingText, { x: (PS - closeW) / 2, y: PS * 0.38, size: 12, font: iFont, color: WHITE, opacity: 0.55 });
     p17.drawText("My Tiny Tales", { x: PS / 2 - 36, y: PS * 0.16, size: 9, font: bFont, color: GOLD, opacity: 0.28 });
 
-    // Page 16: Blank (inside back cover) — total 16 pages, multiple of 4
-    addBlank(CREAM);
-
+    // Total: 1 blank + title + dedication + 12 story pages + The End = 16 pages (multiple of 4)
     const interiorPdfBytes = await doc.save();
     console.log("PDF: interior built, uploading...");
 

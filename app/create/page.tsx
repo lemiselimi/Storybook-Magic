@@ -9,7 +9,7 @@ const THEMES = [
   { id: "ocean",      emoji: "🌊", title: "Deep Blue",          subtitle: "Ocean & Nature",         desc: "An underwater mystery only your child can solve" },
   { id: "jungle",     emoji: "🦁", title: "Jungle Crown",       subtitle: "Animals & Wildlife",     desc: "Your child becomes ruler of the animal kingdom for a day" },
   { id: "superpower", emoji: "🏆", title: "My Superpower",      subtitle: "Real Life Heroes",       desc: "Your child discovers their unique gift and uses it to help their community" },
-  { id: "worldcup",   emoji: "⚽", title: "World Cup Hero",      subtitle: "Football & Glory",        desc: "Your child leads their team all the way to the World Cup final and lifts the trophy" },
+  { id: "worldcup",   emoji: "⚽", title: "World Cup Hero",      subtitle: "Football & Glory",        desc: "Your child is the star striker for the USA at the World Cup final. Follow this exact arc — Page 1: child walks out of the tunnel into the roaring stadium. Page 2: first sprint with the ball, leaving defenders behind. Page 3: the USA team falls behind and the pressure builds on child. Page 4: child earns a crucial penalty kick and steps up to take it. Page 5: child blasts the ball into the net — USA win! Page 6: child lifts the golden World Cup trophy as fireworks explode above the stadium." },
 ];
 
 const CHAPTER_NAMES = ["One", "Two", "Three", "Four", "Five", "Six"];
@@ -285,36 +285,42 @@ const SCENE_PROMPTS_BY_THEME: Record<string, string[]> = {
   ],
 
   worldcup: [
-    "a photo of TOK, standing at the tunnel entrance of a massive floodlit soccer stadium, " +
+    // Scene 1 — tunnel walk-out
+    "a photo of TOK, standing at the mouth of the players tunnel staring out at an enormous floodlit World Cup stadium, " +
     "fully dressed in a white USA soccer jersey with red and blue trim, long white socks shin guards and cleats, " +
-    "one hand on the tunnel wall, staring out wide-eyed at the roaring crowd and glowing green pitch ahead, " +
-    "American flags and red white and blue confetti filling the air, USA banners waving in every direction. " + STYLE_TOKEN + " " + SAFETY,
+    "one hand resting on the tunnel wall, eyes wide with wonder and excitement at the roaring crowd and glowing green pitch ahead, " +
+    "American flags filling every stand, red white and blue bunting everywhere. " + STYLE_TOKEN + " " + SAFETY,
 
-    "a photo of TOK, mid-sprint down the wing of a sunlit soccer pitch, " +
+    // Scene 2 — first sprint, leaving defenders behind
+    "a photo of TOK, sprinting at full pace down the left wing of a World Cup final pitch, " +
     "fully dressed in a white USA soccer jersey with red and blue trim, long white socks shin guards and cleats, " +
-    "ball at their feet, one arm pumping forward, hair and kit streaming in the wind, " +
-    "blurred defenders left behind, thousands of cheering fans waving American flags in the packed stadium behind. " + STYLE_TOKEN + " " + SAFETY,
+    "ball at their feet, one arm pumping hard, kit and hair streaming in the wind, " +
+    "two defenders left stumbling behind, fifty thousand fans on their feet waving American flags in the packed stands. " + STYLE_TOKEN + " " + SAFETY,
 
-    "a photo of TOK, frozen at the peak of a powerful strike, one leg fully extended toward the ball, " +
-    "body leaning back with intense focus, fully dressed in a white USA soccer jersey with red and blue trim long socks and cleats, " +
-    "the ball curving into the top corner of the goal, the goalkeeper diving helplessly the other way, " +
-    "the net billowing as the crowd erupts and American flags wave wildly throughout the stadium. " + STYLE_TOKEN + " " + SAFETY,
+    // Scene 3 — USA trail, pressure on child
+    "a photo of TOK, standing alone in the centre circle of a World Cup stadium, head bowed slightly, " +
+    "fully dressed in a white USA soccer jersey with red and blue trim, long white socks shin guards and cleats, " +
+    "hands on hips, brow furrowed with fierce determination, scoreboard visible behind showing USA behind by one goal, " +
+    "teammates gathering around with encouraging hands on shoulders, stadium tense and hushed. " + STYLE_TOKEN + " " + SAFETY,
 
-    "a photo of TOK, sprinting with both arms raised high in wild celebration after scoring, " +
-    "mouth open in a huge roar of joy, fully dressed in a white USA soccer jersey with red and blue trim long socks and cleats, " +
-    "teammates in matching USA kits piling in from every direction, red white and blue confetti raining from the floodlights, " +
-    "the packed stadium a blaze of American flags and colour. " + STYLE_TOKEN + " " + SAFETY,
+    // Scene 4 — penalty spot, staring down the goalkeeper
+    "a photo of TOK, standing over the penalty spot twelve yards from goal, " +
+    "fully dressed in a white USA soccer jersey with red and blue trim, long white socks shin guards and cleats, " +
+    "ball placed perfectly on the spot, eyes locked on the goalkeeper in intense concentration, " +
+    "stadium completely silent with anticipation, referee stepping back, American flags held still in the crowd. " + STYLE_TOKEN + " " + SAFETY,
 
-    "a photo of TOK, crouching intensely in goal, arms spread wide and eyes locked on the incoming penalty ball, " +
-    "fully dressed in a USA goalkeeper kit with long sleeves long trousers gloves and cleats in red white and blue, " +
-    "diving full-stretch to tip the ball around the post at the last possible moment, " +
-    "the stadium crowd frozen in a single gasp, American flags everywhere in the stands. " + STYLE_TOKEN + " " + SAFETY,
+    // Scene 5 — penalty hits the net, USA win
+    "a photo of TOK, frozen mid-kick with one leg fully extended and boot striking the ball, " +
+    "fully dressed in a white USA soccer jersey with red and blue trim, long white socks shin guards and cleats, " +
+    "the ball rocketing into the top corner of the goal as the goalkeeper dives the wrong way completely beaten, " +
+    "the net bulging and the entire stadium erupting in a blaze of American flags and red white and blue confetti. " + STYLE_TOKEN + " " + SAFETY,
 
-    "a photo of TOK, standing on the podium of a packed World Cup final stadium, " +
-    "both arms raised high holding an enormous gleaming gold World Cup trophy above their head, " +
+    // Scene 6 — trophy lift
+    "a photo of TOK, standing on the winner's podium at the centre of a World Cup final stadium, " +
+    "both arms stretched high above their head holding an enormous gleaming gold World Cup trophy, " +
     "fully dressed in a white USA soccer jersey with red and blue trim long socks and cleats, " +
-    "red white and blue confetti and ticker tape exploding in every direction, teammates in USA kits cheering, " +
-    "the entire stadium on its feet under a sky full of fireworks and American flags. " + STYLE_TOKEN + " " + SAFETY,
+    "red white and blue confetti and ticker tape exploding in every direction, teammates in USA kits cheering and hugging, " +
+    "the sky above the stadium blazing with fireworks and American flags filling every stand. " + STYLE_TOKEN + " " + SAFETY,
   ],
 };
 
@@ -997,10 +1003,15 @@ export default function StorybookCreator() {
         };
 
         const fullThemePrompts = SCENE_PROMPTS_BY_THEME[_theme] ?? SCENE_PROMPTS_BY_THEME.adventure;
-        const fullStoryPrompts = (storyData?.pages || []).map((pg: any) =>
-          pg.illustration
-            ? `a photo of TOK, ${pg.illustration} Scene context: ${(pg.text || "").substring(0, 120)} ${STYLE_TOKEN} ${SAFETY}`
-            : fullThemePrompts[0]
+        // Themes with costume/kit requirements use hardcoded prompts so the gear is always correct.
+        // For all other themes, use the AI illustration description for per-page accuracy.
+        const USE_FIXED_PROMPTS = new Set(["worldcup"]);
+        const fullStoryPrompts = (storyData?.pages || []).map((pg: any, i: number) =>
+          USE_FIXED_PROMPTS.has(_theme)
+            ? (fullThemePrompts[i] ?? fullThemePrompts[0])
+            : pg.illustration
+              ? `a photo of TOK, ${pg.illustration} Scene context: ${(pg.text || "").substring(0, 120)} ${STYLE_TOKEN} ${SAFETY}`
+              : (fullThemePrompts[i] ?? fullThemePrompts[0])
         );
 
         const handleScene2 = async (prompt: string, idx: number) => {

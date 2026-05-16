@@ -1206,7 +1206,7 @@ export default function StorybookCreator() {
 
   const totalPages = story?.pages?.length ?? 6;
 
-  // ── BookSpread — CSS Grid: text left (40%), illustration right (60%) ──────────
+  // ── BookSpread — CSS Grid: text left (50%), illustration right (50%) ──────────
   const BookSpread = ({ spreadIndex }: { spreadIndex: number }) => {
     const page       = story.pages[spreadIndex];
     if (!page) return null;
@@ -1218,7 +1218,7 @@ export default function StorybookCreator() {
       <div className="print-spread scene-wrap" style={{
         position: "relative",
         display: "grid",
-        gridTemplateColumns: isMobile ? "1fr" : "40% 60%",
+        gridTemplateColumns: isMobile ? "1fr" : "50% 50%",
         gridTemplateRows: isMobile ? "auto auto" : undefined,
         background: "#fdfcf7",
         height: isMobile ? undefined : 520,
@@ -1235,7 +1235,7 @@ export default function StorybookCreator() {
         {/* Gutter shadow — simulates book binding crease */}
         {!isMobile && (
           <div style={{
-            position: "absolute", top: 0, bottom: 0, left: "40%", width: 28,
+            position: "absolute", top: 0, bottom: 0, left: "50%", width: 28,
             transform: "translateX(-50%)", zIndex: 2, pointerEvents: "none",
             background: "linear-gradient(to right, rgba(0,0,0,0.10) 0%, rgba(0,0,0,0.03) 50%, transparent 100%)",
           }} />
@@ -1283,7 +1283,7 @@ export default function StorybookCreator() {
               <span style={{ fontSize: 40, opacity: 0.4 }}>✨</span>
             </div>
           ) : sceneImg ? (
-            <img crossOrigin="anonymous" src={sceneImg} alt={`Page ${page.pageNum}`} style={{ width: "100%", height: "100%", objectFit: "contain", objectPosition: "center", display: "block" }} />
+            <img crossOrigin="anonymous" src={sceneImg} alt={`Page ${page.pageNum}`} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", display: "block" }} />
           ) : (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
               <div style={{ width: 28, height: 28, border: "3px solid rgba(120,80,30,0.12)", borderTop: "3px solid rgba(120,80,30,0.4)", borderRadius: "50%", animation: "spin 1.2s linear infinite" }} />
@@ -1815,7 +1815,7 @@ export default function StorybookCreator() {
                           <div key={idx} style={{
                             position: "relative",
                             display: "grid",
-                            gridTemplateColumns: isMobile ? "1fr" : "40% 60%",
+                            gridTemplateColumns: isMobile ? "1fr" : "50% 50%",
                             background: "#fdfcf7",
                             height: isMobile ? undefined : 400,
                             overflow: "hidden",
@@ -1824,7 +1824,7 @@ export default function StorybookCreator() {
                             {/* Paper grain */}
                             <div style={{ position: "absolute", inset: 0, zIndex: 3, pointerEvents: "none", backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E")`, opacity: 0.045 }} />
                             {/* Gutter shadow */}
-                            {!isMobile && <div style={{ position: "absolute", top: 0, bottom: 0, left: "40%", width: 28, transform: "translateX(-50%)", zIndex: 2, pointerEvents: "none", background: "linear-gradient(to right, rgba(0,0,0,0.10) 0%, rgba(0,0,0,0.03) 50%, transparent 100%)" }} />}
+                            {!isMobile && <div style={{ position: "absolute", top: 0, bottom: 0, left: "50%", width: 28, transform: "translateX(-50%)", zIndex: 2, pointerEvents: "none", background: "linear-gradient(to right, rgba(0,0,0,0.10) 0%, rgba(0,0,0,0.03) 50%, transparent 100%)" }} />}
 
                             {/* Text page — left */}
                             <div style={{ order: isMobile ? 2 : undefined, display: "flex", flexDirection: "column", justifyContent: "center", padding: isMobile ? "20px 20px 24px" : "48px 36px 48px 48px", zIndex: 1, background: "#fdfcf7" }}>
@@ -1859,7 +1859,7 @@ export default function StorybookCreator() {
                           {previewStory.pages.slice(2).map((page: any, idx: number) => {
                             const img = previewImages[idx + 2];
                             return (
-                              <div key={idx} style={{ display: "grid", gridTemplateColumns: "40% 60%", height: 90, overflow: "hidden", background: "#fdfcf7" }}>
+                              <div key={idx} style={{ display: "grid", gridTemplateColumns: "50% 50%", height: 90, overflow: "hidden", background: "#fdfcf7" }}>
                                 <div style={{ background: "#fdfcf7", padding: "14px 18px", display: "flex", flexDirection: "column" as const, justifyContent: "center", gap: 8 }}>
                                   <div style={{ height: 8, background: "#d8cec4", borderRadius: 4, width: "70%" }} />
                                   <div style={{ height: 8, background: "#d8cec4", borderRadius: 4, width: "90%" }} />

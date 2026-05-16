@@ -3,6 +3,15 @@ const nextConfig = {
   images: {
     domains: ['v3b.fal.media', 'fal.media', 'storage.googleapis.com'],
   },
+  // Include fontsource woff2 files in the Vercel deployment bundle.
+  // fs.readFileSync paths aren't statically analysable, so file tracing misses them.
+  outputFileTracingIncludes: {
+    "/api/generate-book-pdf": [
+      "./node_modules/@fontsource/lato/files/lato-latin-700-normal.woff2",
+      "./node_modules/@fontsource/libre-baskerville/files/libre-baskerville-latin-400-normal.woff2",
+      "./node_modules/@fontsource/libre-baskerville/files/libre-baskerville-latin-400-italic.woff2",
+    ],
+  },
   async headers() {
     return [
       {

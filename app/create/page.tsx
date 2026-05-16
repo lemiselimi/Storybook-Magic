@@ -9,6 +9,7 @@ const THEMES = [
   { id: "ocean",      emoji: "🌊", title: "Deep Blue",          subtitle: "Ocean & Nature",         desc: "An underwater mystery only your child can solve" },
   { id: "jungle",     emoji: "🦁", title: "Jungle Crown",       subtitle: "Animals & Wildlife",     desc: "Your child becomes ruler of the animal kingdom for a day" },
   { id: "superpower", emoji: "🏆", title: "My Superpower",      subtitle: "Real Life Heroes",       desc: "Your child discovers their unique gift and uses it to help their community" },
+  { id: "worldcup",   emoji: "⚽", title: "World Cup Hero",      subtitle: "Football & Glory",        desc: "Your child leads their team all the way to the World Cup final and lifts the trophy" },
 ];
 
 const CHAPTER_NAMES = ["One", "Two", "Three", "Four", "Five", "Six"];
@@ -35,6 +36,7 @@ const THEME_CLOSING: Record<string, (name: string) => string> = {
   ocean:      (n) => `The ocean is deep and full of mystery — but so is your courage, ${n}. Never stop diving deeper into the wonder of the world.`,
   jungle:     (n) => `You are the ruler of your own kingdom, ${n}. Lead with kindness, speak with courage, and the world will always follow.`,
   superpower: (n) => `Your superpower is real, ${n}. It lives inside you every single day. The world is a brighter, better place because you are in it.`,
+  worldcup:   (n) => `You proved it, ${n}: champions are made of heart, not just skill. Keep chasing your dreams — the world is watching, and it is cheering for you.`,
 };
 
 const HAIR_COLORS = [
@@ -280,6 +282,39 @@ const SCENE_PROMPTS_BY_THEME: Record<string, string[]> = {
     "a photo of TOK, standing humbly and smiling as neighbours and friends cheer and applaud all around, " +
     "golden sparkles still floating gently from their hands, sunflowers blooming at their feet, " +
     "a warm sunny street celebration with banners and balloons in every direction. " + STYLE_TOKEN + " " + SAFETY,
+  ],
+
+  worldcup: [
+    "a photo of TOK, standing at the tunnel entrance of a massive floodlit football stadium, " +
+    "fully dressed in a bright football kit with long socks and shin guards and boots, " +
+    "one hand on the tunnel wall, staring out wide-eyed at the roaring crowd and glowing green pitch ahead, " +
+    "confetti already floating through the air, team flags waving in every direction. " + STYLE_TOKEN + " " + SAFETY,
+
+    "a photo of TOK, mid-sprint down the wing of a sunlit football pitch, " +
+    "fully dressed in a bright football kit with long socks shin guards and boots, " +
+    "ball at their feet, one arm pumping forward, hair and kit streaming in the wind, " +
+    "blurred defenders left behind, thousands of cheering fans filling the stadium stands behind them. " + STYLE_TOKEN + " " + SAFETY,
+
+    "a photo of TOK, frozen at the peak of a powerful strike, one leg fully extended toward the ball, " +
+    "body leaning back with intense focus, fully dressed in a bright football kit with long socks and boots, " +
+    "the ball curving into the top corner of the goal, the goalkeeper diving helplessly the other way, " +
+    "the net billowing dramatically as the stadium crowd erupts in a sea of colour behind. " + STYLE_TOKEN + " " + SAFETY,
+
+    "a photo of TOK, sprinting with both arms raised high in wild celebration after scoring, " +
+    "mouth open in a huge roar of joy, fully dressed in a bright football kit with long socks and boots, " +
+    "teammates piling in from every direction to celebrate, golden confetti raining down from the floodlights above, " +
+    "the packed stadium a blaze of colour and movement behind them. " + STYLE_TOKEN + " " + SAFETY,
+
+    "a photo of TOK, crouching intensely in goal, arms spread wide and eyes locked on the incoming penalty ball, " +
+    "fully dressed in a goalkeeper kit with long sleeves gloves long trousers and boots, " +
+    "diving full-stretch to tip the ball around the post at the last possible moment, " +
+    "the stadium crowd frozen in a single gasp, floodlights blazing overhead. " + STYLE_TOKEN + " " + SAFETY,
+
+    "a photo of TOK, standing on the podium of a packed World Cup final stadium, " +
+    "both arms raised high holding an enormous gleaming gold trophy above their head, " +
+    "fully dressed in a bright football kit with long socks and boots, " +
+    "golden confetti and ticker tape exploding from cannons all around, teammates cheering and lifting them, " +
+    "the entire stadium on its feet in a thunderous golden celebration. " + STYLE_TOKEN + " " + SAFETY,
   ],
 };
 

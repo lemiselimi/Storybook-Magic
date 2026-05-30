@@ -561,42 +561,11 @@ export default function StorybookCreator() {
       return;
     }
 
-    const success   = params.get("success");
-    const sessionId = params.get("session_id");
-    const ref       = params.get("ref");
-    if (success && sessionId && ref) {
-      const plan = params.get("plan");
-
-      const applyBookData = (data: any, result: any) => {
-        if (!result.ok) return;
-        setChildName(data.childName || ""); setChildAge(data.childAge ?? 5);
-        setChildGender(data.childGender || "boy"); setTheme(data.theme || "adventure");
-        setHairColor(data.hairColor || "brown"); setEyeColor(data.eyeColor || "brown");
-        if (data.photosBase64?.length) setPhotosBase64(data.photosBase64);
-        if (data.coverFalUrl) setCoverImageUrl(`/api/proxy?url=${encodeURIComponent(data.coverFalUrl)}`);
-        if (plan === "print") setPendingPrintSession(sessionId);
-        setTimeout(() => generateFullBook(data), 50);
-      };
-
-      const loadAndApply = async () => {
-        // Fast path: sessionStorage (same tab, same session)
-        const saved = sessionStorage.getItem(ref);
-        let data: any = saved ? JSON.parse(saved) : null;
-        try { sessionStorage.removeItem(ref); } catch {}
-
-        // Fallback: KV (works after tab close, refresh, or new-tab redirect)
-        if (!data) {
-          const kvRes = await fetch(`/api/get-book-ref?ref=${ref}`).then(r => r.json()).catch(() => null);
-          if (kvRes?.ok) data = kvRes.data;
-        }
-
-        if (!data) { console.error("Book ref not found in sessionStorage or KV"); return; }
-
-        const result = await fetch(`/api/verify-session?session_id=${sessionId}`).then(r => r.json()).catch(() => ({}));
-        applyBookData(data, result);
-      };
-
-      loadAndApply().catch(console.error);
+    // Legacy success redirect — new flow sends customers directly to /book/${ref}
+    const success = params.get("success");
+    const ref     = params.get("ref");
+    if (success && ref) {
+      window.location.replace(`/book/${ref}`);
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -1051,25 +1020,44 @@ export default function StorybookCreator() {
     setCheckoutLoading(plan);
     try {
       const ref = crypto.randomUUID();
+
+      // Pre-compute all 7 image prompts so the server-side webhook can generate
+      // images without needing access to client-side prompt logic.
+      const fullThemePrompts = SCENE_PROMPTS_BY_THEME[theme] ?? SCENE_PROMPTS_BY_THEME.adventure;
+      const USE_FIXED_PROMPTS = new Set(["worldcup"]);
+      const computedSeed = bookSeedRef.current ?? Math.floor(Math.random() * 2_147_483_647);
+      if (!bookSeedRef.current) bookSeedRef.current = computedSeed;
+
+      const scenePrompts = (previewStory?.pages || []).map((pg: any, i: number) => {
+        const base = USE_FIXED_PROMPTS.has(theme)
+          ? (fullThemePrompts[i] ?? fullThemePrompts[0])
+          : pg.illustration
+            ? `a photo of TOK, ${pg.illustration} Scene context: ${(pg.text || "").substring(0, 120)} ${STYLE_TOKEN} ${SAFETY}`
+            : (fullThemePrompts[i] ?? fullThemePrompts[0]);
+        return buildGenderedPrompt(base, childGender, childAge, hairColor, eyeColor);
+      });
+
       const bookData = {
         childName, childAge, childGender, theme, hairColor, eyeColor,
-        story: previewStory,
+        story:        previewStory,
         photosBase64: photosBase64,
-        loraUrl: loraUrl,
-        coverFalUrl: previewCoverUrl ? rawFalUrl(previewCoverUrl) : null,
-        previewFalUrls: previewImages.map(u => u ? rawFalUrl(u) : null),
+        loraUrl:      loraUrl,
         plan,
+        coverPrompt:  buildGenderedPrompt(COVER_PROMPT, childGender, childAge, hairColor, eyeColor),
+        scenePrompts,
+        seed:         computedSeed,
       };
-      // Save to sessionStorage (fast path) and KV (durable fallback)
-      try { sessionStorage.setItem(ref, JSON.stringify(bookData)); } catch {}
+
       await fetch("/api/save-book-ref", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ref, ...bookData }),
       });
+
       const res = await fetch("/api/checkout", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ref, plan }),
       }).then(r => r.json());
+
       if (res.url) window.location.href = res.url;
       else throw new Error(res.error || "Checkout failed");
     } catch (err: any) { alert("Payment setup failed: " + err.message); setCheckoutLoading(null); }

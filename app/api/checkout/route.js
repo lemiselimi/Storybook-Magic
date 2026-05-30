@@ -20,7 +20,7 @@ export async function POST(request) {
       mode: "payment",
       allow_promotion_codes: true,
       metadata: { ref, plan },
-      success_url: `${origin}/create?success=1&session_id={CHECKOUT_SESSION_ID}&ref=${ref}&plan=${plan}`,
+      success_url: `${origin}/book/${ref}?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/create?cancelled=1`,
       // Collect shipping address for print orders — Stripe shows address form at checkout
       ...(plan === "print" ? {

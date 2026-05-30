@@ -3,70 +3,63 @@ import { kv } from "@vercel/kv";
 
 export const maxDuration = 60;
 
-// Lulu production API
-const LULU_TOKEN_URL = "https://api.lulu.com/auth/realms/glasstree/protocol/openid-connect/token";
-const LULU_JOBS_URL  = "https://api.lulu.com/print-jobs/";
+const GELATO_API_URL = "https://order.gelatoapis.com/v4/orders";
 
-// 8.5×8.5" square, full color, premium, saddle stitch, 80lb coated white
-const DEFAULT_PACKAGE = "0850X0850.FC.PRE.SS.080CW444.MXX";
+async function createGelatoOrder(apiKey, { coverPdfUrl, interiorPdfUrl, shippingAddress, contactEmail, title, externalId }) {
+  const nameParts = (shippingAddress.name || "").trim().split(/\s+/);
+  const firstName  = nameParts[0] || "Guest";
+  const lastName   = nameParts.length > 1 ? nameParts.slice(1).join(" ") : firstName;
 
-async function getLuluToken() {
-  const params = new URLSearchParams({
-    grant_type:    "client_credentials",
-    client_id:     process.env.LULU_CLIENT_ID,
-    client_secret: process.env.LULU_CLIENT_SECRET,
-  });
-  const res = await fetch(LULU_TOKEN_URL, {
-    method:  "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body:    params.toString(),
-  });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Lulu auth failed: ${res.status} — ${text}`);
-  }
-  const data = await res.json();
-  return data.access_token;
-}
-
-async function createLuluJob(token, { coverPdfUrl, interiorPdfUrl, shippingAddress, contactEmail, title, externalId }) {
   const body = {
-    contact_email: contactEmail,
-    external_id:   externalId,
-    line_items: [{
-      title,
-      cover:    { source_url: coverPdfUrl },
-      interior: { source_url: interiorPdfUrl },
-      pod_package_id: process.env.LULU_PACKAGE_ID || DEFAULT_PACKAGE,
+    orderType:           "order",
+    orderReferenceId:    externalId,
+    customerReferenceId: externalId,
+    currency:            "USD",
+    items: [{
+      itemReferenceId: `${externalId}-1`,
+      productUid:      process.env.GELATO_PRODUCT_UID,
+      files: [
+        { type: "cover",   url: coverPdfUrl    },
+        { type: "default", url: interiorPdfUrl },
+      ],
       quantity: 1,
+      title,
     }],
-    shipping_address: shippingAddress,
-    shipping_level:   "GROUND",
-    production_delay: 120,
+    shipmentMethodUid: "normal",
+    shippingAddress: {
+      firstName,
+      lastName,
+      addressLine1: shippingAddress.street1   || "",
+      addressLine2: shippingAddress.street2   || undefined,
+      city:         shippingAddress.city      || "",
+      state:        shippingAddress.state_code || undefined,
+      postCode:     shippingAddress.postcode  || "",
+      country:      shippingAddress.country_code || "US",
+      email:        contactEmail,
+      phone:        shippingAddress.phone_number || undefined,
+    },
   };
 
-  const res = await fetch(LULU_JOBS_URL, {
+  const res = await fetch(GELATO_API_URL, {
     method:  "POST",
-    headers: {
-      "Authorization": `Bearer ${token}`,
-      "Content-Type":  "application/json",
-    },
-    body: JSON.stringify(body),
+    headers: { "X-API-KEY": apiKey, "Content-Type": "application/json" },
+    body:    JSON.stringify(body),
   });
 
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`Lulu print job failed: ${res.status} — ${text}`);
+    throw new Error(`Gelato order failed: ${res.status} — ${text}`);
   }
   return res.json();
 }
 
 export async function POST(request) {
+  const gelatoKey = process.env.GELATO_API_KEY;
   if (!process.env.STRIPE_SECRET_KEY) {
     return Response.json({ error: "Stripe not configured" }, { status: 503 });
   }
-  if (!process.env.LULU_CLIENT_ID || !process.env.LULU_CLIENT_SECRET) {
-    return Response.json({ error: "Lulu credentials not configured" }, { status: 503 });
+  if (!gelatoKey || !process.env.GELATO_PRODUCT_UID) {
+    return Response.json({ error: "Gelato credentials not configured" }, { status: 503 });
   }
 
   let body;
@@ -80,9 +73,7 @@ export async function POST(request) {
   if (!sessionId) return Response.json({ error: "sessionId required" }, { status: 400 });
 
   try {
-    // ── 1. Verify payment & get shipping address from Stripe ─────────────────
-    // shipping_details is auto-populated for sessions with shipping_address_collection —
-    // it is NOT an expandable property and must not be passed to expand[]
+    // ── 1. Verify payment & get shipping address from Stripe ──────────────────
     const stripe  = new Stripe(process.env.STRIPE_SECRET_KEY);
     const session = await stripe.checkout.sessions.retrieve(sessionId);
 
@@ -90,12 +81,11 @@ export async function POST(request) {
       return Response.json({ error: "Payment not completed" }, { status: 402 });
     }
 
-    // shipping_details is the primary source; customer_details.address is the fallback
     const shipping = session.shipping_details ?? null;
     const address  = shipping?.address ?? session.customer_details?.address ?? null;
 
     if (!address) {
-      return Response.json({ error: "No shipping address on Stripe session — make sure shipping_address_collection is enabled for print orders" }, { status: 400 });
+      return Response.json({ error: "No shipping address on Stripe session" }, { status: 400 });
     }
 
     const contactEmail = session.customer_details?.email || "";
@@ -108,18 +98,17 @@ export async function POST(request) {
       state_code:   address.state || "",
       postcode:     address.postal_code || "",
       country_code: address.country || "US",
-      email:        contactEmail,
       phone_number: session.customer_details?.phone || "",
     };
 
-    // ── 2. Generate print-ready PDFs ─────────────────────────────────────────
+    // ── 2. Generate print-ready PDFs ──────────────────────────────────────────
     const origin = request.headers.get("origin") ||
                    (process.env.NEXT_PUBLIC_SITE_URL ?? "https://mytinytales.studio");
 
     const pdfRes = await fetch(`${origin}/api/generate-book-pdf`, {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ coverFalUrl, pageFalUrls, story, childName, theme }),
+      body:    JSON.stringify({ coverFalUrl, pageFalUrls, story, childName, theme }),
     });
 
     if (!pdfRes.ok) {
@@ -129,15 +118,12 @@ export async function POST(request) {
 
     const { coverPdfUrl, interiorPdfUrl } = await pdfRes.json();
 
-    // ── 3. Submit print job to Lulu ─────────────────────────────────────────
-    const token = await getLuluToken();
-
+    // ── 3. Submit print order to Gelato ───────────────────────────────────────
     const capName = childName
       ? childName.charAt(0).toUpperCase() + childName.slice(1).toLowerCase()
       : "a special child";
 
-    // Append timestamp so retries don't collide on Lulu's external_id uniqueness check
-    const luluJob = await createLuluJob(token, {
+    const gelatoOrder = await createGelatoOrder(gelatoKey, {
       coverPdfUrl,
       interiorPdfUrl,
       shippingAddress,
@@ -146,32 +132,35 @@ export async function POST(request) {
       externalId: `${sessionId}-${Date.now()}`,
     });
 
-    console.log("Lulu print job created:", luluJob.id, "status:", luluJob.status);
+    console.log("Gelato order created:", gelatoOrder.id, "status:", gelatoOrder.fulfillmentStatus);
 
-    // Update KV order record with Lulu job ID
+    // Update KV order record
     try {
       const existing = await kv.get(`order:${sessionId}`) || {};
-      await kv.set(`order:${sessionId}`, { ...existing, status: "fulfilled", luluJobId: luluJob.id, fulfilledAt: new Date().toISOString() }, { ex: 2_592_000 });
+      await kv.set(`order:${sessionId}`, {
+        ...existing,
+        status:       "fulfilled",
+        gelatoOrderId: gelatoOrder.id,
+        fulfilledAt:  new Date().toISOString(),
+      }, { ex: 2_592_000 });
     } catch (kvErr) {
       console.error("KV update failed (non-fatal):", kvErr.message);
     }
 
     return Response.json({
-      ok:         true,
-      luluJobId:  luluJob.id,
-      status:     luluJob.status,
-      eta:        luluJob.date_created,
+      ok:            true,
+      gelatoOrderId: gelatoOrder.id,
+      status:        gelatoOrder.fulfillmentStatus,
     });
 
   } catch (err) {
     console.error("Fulfill print order error:", err.message);
 
-    // Alert admin on any failure
     if (process.env.RESEND_API_KEY) {
       fetch("https://api.resend.com/emails", {
-        method: "POST",
+        method:  "POST",
         headers: { "Authorization": `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
+        body:    JSON.stringify({
           from:    "My Tiny Tales <hello@mytinytales.studio>",
           to:      ["hello@mytinytales.studio"],
           subject: `⚠️ Print order failed — ${body?.sessionId || "unknown session"}`,

@@ -50,7 +50,7 @@ export async function POST(request) {
       input: {
         images_data_url: zipUrl,
         trigger_word: "TOK",
-        steps: 300,
+        steps: 200,
         rank: 16,
         learning_rate: 0.0004,
         multiresolution_training: true,

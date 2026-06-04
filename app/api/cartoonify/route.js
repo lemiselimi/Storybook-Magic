@@ -49,7 +49,7 @@ export async function POST(request) {
         reference_image_url: photoUrl,
         prompt: `${ageDesc} ${genderWord}${appearance ? ` with ${appearance}` : ""}, facing camera, warm friendly smile, cinematic 3D animated storybook portrait, colorful storybook outfit, soft studio lighting, clean pastel gradient background, high-quality CGI render`,
         negative_prompt: "different person, wrong face, altered face, realistic photo, dark, scary, blurry, low quality, adult, teenager, wrong age, text, watermark, deformed, ugly, multiple people, sunglasses",
-        num_inference_steps: 35,
+        num_inference_steps: 25,
         guidance_scale: 2.5,
         true_cfg: 1,
         id_weight: 1.0,

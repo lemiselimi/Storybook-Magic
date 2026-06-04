@@ -31,7 +31,7 @@ export async function POST(request) {
         prompt,
         negative_prompt: NEGATIVE_PROMPT,
         loras: [{ path: loraUrl, scale: 1.0 }],
-        num_inference_steps: 28,
+        num_inference_steps: 20,
         guidance_scale: 6.0,
         image_size: "square_hd",
         enable_safety_checker: true,

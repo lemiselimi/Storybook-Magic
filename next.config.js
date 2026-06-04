@@ -7,9 +7,9 @@ const nextConfig = {
   // fs.readFileSync paths aren't statically analysable, so file tracing misses them.
   outputFileTracingIncludes: {
     "/api/generate-book-pdf": [
-      "./node_modules/@fontsource/lato/files/lato-latin-700-normal.woff2",
-      "./node_modules/@fontsource/libre-baskerville/files/libre-baskerville-latin-400-normal.woff2",
-      "./node_modules/@fontsource/libre-baskerville/files/libre-baskerville-latin-400-italic.woff2",
+      "./node_modules/@fontsource/lato/files/lato-latin-700-normal.woff",
+      "./node_modules/@fontsource/libre-baskerville/files/libre-baskerville-latin-400-normal.woff",
+      "./node_modules/@fontsource/libre-baskerville/files/libre-baskerville-latin-400-italic.woff",
     ],
   },
   async headers() {

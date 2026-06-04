@@ -48,9 +48,12 @@ function loadFont(pkg, file) {
   return fs.readFileSync(path.join(FONT_DIR, pkg, "files", file));
 }
 
-const BOLD_BYTES    = loadFont("@fontsource/lato",               "lato-latin-700-normal.woff2");
-const REGULAR_BYTES = loadFont("@fontsource/libre-baskerville",  "libre-baskerville-latin-400-normal.woff2");
-const ITALIC_BYTES  = loadFont("@fontsource/libre-baskerville",  "libre-baskerville-latin-400-italic.woff2");
+// WOFF (not WOFF2) — fontkit parses WOFF via zlib reliably in serverless.
+// WOFF2 uses Brotli decompression which produces malformed glyph tables on Vercel,
+// causing text to print as dots and dashes.
+const BOLD_BYTES    = loadFont("@fontsource/lato",               "lato-latin-700-normal.woff");
+const REGULAR_BYTES = loadFont("@fontsource/libre-baskerville",  "libre-baskerville-latin-400-normal.woff");
+const ITALIC_BYTES  = loadFont("@fontsource/libre-baskerville",  "libre-baskerville-latin-400-italic.woff");
 
 function sanitize(str) {
   return (str || "")

@@ -3,13 +3,14 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 
 const THEMES = [
-  { id: "adventure",  emoji: "🌋", title: "The Big Adventure", subtitle: "Quest & Exploration",  desc: "Your child discovers a hidden world and must be brave to save the day", popular: true },
-  { id: "dragon",     emoji: "🐉", title: "Dragon Tamer",      subtitle: "Fantasy & Magic",       desc: "A magical creature needs help and only your child has what it takes" },
-  { id: "space",      emoji: "🚀", title: "To The Stars",      subtitle: "Space & Science",        desc: "Your child blasts off into the cosmos on a mission to save the universe" },
-  { id: "ocean",      emoji: "🌊", title: "Deep Blue",          subtitle: "Ocean & Nature",         desc: "An underwater mystery only your child can solve" },
-  { id: "jungle",     emoji: "🦁", title: "Jungle Crown",       subtitle: "Animals & Wildlife",     desc: "Your child becomes ruler of the animal kingdom for a day" },
-  { id: "superpower", emoji: "🏆", title: "My Superpower",      subtitle: "Real Life Heroes",       desc: "Your child discovers their unique gift and uses it to help their community" },
-  { id: "worldcup",   emoji: "⚽", title: "World Cup Hero",      subtitle: "Football & Glory",        desc: "Your child is the star striker for the USA at the World Cup final. Follow this exact arc — Page 1: child walks out of the tunnel into the roaring stadium. Page 2: first sprint with the ball, leaving defenders behind. Page 3: the USA team falls behind and the pressure builds on child. Page 4: child earns a crucial penalty kick and steps up to take it. Page 5: child blasts the ball into the net — USA win! Page 6: child lifts the golden World Cup trophy as fireworks explode above the stadium." },
+  { id: "july4",      emoji: "🎆", title: "Fireworks Night",    subtitle: "A Fourth of July Story", desc: "Your child saves the town's Fourth of July celebration — from parade leader to the big fireworks finale", seasonal: true, popular: true },
+  { id: "worldcup",   emoji: "⚽", title: "World Cup Hero",      subtitle: "USA World Cup 2026",      desc: "Your child is the star striker for the USA at the World Cup final — from tunnel walk to trophy lift", seasonal: true },
+  { id: "adventure",  emoji: "🌋", title: "The Big Adventure",  subtitle: "Quest & Exploration",     desc: "Your child discovers a hidden world and must be brave to save the day" },
+  { id: "dragon",     emoji: "🐉", title: "Dragon Tamer",       subtitle: "Fantasy & Magic",          desc: "A magical creature needs help and only your child has what it takes" },
+  { id: "space",      emoji: "🚀", title: "To The Stars",       subtitle: "Space & Science",          desc: "Your child blasts off into the cosmos on a mission to save the universe" },
+  { id: "ocean",      emoji: "🌊", title: "Deep Blue",           subtitle: "Ocean & Nature",           desc: "An underwater mystery only your child can solve" },
+  { id: "jungle",     emoji: "🦁", title: "Jungle Crown",        subtitle: "Animals & Wildlife",       desc: "Your child becomes ruler of the animal kingdom for a day" },
+  { id: "superpower", emoji: "🏆", title: "My Superpower",       subtitle: "Real Life Heroes",         desc: "Your child discovers their unique gift and uses it to help their community" },
 ];
 
 const CHAPTER_NAMES = ["One", "Two", "Three", "Four", "Five", "Six"];
@@ -321,6 +322,43 @@ const SCENE_PROMPTS_BY_THEME: Record<string, string[]> = {
     "fully dressed in a white USA soccer jersey with red and blue trim long socks and cleats, " +
     "red white and blue confetti and ticker tape exploding in every direction, teammates in USA kits cheering and hugging, " +
     "the sky above the stadium blazing with fireworks and American flags filling every stand. " + STYLE_TOKEN + " " + SAFETY,
+  ],
+
+  july4: [
+    // Scene 1 — chosen to lead the parade
+    "a photo of TOK, standing proudly at the very front of a small-town Fourth of July parade, " +
+    "dressed in a red white and blue patriotic outfit, an American flag in each raised hand, " +
+    "face beaming with pride and excitement, bunting-draped storefronts and cheering crowd lining Main Street on both sides, " +
+    "brilliant summer sunshine, red white and blue streamers and confetti filling the air. " + STYLE_TOKEN + " " + SAFETY,
+
+    // Scene 2 — marching at the head of the parade
+    "a photo of TOK, marching confidently down a festive Main Street as parade leader, " +
+    "dressed in a red white and blue patriotic outfit, holding a large American flag high above their head, " +
+    "huge grin, a marching band in uniform stepping behind them, crowds waving flags and cheering from both sides, " +
+    "storefronts decorated with red white and blue bunting and star banners in the summer sun. " + STYLE_TOKEN + " " + SAFETY,
+
+    // Scene 3 — fireworks launcher breaks, celebration at risk
+    "a photo of TOK, kneeling next to a large fireworks launch console that has gone dark and silent, " +
+    "dressed in a red white and blue patriotic outfit, brow furrowed with worried determination, " +
+    "wires and panels open in front of them, worried townspeople gathered around in the background, " +
+    "the dark night sky empty and waiting, American flags hanging still. " + STYLE_TOKEN + " " + SAFETY,
+
+    // Scene 4 — the low moment, thinking it through alone
+    "a photo of TOK, sitting on a wooden step with elbows on knees and chin resting in both hands, thinking hard, " +
+    "dressed in a red white and blue patriotic outfit, expression serious and focused with quiet determination, " +
+    "a few concerned friends and neighbours sitting nearby, lanterns glowing softly in the warm summer twilight. " + STYLE_TOKEN + " " + SAFETY,
+
+    // Scene 5 — child's idea saves the show, everyone rallies
+    "a photo of TOK, standing on a float with arms raised directing townsfolk into action, " +
+    "dressed in a red white and blue patriotic outfit, face alive with joy and confidence, " +
+    "kids and adults working together happily all around them, the float glowing back to life with lights and decorations, " +
+    "the crowd watching with hope and cheers beginning to build. " + STYLE_TOKEN + " " + SAFETY,
+
+    // Scene 6 — fireworks finale, whole town celebrates the child
+    "a photo of TOK, standing on a stage with both arms raised high in triumph, " +
+    "dressed in a red white and blue patriotic outfit, face lit by spectacular red white and blue fireworks " +
+    "exploding in magnificent bursts directly above, the entire town cheering below, " +
+    "American flags waving everywhere, golden sparks and colourful stars raining down over the celebration. " + STYLE_TOKEN + " " + SAFETY,
   ],
 };
 
@@ -666,7 +704,7 @@ export default function StorybookCreator() {
             method: "POST", headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               childName, childAge: String(childAge), gender: childGender, hairColor, eyeColor,
-              theme: `${selectedTheme?.title} - ${selectedTheme?.subtitle}: ${selectedTheme?.desc}`,
+              themeId: selectedTheme?.id,
             }),
           }, 60_000).then(r => r.json());
       pendingStoryRef.current = null;
@@ -894,11 +932,10 @@ export default function StorybookCreator() {
       let storyData = _savedStory;
 
       if (!storyData) {
-        const sel = THEMES.find(t => t.id === _theme);
         setLoadingMsg("Writing your story...");
         const res = await fetchWithTimeout("/api/story", {
           method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ childName: _name, childAge: String(_age), gender: _gender, hairColor: _hair, eyeColor: _eye, theme: `${sel?.title} - ${sel?.subtitle}` }),
+          body: JSON.stringify({ childName: _name, childAge: String(_age), gender: _gender, hairColor: _hair, eyeColor: _eye, themeId: _theme }),
         }, 60_000).then(r => r.json());
         storyData = res?.pages ? res : getFallbackStory(_name);
       }
@@ -974,7 +1011,7 @@ export default function StorybookCreator() {
         const fullThemePrompts = SCENE_PROMPTS_BY_THEME[_theme] ?? SCENE_PROMPTS_BY_THEME.adventure;
         // Themes with costume/kit requirements use hardcoded prompts so the gear is always correct.
         // For all other themes, use the AI illustration description for per-page accuracy.
-        const USE_FIXED_PROMPTS = new Set(["worldcup"]);
+        const USE_FIXED_PROMPTS = new Set(["worldcup", "july4"]);
         const fullStoryPrompts = (storyData?.pages || []).map((pg: any, i: number) =>
           USE_FIXED_PROMPTS.has(_theme)
             ? (fullThemePrompts[i] ?? fullThemePrompts[0])
@@ -1024,7 +1061,7 @@ export default function StorybookCreator() {
       // Pre-compute all 7 image prompts so the server-side webhook can generate
       // images without needing access to client-side prompt logic.
       const fullThemePrompts = SCENE_PROMPTS_BY_THEME[theme] ?? SCENE_PROMPTS_BY_THEME.adventure;
-      const USE_FIXED_PROMPTS = new Set(["worldcup"]);
+      const USE_FIXED_PROMPTS = new Set(["worldcup", "july4"]);
       const computedSeed = bookSeedRef.current ?? Math.floor(Math.random() * 2_147_483_647);
       if (!bookSeedRef.current) bookSeedRef.current = computedSeed;
 
@@ -1070,12 +1107,11 @@ export default function StorybookCreator() {
     // Pre-warm Claude story generation the moment the user hits Generate
     // so it runs in parallel with any LoRA training instead of sequentially
     if (newStep === 5 && !pendingStoryRef.current) {
-      const sel = THEMES.find(t => t.id === theme);
       pendingStoryRef.current = fetchWithTimeout("/api/story", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           childName, childAge: String(childAge), gender: childGender, hairColor, eyeColor,
-          theme: `${sel?.title} - ${sel?.subtitle}: ${sel?.desc}`,
+          themeId: theme,
         }),
       }, 60_000).then(r => r.json()).catch(() => null);
     }
@@ -1691,6 +1727,7 @@ export default function StorybookCreator() {
                   {THEMES.map((t) => (
                     <div key={t.id} className="theme-card" onClick={() => setTheme(t.id)} style={{ position: "relative", padding: "22px 18px 18px", borderRadius: 20, cursor: "pointer", border: `2px solid ${theme === t.id ? "#E8C07A" : "rgba(255,255,255,0.1)"}`, background: theme === t.id ? "rgba(232,192,122,0.08)" : "rgba(255,255,255,0.04)", boxShadow: theme === t.id ? "0 0 24px rgba(232,192,122,0.18)" : "0 2px 8px rgba(0,0,0,0.2)" }}>
                       {t.popular && <div style={{ position: "absolute", top: -10, right: 12, background: "linear-gradient(135deg, #ff6b6b, #ee5a24)", color: "white", fontSize: 9, fontWeight: 800, padding: "3px 10px", borderRadius: 20, letterSpacing: "0.06em" }}>MOST POPULAR</div>}
+                      {!t.popular && t.seasonal && <div style={{ position: "absolute", top: -10, right: 12, background: "linear-gradient(135deg, #00b894, #00cec9)", color: "white", fontSize: 9, fontWeight: 800, padding: "3px 10px", borderRadius: 20, letterSpacing: "0.06em" }}>🌍 LIVE NOW</div>}
                       <div style={{ fontSize: 44, marginBottom: 11 }}>{t.emoji}</div>
                       <div style={{ color: theme === t.id ? "#E8C07A" : "white", fontWeight: 700, fontSize: 16, marginBottom: 3 }}>{t.title}</div>
                       <div style={{ color: theme === t.id ? "rgba(232,192,122,0.65)" : "rgba(255,255,255,0.35)", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 9 }}>{t.subtitle}</div>

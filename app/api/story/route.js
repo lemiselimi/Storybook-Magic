@@ -5,8 +5,7 @@ export const maxDuration = 60;
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 // In-memory rate limiting: 5 story generations per IP per 24 h
-// (resets on cold start; acceptable without a KV store)
-const rateLimitMap = new Map(); // ip -> { count, resetAt }
+const rateLimitMap = new Map();
 const RATE_LIMIT  = 5;
 const RATE_WINDOW = 24 * 60 * 60 * 1000;
 
@@ -22,6 +21,112 @@ function checkRateLimit(ip) {
   return true;
 }
 
+const THEME_DATA = {
+  july4: {
+    title: "Fireworks Night",
+    category: "A Fourth of July Story",
+    arc: [
+      "Child is chosen to lead the whole town's Fourth of July parade — red, white, and blue outfit on, flag in hand, heart full of pride.",
+      "Child marches at the very front of the parade down a cheering Main Street, flag held high, soaking in every moment.",
+      "Disaster — the fireworks launch console goes dark minutes before the grand finale, and the celebration is on the verge of falling apart.",
+      "Child sits alone for a quiet moment with the weight of the whole town's night on their shoulders, thinking hard, not giving up.",
+      "Child has an idea — rallies the whole town, everyone works together, and the show comes back to life because of them.",
+      "Spectacular red, white, and blue fireworks explode overhead, the whole town cheering the child's name as stars rain down over the celebration.",
+    ],
+  },
+  adventure: {
+    title: "The Big Adventure",
+    category: "Quest & Exploration",
+    arc: [
+      "Child steps through a hidden door and enters a magical world for the very first time — wide-eyed, heart pounding.",
+      "Child explores and discovers something wondrous: a glowing map, a talking creature, or a voice calling their name.",
+      "Child faces their first real obstacle — a crumbling bridge, a locked gate, a creature blocking the path — and tries something that doesn't quite work.",
+      "A friendly guide or magical creature appears and gives a cryptic clue, but the child must act on their own.",
+      "Child uses their unique quality — bravery, kindness, or cleverness — to overcome the final challenge in a satisfying, specific way.",
+      "Child returns home changed, carrying a small piece of the magical world, knowing the adventure will always be part of them.",
+    ],
+  },
+  dragon: {
+    title: "Dragon Tamer",
+    category: "Fantasy & Magic",
+    arc: [
+      "Child discovers a small, frightened dragon hiding in an unexpected place — injured, alone, and desperate for help.",
+      "Child earns the dragon's trust slowly, with patience and gentleness, and the dragon reveals it has a secret.",
+      "A storm or threat arrives; the scared dragon accidentally causes chaos, and the child must stay calm.",
+      "Child and dragon find a way to truly understand each other, and the dragon reveals the real danger they must face together.",
+      "Child and dragon act as one — dragon flies, child guides — and together they solve the problem no one else could.",
+      "The danger is gone; dragon and child share a moment of pure joy, and the child knows this friendship will last forever.",
+    ],
+  },
+  space: {
+    title: "To The Stars",
+    category: "Space & Science",
+    arc: [
+      "Child receives an urgent signal from deep space — a distant planet is in trouble and only one person can help.",
+      "Child launches into the cosmos, rocketing past moons and stars, filled with wonder and just a little fear.",
+      "Child arrives to find the planet dark and its creatures frightened — the sun is dimming and no one knows why.",
+      "Child discovers the cause of the problem and realizes the solution is something small they brought from home.",
+      "Child activates the solution — light floods back across the planet, creatures cheer, stars burst into colour.",
+      "Child returns to Earth as a hero, gazes up at the night sky, and smiles knowing a distant world shines because of them.",
+    ],
+  },
+  ocean: {
+    title: "Deep Blue",
+    category: "Ocean & Nature",
+    arc: [
+      "Child dives beneath the waves and discovers a dazzling underwater kingdom full of colour, light, and wonder.",
+      "A sea creature swims up in a panic — the coral is going dark and the ocean is getting cold.",
+      "Child explores to find the source of the problem and hits an obstacle: a tangled net, a blocked current, a sealed cave.",
+      "A wise old turtle offers a riddle-clue, but only the child is small or clever enough to act on it.",
+      "Child solves the puzzle — coral blazes back to life in every colour, fish cheer, the whole ocean glows.",
+      "Child surfaces home carrying a single shell, and every night holds it to their ear to hear the ocean say thank you.",
+    ],
+  },
+  jungle: {
+    title: "Jungle Crown",
+    category: "Animals & Wildlife",
+    arc: [
+      "Child arrives in the jungle and is greeted by a parade of animals who crown them ruler for the day.",
+      "Child explores the kingdom — every creature has a job, a name, and something to show their new leader.",
+      "Two animals are in a fierce argument and the whole jungle is taking sides — only the child can settle it fairly.",
+      "Child listens carefully to both sides and comes up with a creative, unexpected solution no animal had thought of.",
+      "Peace is restored — the jungle erupts in celebration, animals dancing, birds singing, the canopy exploding with colour.",
+      "The crown is returned at sunset, but as child leaves, every animal calls out: 'You'll always be our queen/king.'",
+    ],
+  },
+  superpower: {
+    title: "My Superpower",
+    category: "Real Life Heroes",
+    arc: [
+      "Child feels ordinary — everyone else seems to have a special talent, and they're still searching for theirs.",
+      "Something goes wrong in the community — a problem no adult or expert can fix, and people are starting to give up.",
+      "Child tries to help but stumbles badly — it doesn't work the first time, and real doubt creeps in.",
+      "A neighbour, teacher, or friend gently points out something the child does naturally, without thinking, that nobody else can.",
+      "Child uses that exact quality — empathy, creativity, stubborn persistence, or boundless imagination — to solve the problem completely.",
+      "The community comes together in celebration, and child realises: the superpower was always theirs — they just needed to find it.",
+    ],
+  },
+  worldcup: {
+    title: "World Cup Hero",
+    category: "Football & Glory",
+    arc: [
+      "Child walks out of the tunnel onto the World Cup final pitch as the roar of the crowd shakes the ground beneath their boots.",
+      "Child sprints with the ball deep into opposition territory, leaving two defenders stumbling, the crowd rising to their feet.",
+      "USA fall behind — the clock is ticking, and all eyes on the pitch turn to the child as the weight of the nation lands on their shoulders.",
+      "Child wins a crucial penalty in the dying minutes and steps up alone to the spot, the whole world holding its breath.",
+      "Child blasts the ball into the top corner — the net explodes, the crowd erupts, teammates pile on — USA have won the World Cup.",
+      "Child lifts the golden trophy high above their head as fireworks light up the night sky and every fan chants their name.",
+    ],
+  },
+};
+
+function getAgeBand(ageNum) {
+  if (ageNum <= 3)  return "1-3";
+  if (ageNum <= 6)  return "4-6";
+  if (ageNum <= 9)  return "7-9";
+  return "10-12";
+}
+
 export async function POST(request) {
   try {
     const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
@@ -33,82 +138,83 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { childName: rawName, childAge, gender, theme: rawTheme, hairColor, eyeColor } = body;
+    const { childName: rawName, childAge, gender, themeId } = body;
 
-    // Sanitize user inputs before interpolating into prompts
     const childName = String(rawName || "").replace(/["\n\\]/g, " ").trim().slice(0, 60);
-    const theme     = String(rawTheme || "").replace(/["\n\\]/g, " ").trim().slice(0, 200);
+    const ageNum    = Number(childAge) || 5;
+    const ageBand   = getAgeBand(ageNum);
+    const pronouns  = gender === "girl" ? "she/her" : gender === "boy" ? "he/him" : "they/them";
 
-    console.log("Story API called with:", { childName, childAge, gender, theme, hairColor, eyeColor });
+    const theme = THEME_DATA[themeId] ?? THEME_DATA.adventure;
 
-    const hairDesc       = hairColor ? `${hairColor.replace(/-/g, " ")} hair` : "";
-    const eyeDesc        = eyeColor  ? `${eyeColor.replace(/-/g, " ")} eyes`  : "";
-    const appearanceParts = [hairDesc, eyeDesc].filter(Boolean);
-    // Appearance is passed only for illustration descriptions — never mentioned in story text
-    const appearanceNote = appearanceParts.length
-      ? `Appearance for illustration descriptions only: ${appearanceParts.join(", ")}. Use this ONLY in the "illustration" fields, never in the story text.`
-      : "";
+    console.log("Story API:", { childName, ageNum, ageBand, pronouns, themeId });
 
-    const ageNum = Number(childAge) || 5;
-    let ageGuidance;
-    if      (ageNum <= 2)  ageGuidance = "TODDLER (1-2 yrs): extremely simple 1-sentence text per page, very basic vocabulary, rhyming if possible. Illustrations should show a tiny toddler.";
-    else if (ageNum <= 4)  ageGuidance = "PRESCHOOLER (3-4 yrs): simple short sentences, basic words, playful tone. Illustrations show a small preschooler.";
-    else if (ageNum <= 7)  ageGuidance = "EARLY READER (5-7 yrs): short sentences, simple vocabulary, exciting action. Illustrations show a young child.";
-    else if (ageNum <= 10) ageGuidance = "MIDDLE GRADE (8-10 yrs): richer vocabulary, more complex sentences, emotional depth.";
-    else                   ageGuidance = "PRETEEN (11-12 yrs): sophisticated vocabulary, nuanced emotions, more complex plot.";
-
-    const pronouns = gender === "girl" ? "she/her" : gender === "boy" ? "he/him" : "they/them";
-    const pronoun  = gender === "girl" ? "she"     : gender === "boy" ? "he"     : "they";
-    const name     = childName || "our hero";
+    const arcJson = JSON.stringify(theme.arc);
 
     const response = await client.messages.create({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 1800,
+      max_tokens: 2000,
+      system: `You are a children's book author writing personalized illustrated storybooks for "My Tiny Tales." Each book is 6 pages, one short story moment per page. The book is being made as a keepsake — emotional, beautiful, and treasured.
+
+YOUR TASK:
+Write exactly 6 pages of story. Each page is ONE story beat from the story_arc, adapted to the child's age band. Return ONLY valid JSON in this structure:
+{"title":"string — a custom book title using the child's name (e.g. 'Lily's World Cup Magic')","dedication":"string — one warm line dedicated to the child, e.g. 'For Aria, the bravest explorer in the cosmos'","pages":[{"pageNum":1,"text":"..."},{"pageNum":2,"text":"..."},{"pageNum":3,"text":"..."},{"pageNum":4,"text":"..."},{"pageNum":5,"text":"..."},{"pageNum":6,"text":"..."}]}
+
+UNIVERSAL RULES (every age band):
+- The CHILD is the hero. Always center them in the action. Never let a sidekick or parent steal the moment.
+- Use the child's name on most pages, naturally — not every page, but most.
+- Use the correct pronouns throughout.
+- Ending must be warm, victorious, or emotionally resolved. No cliffhangers, no sadness on page 6.
+- No violence beyond mild adventure peril (chasing, racing, gentle danger). No weapons used to harm anyone.
+- No romance, no scary villains, no death, no bodily fluids, no toilet humor.
+- No real-world public figures, no copyrighted characters.
+- No commentary, no preamble — return ONLY the JSON.
+- Page text must NOT include the chapter number or "Page X" — only the story text itself.
+
+AGE BAND VOICE GUIDE:
+If age_band = "1-3" (Toddler): 1-2 short sentences per page. Vocabulary a 2-year-old recognizes. Heavy sound words: whoosh!, boom!, yay!, zoom! Lots of repetition and rhythm. Total ~40-80 words.
+If age_band = "4-6" (Pre-K): 3-4 sentences per page. Simple emotions named directly: brave, nervous, proud, happy. Short bits of dialogue. Active verbs. Total ~150-220 words.
+If age_band = "7-9" (Early Reader): 5-6 sentences per page. Varied sentence structure. Light internal thoughts. More nuanced emotions: doubt, determination, hope, relief. Light sensory detail. Total ~300-400 words.
+If age_band = "10-12" (Middle Grade): 6-8 sentences per page. Richer interior life. Light metaphor and sensory writing. Subtle foreshadowing, payoff later. Emotional complexity welcome. Total ~500-650 words.
+
+STRUCTURE OF THE SIX PAGES (universal):
+- Page 1: Opening — introduce the child in the world of the adventure. Establish the dream/goal.
+- Page 2: The journey begins. First action, first taste of the adventure.
+- Page 3: A challenge appears. Stakes rise.
+- Page 4: The low moment. Doubt, difficulty, or the biggest obstacle.
+- Page 5: The breakthrough. The child overcomes through their own courage/kindness/cleverness.
+- Page 6: Triumph and warmth. The reward, the celebration, and a quiet emotional beat for the keepsake.
+
+TITLE RULE:
+- The book title should include the child's name and feel like a real picture book title.
+- Examples: "Lily's Brave Penalty Kick", "Theo and the Lonely Dragon", "Aria's Deep Blue Secret"
+- Avoid generic titles like "The Adventure" or "A Magical Day"
+
+SUBTITLE RULE:
+- 3-6 words evoking the category emotion.
+- Examples: "A World Cup Story", "A Fairy-Tale Friendship", "An Ocean Adventure"
+- Put this in the "dedication" field as a companion to the warm dedication line — format: "For [Name], [warm line]. [Subtitle]."
+
+FINAL CHECK BEFORE RETURNING:
+- All 6 pages written? ✓
+- Age band voice consistent across all pages? ✓
+- Child is the hero on every page? ✓
+- Ending warm and resolved? ✓
+- Valid JSON, no extra text? ✓`,
       messages: [{
         role: "user",
-        content: `You are a world-class children's book author — think the warmth of Julia Donaldson, the imagination of Roald Dahl, and the emotional punch of Pixar. Write a 6-page personalised storybook.
-
-CHILD: ${name}, age ${childAge || 5}, pronouns ${pronouns}
-THEME: ${theme}
-${appearanceNote}
-
-STORY RULES:
-- Page 1: Open with a single vivid sentence that drops us straight into the world — no "once upon a time". Establish ${name}'s world and hint at what ${pronoun} wants most.
-- Page 2: Something unexpected happens — a discovery, a call to adventure, a problem that only ${name} can solve.
-- Page 3: ${name} faces their first real challenge. ${pronoun.charAt(0).toUpperCase() + pronoun.slice(1)} tries something and it doesn't quite work. Show courage despite doubt.
-- Page 4: The stakes rise. Things get harder or more magical. A helper, creature, or surprise appears.
-- Page 5: The climax — ${name}'s unique quality (bravery, kindness, cleverness, imagination) saves the day in a specific, satisfying way.
-- Page 6: A warm, earned resolution. The world has changed because ${name} was in it. End on one short, resonant sentence.
-
-WRITING RULES:
-- Age level: ${ageGuidance}
-- Use ${name}'s name naturally — not in every sentence, but enough to feel personal
-- Use specific, concrete details — not "a big tree" but "an oak tree so wide it took ten hugs to reach around"
-- Use sound words, action verbs, and short punchy sentences for excitement
-- Every page must end on a moment that makes you want to turn the page
-- NEVER describe physical appearance (hair, eyes, skin, height) — focus on actions, feelings, and personality
-- Pronouns: ${pronouns}
-
-WORLD CONSISTENCY RULES:
-- Decide on ONE consistent world/setting for the story (e.g. a meadow village, an enchanted forest, a space station) and keep it present across all 6 pages — the environment should feel like one continuous place, not 6 different locations
-- Recurring characters (a rabbit friend, a dragon, a neighbour) introduced in the text MUST appear in every subsequent page they are mentioned in
-
-ILLUSTRATION RULES — CRITICAL:
-- The illustration field must be a literal visual description of EXACTLY what is happening in the text field for that same page
-- Every character, creature, and object named in the text MUST appear in the illustration — if the text says "a fluffy rabbit hopped over", the illustration MUST include a fluffy rabbit
-- If the text says a neighbour heard something, show the neighbour in the scene
-- Always specify the child's age accurately: ${ageNum <= 2 ? "a tiny baby toddler" : ageNum <= 4 ? "a small preschooler" : ageNum <= 7 ? "a young child" : "an older child"}
-- Describe: the specific moment from the text, all characters present, the setting, emotion, and lighting
-- Each illustration should feel like a frame from the same animated film — consistent world, different moments
-
-Respond ONLY with this exact JSON, no markdown, no extra text:
-{"title":"A short punchy book title (max 5 words)","dedication":"A warm one-line dedication to ${name}","pages":[{"pageNum":1,"text":"Page text.","illustration":"Scene description."},{"pageNum":2,"text":"Page text.","illustration":"Scene description."},{"pageNum":3,"text":"Page text.","illustration":"Scene description."},{"pageNum":4,"text":"Page text.","illustration":"Scene description."},{"pageNum":5,"text":"Page text.","illustration":"Scene description."},{"pageNum":6,"text":"Page text.","illustration":"Scene description."}]}`
-      }]
+        content: `child_name: ${childName}
+child_pronouns: ${pronouns}
+age_band: ${ageBand}
+adventure_title: ${theme.title}
+adventure_category: ${theme.category}
+story_arc: ${arcJson}`,
+      }],
     });
 
-    const text = response.content[0].text;
+    const text  = response.content[0].text;
     console.log("Raw response:", text.substring(0, 200));
-    const clean = text.replace(/```json|```/g, "").trim();
+    const clean  = text.replace(/```json|```/g, "").trim();
     const parsed = JSON.parse(clean);
     console.log("Parsed successfully, pages:", parsed.pages?.length);
     return Response.json(parsed);

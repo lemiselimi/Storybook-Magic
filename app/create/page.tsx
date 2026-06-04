@@ -95,13 +95,12 @@ const SAFETY = "The child is completely and fully clothed in an age-appropriate 
 // Injects gender, age, and explicit clothing description into every prompt at generation time.
 // This is the primary guard against wrong gender features and any exposed skin.
 function buildGenderedPrompt(prompt: string, gender: string, age: number, hairColor?: string, eyeColor?: string): string {
-  // Age-based body size descriptor
+  // Age-based body size descriptor — kept simple so it reinforces scale without fighting scene content
   const sizeHint =
-    age <= 1  ? "tiny baby, infant, barely walking, very small toddler body, " :
-    age <= 2  ? "tiny toddler, very small young child body, " :
-    age <= 4  ? "small preschooler, small young child body, " :
-    age <= 7  ? "young child, small child body, " :
-    age <= 10 ? "older child, " : "";
+    age <= 1  ? "very small baby body, " :
+    age <= 3  ? "small toddler body, " :
+    age <= 6  ? "small child body, " :
+    age <= 10 ? "child-sized body, " : "";
 
   const hairHint = hairColor ? `${hairColor.replace(/-/g, " ")} hair, ` : "";
   const eyeHint  = eyeColor  ? `${eyeColor.replace(/-/g, " ")} eyes, `  : "";
@@ -827,10 +826,10 @@ export default function StorybookCreator() {
           setPreviewMsg(done < total ? `${done} of ${total} scenes ready...` : "All illustrations ready!");
         };
 
-        const storyScenePrompts = (storyData.pages || []).map((pg: any) =>
+        const storyScenePrompts = (storyData.pages || []).map((pg: any, idx: number) =>
           pg.illustration
             ? `a photo of TOK, ${pg.illustration} Scene context: ${(pg.text || "").substring(0, 120)} ${STYLE_TOKEN} ${SAFETY}`
-            : themePrompts[0]
+            : (themePrompts[idx] ?? themePrompts[0])
         );
 
         // Cap concurrency: 2 on mobile (avoids connection saturation), 4 on desktop

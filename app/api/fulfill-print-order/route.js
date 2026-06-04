@@ -102,8 +102,7 @@ export async function POST(request) {
     };
 
     // ── 2. Generate print-ready PDFs ──────────────────────────────────────────
-    const origin = request.headers.get("origin") ||
-                   (process.env.NEXT_PUBLIC_SITE_URL ?? "https://mytinytales.studio");
+    const origin = process.env.NEXT_PUBLIC_SITE_URL ?? "https://mytinytales.studio";
 
     const pdfRes = await fetch(`${origin}/api/generate-book-pdf`, {
       method:  "POST",

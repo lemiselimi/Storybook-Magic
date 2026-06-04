@@ -204,12 +204,12 @@ FINAL CHECK BEFORE RETURNING:
 - Valid JSON, no extra text? ✓`,
       messages: [{
         role: "user",
-        content: `child_name: ${childName}
-child_pronouns: ${pronouns}
-age_band: ${ageBand}
-adventure_title: ${theme.title}
-adventure_category: ${theme.category}
-story_arc: ${arcJson}`,
+        content: `<child_name>${childName}</child_name>
+<child_pronouns>${pronouns}</child_pronouns>
+<age_band>${ageBand}</age_band>
+<adventure_title>${theme.title}</adventure_title>
+<adventure_category>${theme.category}</adventure_category>
+<story_arc>${arcJson}</story_arc>`,
       }],
     });
 

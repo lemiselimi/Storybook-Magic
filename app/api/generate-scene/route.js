@@ -3,7 +3,20 @@ import { NEGATIVE_PROMPT } from "../_lib/fal.js";
 
 export const maxDuration = 30;
 
+const rateLimitMap = new Map();
+function checkRateLimit(ip, limit = 30, windowMs = 60 * 60 * 1000) {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+  if (!entry || now > entry.resetAt) { rateLimitMap.set(ip, { count: 1, resetAt: now + windowMs }); return true; }
+  if (entry.count >= limit) return false;
+  entry.count++;
+  return true;
+}
+
 export async function POST(request) {
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  if (!checkRateLimit(ip)) return Response.json({ error: "Too many requests. Try again later." }, { status: 429 });
+
   fal.config({ credentials: process.env.FAL_API_KEY });
   try {
     const { loraUrl, prompt, seed, webhookUrl } = await request.json();

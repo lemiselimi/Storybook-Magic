@@ -10,7 +10,9 @@ export async function POST(request) {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
   try {
     const { ref, plan } = await request.json();
-    const origin = request.headers.get("origin") || "https://mytinytales.studio";
+    const ALLOWED_ORIGINS = new Set(["https://mytinytales.studio", "http://localhost:3000"]);
+    const rawOrigin = request.headers.get("origin") || "";
+    const origin = ALLOWED_ORIGINS.has(rawOrigin) ? rawOrigin : "https://mytinytales.studio";
 
     const priceId = plan === "print" ? PRICE_PRINT : PRICE_DIGITAL;
 

@@ -21,6 +21,7 @@ function checkRateLimit(ip) {
   return true;
 }
 
+
 const THEME_DATA = {
   july4: {
     title: "Fireworks Night",
@@ -173,7 +174,7 @@ UNIVERSAL RULES (every age band):
 
 AGE BAND VOICE GUIDE:
 If age_band = "1-3" (Toddler): 1-2 short sentences per page. Vocabulary a 2-year-old recognizes. Heavy sound words: whoosh!, boom!, yay!, zoom! Lots of repetition and rhythm. Total ~40-80 words.
-If age_band = "4-6" (Pre-K): 3-4 sentences per page. Simple emotions named directly: brave, nervous, proud, happy. Short bits of dialogue. Active verbs. Total ~150-220 words.
+If age_band = "4-6" (Pre-K): 3-5 sentences per page. Simple emotions named directly: brave, nervous, proud, happy. Short dialogue and sound words welcome. Active verbs. Total ~200-300 words.
 If age_band = "7-9" (Early Reader): 5-6 sentences per page. Varied sentence structure. Light internal thoughts. More nuanced emotions: doubt, determination, hope, relief. Light sensory detail. Total ~300-400 words.
 If age_band = "10-12" (Middle Grade): 6-8 sentences per page. Richer interior life. Light metaphor and sensory writing. Subtle foreshadowing, payoff later. Emotional complexity welcome. Total ~500-650 words.
 
@@ -217,6 +218,7 @@ story_arc: ${arcJson}`,
     const clean  = text.replace(/```json|```/g, "").trim();
     const parsed = JSON.parse(clean);
     console.log("Parsed successfully, pages:", parsed.pages?.length);
+
     return Response.json(parsed);
   } catch (err) {
     console.error("Story API error:", err.message);

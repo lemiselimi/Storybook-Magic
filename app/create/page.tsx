@@ -116,11 +116,64 @@ function buildGenderedPrompt(prompt: string, gender: string, age: number, hairCo
 }
 
 const COVER_PROMPT =
-  "a photo of TOK, close-up 3/4 portrait caught mid-laugh with large sparkling expressive eyes and a huge joyful smile, " +
-  "leaning slightly forward with energy and excitement, " +
-  "magical glowing portal swirling with golden light in the background, " +
-  "warm dramatic rim lighting, face fully illuminated, " +
+  "a photo of TOK, standing centered in a heroic wide pose with arms spread joyfully, " +
+  "adventure outfit, magical glowing world stretching behind them, " +
+  "WIDE HEROIC CENTERED COMPOSITION, generous clear sky at the top of the frame for title text, " +
+  "low angle looking slightly upward, cinematic poster style. " +
   "Disney Pixar 3D animated film style, smooth stylized character design, vivid saturated colours, no text anywhere." + CLOTHING;
+
+// Per-theme cover prompts — wide establishing/poster shot so title text can overlay cleanly at top
+const COVER_PROMPTS_BY_THEME: Record<string, string> =  {
+  july4:
+    "a photo of TOK, standing centered on a festive Main Street with arms spread wide and face tilted upward joyfully, " +
+    "dressed in a red white and blue patriotic outfit, enormous cheering crowd lining both sides of the street, " +
+    "giant American flags and red white and blue bunting filling the frame, brilliant sunshine, " +
+    "WIDE HEROIC CENTERED COMPOSITION, clear blue sky at the very top of the frame for title text overlay, " +
+    "low angle looking slightly up, cinematic parade poster style. " + STYLE_TOKEN + " " + SAFETY,
+
+  worldcup:
+    "a photo of TOK, standing centered at the World Cup final pitch centre circle, arms spread wide facing the camera, " +
+    "fully dressed in a white USA soccer jersey with red and blue trim, long white socks and cleats, " +
+    "80,000 cheering fans filling the stadium stands in every direction behind them, floodlights blazing, " +
+    "WIDE HEROIC CENTERED COMPOSITION, stadium roof and clear sky at the very top for title text overlay, " +
+    "low angle looking slightly up, cinematic stadium poster style. " + STYLE_TOKEN + " " + SAFETY,
+
+  adventure:
+    "a photo of TOK, standing centered before a towering glowing magical portal archway, arms spread wide, " +
+    "adventure outfit, golden sparkles and magical light swirling everywhere, enchanted forest stretching deep behind, " +
+    "WIDE HEROIC CENTERED COMPOSITION, glowing golden sky at the very top of the frame for title text overlay, " +
+    "low angle looking slightly up, cinematic poster style. " + STYLE_TOKEN + " " + SAFETY,
+
+  dragon:
+    "a photo of TOK, standing centered with a magnificent friendly dragon curling protectively behind them, " +
+    "adventure outfit, dragon's glowing wings spread wide framing the full scene, misty mountain peaks and golden sky, " +
+    "WIDE HEROIC CENTERED COMPOSITION, golden sky at the very top of the frame for title text overlay, " +
+    "low angle looking slightly up, cinematic poster style. " + STYLE_TOKEN + " " + SAFETY,
+
+  space:
+    "a photo of TOK, floating centered in deep space in a spacesuit, arms spread wide, " +
+    "a blazing galaxy and thousands of stars filling the background, Earth glowing blue far below, " +
+    "WIDE HEROIC CENTERED COMPOSITION, deep starfield at the very top of the frame for title text overlay, " +
+    "low angle looking slightly up, cinematic sci-fi poster style. " + STYLE_TOKEN + " " + SAFETY,
+
+  ocean:
+    "a photo of TOK, standing centered on a sunlit rock at the ocean edge, arms spread wide, " +
+    "dolphins leaping from crystal-clear turquoise water behind them, tropical fish visible below the surface, " +
+    "WIDE HEROIC CENTERED COMPOSITION, bright blue sky at the very top of the frame for title text overlay, " +
+    "low angle looking slightly up, cinematic adventure poster style. " + STYLE_TOKEN + " " + SAFETY,
+
+  jungle:
+    "a photo of TOK, standing centered in a sun-dappled jungle clearing wearing a crown of tropical flowers, arms spread wide, " +
+    "friendly lions, elephants, and parrots gathered proudly behind them, golden light streaming through the canopy, " +
+    "WIDE HEROIC CENTERED COMPOSITION, glowing canopy and golden sky at the very top for title text overlay, " +
+    "low angle looking slightly up, cinematic adventure poster style. " + STYLE_TOKEN + " " + SAFETY,
+
+  superpower:
+    "a photo of TOK, standing centered in a sunny neighbourhood street, arms raised with golden light beaming from their palms, " +
+    "adventure outfit, golden sparkles and flowers blooming all around their feet, neighbours cheering behind, " +
+    "WIDE HEROIC CENTERED COMPOSITION, golden sky at the very top of the frame for title text overlay, " +
+    "low angle looking slightly up, cinematic superhero poster style. " + STYLE_TOKEN + " " + SAFETY,
+};
 
 const SCENE_PROMPTS_BY_THEME: Record<string, string[]> = {
   adventure: [
@@ -324,40 +377,46 @@ const SCENE_PROMPTS_BY_THEME: Record<string, string[]> = {
   ],
 
   july4: [
-    // Scene 1 — chosen to lead the parade
-    "a photo of TOK, standing proudly at the very front of a small-town Fourth of July parade, " +
-    "dressed in a red white and blue patriotic outfit, an American flag in each raised hand, " +
-    "face beaming with pride and excitement, bunting-draped storefronts and cheering crowd lining Main Street on both sides, " +
-    "brilliant summer sunshine, red white and blue streamers and confetti filling the air. " + STYLE_TOKEN + " " + SAFETY,
+    // Page 1 — MEDIUM PORTRAIT | FRONT DOORWAY | MORNING | Parent in background
+    "a photo of TOK, standing in a sunlit front doorway framed by patriotic bunting, " +
+    "dressed in a crisp red white and blue patriotic outfit, holding a small American flag proudly in both hands, " +
+    "face beaming with excitement at the day ahead, warm morning sunlight streaming in from behind, " +
+    "a parent's hand giving a proud pat on the shoulder at the edge of frame, bunting and star decorations on the walls, " +
+    "MEDIUM PORTRAIT FRAMING, eye-level shot, clear space above. " + STYLE_TOKEN + " " + SAFETY,
 
-    // Scene 2 — marching at the head of the parade
-    "a photo of TOK, marching confidently down a festive Main Street as parade leader, " +
-    "dressed in a red white and blue patriotic outfit, holding a large American flag high above their head, " +
-    "huge grin, a marching band in uniform stepping behind them, crowds waving flags and cheering from both sides, " +
-    "storefronts decorated with red white and blue bunting and star banners in the summer sun. " + STYLE_TOKEN + " " + SAFETY,
+    // Page 2 — WIDE ESTABLISHING SHOT | MAIN STREET | MIDDAY SUNSHINE | Crowd on both sides
+    "a photo of TOK, marching at the very front of a large Fourth of July parade, " +
+    "dressed in a red white and blue patriotic outfit, large American flag held high overhead in both arms, " +
+    "WIDE ESTABLISHING SHOT from street level, Main Street stretching deep into the distance behind them, " +
+    "enormous cheering crowds waving flags packed on both sides of the street, a full marching band visible behind, " +
+    "brilliant midday sunshine, red white and blue confetti raining down from above. " + STYLE_TOKEN + " " + SAFETY,
 
-    // Scene 3 — fireworks launcher breaks, celebration at risk
-    "a photo of TOK, kneeling next to a large fireworks launch console that has gone dark and silent, " +
-    "dressed in a red white and blue patriotic outfit, brow furrowed with worried determination, " +
-    "wires and panels open in front of them, worried townspeople gathered around in the background, " +
-    "the dark night sky empty and waiting, American flags hanging still. " + STYLE_TOKEN + " " + SAFETY,
+    // Page 3 — MEDIUM ACTION CLOSE-UP | NEAR PARADE FLOAT | LATE AFTERNOON | Worried crowd around them
+    "a photo of TOK, kneeling over a large darkened parade float generator with a focused worried expression, " +
+    "dressed in a red white and blue patriotic outfit, both hands examining an open panel, tools scattered nearby, " +
+    "concerned townspeople crowded in a ring around the background, flat golden late-afternoon light casting long shadows, " +
+    "MEDIUM ACTION SHOT at slight overhead angle looking down. " + STYLE_TOKEN + " " + SAFETY,
 
-    // Scene 4 — the low moment, thinking it through alone
-    "a photo of TOK, sitting on a wooden step with elbows on knees and chin resting in both hands, thinking hard, " +
-    "dressed in a red white and blue patriotic outfit, expression serious and focused with quiet determination, " +
-    "a few concerned friends and neighbours sitting nearby, lanterns glowing softly in the warm summer twilight. " + STYLE_TOKEN + " " + SAFETY,
+    // Page 4 — LOW DRAMATIC ANGLE | KERBSIDE | GOLDEN HOUR | Alone with a few friends nearby
+    "a photo of TOK, sitting alone on a kerbside with knees pulled up and chin resting in cupped hands, " +
+    "dressed in a red white and blue patriotic outfit, expression deeply thoughtful and quietly determined, " +
+    "long golden-hour shadows stretching across the pavement, a few concerned friends sitting a short distance away, " +
+    "warm glowing paper lanterns hanging in the dusk air behind, " +
+    "LOW DRAMATIC ANGLE looking slightly upward, ground-level shot. " + STYLE_TOKEN + " " + SAFETY,
 
-    // Scene 5 — child's idea saves the show, everyone rallies
-    "a photo of TOK, standing on a float with arms raised directing townsfolk into action, " +
-    "dressed in a red white and blue patriotic outfit, face alive with joy and confidence, " +
-    "kids and adults working together happily all around them, the float glowing back to life with lights and decorations, " +
-    "the crowd watching with hope and cheers beginning to build. " + STYLE_TOKEN + " " + SAFETY,
+    // Page 5 — WIDE ACTION SHOT | ON TOP OF THE FLOAT | TWILIGHT | Everyone rallying below
+    "a photo of TOK, standing on top of a parade float with both arms raised rallying the crowd, " +
+    "dressed in a red white and blue patriotic outfit, face lit with joy and determined energy, " +
+    "townspeople and kids working together excitedly all around the float below them, " +
+    "fairy lights and decorations blazing back to life around the float, deep blue twilight sky with first stars appearing, " +
+    "WIDE ACTION SHOT showing the full float and crowd below, dynamic slightly low angle. " + STYLE_TOKEN + " " + SAFETY,
 
-    // Scene 6 — fireworks finale, whole town celebrates the child
-    "a photo of TOK, standing on a stage with both arms raised high in triumph, " +
-    "dressed in a red white and blue patriotic outfit, face lit by spectacular red white and blue fireworks " +
-    "exploding in magnificent bursts directly above, the entire town cheering below, " +
-    "American flags waving everywhere, golden sparks and colourful stars raining down over the celebration. " + STYLE_TOKEN + " " + SAFETY,
+    // Page 6 — WIDE SPECTACULAR | PARK STAGE | NIGHT | Whole town celebrating below
+    "a photo of TOK, standing alone on an outdoor stage with both arms stretched wide in triumph, " +
+    "dressed in a red white and blue patriotic outfit lit by brilliant fireworks bursting directly overhead, " +
+    "spectacular red white and blue fireworks exploding in enormous bursts filling the entire night sky, " +
+    "the whole cheering town visible below waving flags and celebrating, golden sparks raining down, " +
+    "WIDE SPECTACULAR SHOT, night sky of fireworks above, crowd below. " + STYLE_TOKEN + " " + SAFETY,
   ],
 };
 
@@ -833,8 +892,13 @@ export default function StorybookCreator() {
         );
 
         // Cap concurrency: 2 on mobile (avoids connection saturation), 4 on desktop
+        const coverPromptBase = COVER_PROMPTS_BY_THEME[theme] ?? COVER_PROMPT;
+        const builtCoverPrompt = buildGenderedPrompt(coverPromptBase, childGender, childAge, hairColor, eyeColor);
+        console.log("[PROMPTS] cover:", builtCoverPrompt.substring(0, 120));
+        storyScenePrompts.forEach((p: string, i: number) => console.log(`[PROMPTS] page ${i + 1}:`, p.substring(0, 120)));
+
         await runCapped([
-          () => handleScene(COVER_PROMPT, -1),
+          () => handleScene(builtCoverPrompt, -1),
           ...storyScenePrompts.map((p: string, idx: number) => () => handleScene(p, idx)),
         ], sceneConcurrency);
       }
@@ -1079,7 +1143,7 @@ export default function StorybookCreator() {
         photosBase64: photosBase64,
         loraUrl:      loraUrl,
         plan,
-        coverPrompt:  buildGenderedPrompt(COVER_PROMPT, childGender, childAge, hairColor, eyeColor),
+        coverPrompt:  buildGenderedPrompt(COVER_PROMPTS_BY_THEME[theme] ?? COVER_PROMPT, childGender, childAge, hairColor, eyeColor),
         scenePrompts,
         seed:         computedSeed,
       };

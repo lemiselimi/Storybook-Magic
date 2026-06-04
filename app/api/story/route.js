@@ -27,12 +27,12 @@ const THEME_DATA = {
     title: "Fireworks Night",
     category: "A Fourth of July Story",
     arc: [
-      "Child is chosen to lead the whole town's Fourth of July parade — red, white, and blue outfit on, flag in hand, heart full of pride.",
-      "Child marches at the very front of the parade down a cheering Main Street, flag held high, soaking in every moment.",
-      "Disaster — the fireworks launch console goes dark minutes before the grand finale, and the celebration is on the verge of falling apart.",
-      "Child sits alone for a quiet moment with the weight of the whole town's night on their shoulders, thinking hard, not giving up.",
-      "Child has an idea — rallies the whole town, everyone works together, and the show comes back to life because of them.",
-      "Spectacular red, white, and blue fireworks explode overhead, the whole town cheering the child's name as stars rain down over the celebration.",
+      "MORNING AT HOME: Child wakes up on the Fourth of July, gets dressed in their red, white, and blue outfit, and stands at the front door bursting with pride — they have been chosen to lead the whole town's parade today.",
+      "MIDDAY ON MAIN STREET: Child marches at the very front of the parade, flag held high, the packed crowd on both sides of the street cheering and waving as the band plays behind them.",
+      "LATE AFTERNOON NEAR THE FLOAT: The parade float's generator suddenly fails and goes dark — with no power, the grand fireworks finale is in danger of being cancelled. The child kneels over the broken equipment, determined not to let the town down.",
+      "GOLDEN HOUR ON THE KERB: Child sits alone for a quiet moment, elbows on knees, thinking hard. It feels impossible. But giving up is not an option.",
+      "TWILIGHT ON THE FLOAT: Child has an idea — rallies every person nearby, and together the whole town pitches in. The float blazes back to life, lights exploding on, the crowd erupting in cheers.",
+      "NIGHT ON THE STAGE: The child stands on the stage with arms raised as spectacular red, white, and blue fireworks burst overhead, the whole town below cheering their name into the night sky.",
     ],
   },
   adventure: {

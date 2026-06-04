@@ -165,8 +165,17 @@ export default function BookPage() {
       {/* Cover */}
       {coverUrl && (
         <div style={{ maxWidth: 480, margin: "40px auto 0", padding: "0 20px" }}>
-          <div style={{ borderRadius: 12, overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.6)" }}>
+          <div style={{ borderRadius: 12, overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.6)", position: "relative" }}>
             <img src={coverUrl} alt="Book cover" style={{ width: "100%", display: "block" }} />
+            <div style={{
+              position: "absolute", bottom: 0, left: 0, right: 0,
+              background: "linear-gradient(transparent 0%, rgba(8,4,20,0.72) 35%, rgba(8,4,20,0.96) 100%)",
+              padding: isMobile ? "48px 20px 22px" : "64px 28px 30px",
+            }}>
+              <p style={{ color: GOLD, fontSize: 10, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", margin: "0 0 6px", opacity: 0.75, fontFamily: "Georgia, serif" }}>My Tiny Tales</p>
+              <h2 style={{ color: "white", fontSize: isMobile ? 19 : 23, fontWeight: 700, margin: "0 0 7px", lineHeight: 1.2, fontFamily: "Georgia, 'Times New Roman', serif" }}>{story?.title}</h2>
+              <p style={{ color: GOLD, fontSize: 11, fontStyle: "italic", margin: 0, opacity: 0.78, lineHeight: 1.5, fontFamily: "Georgia, serif" }}>{story?.dedication}</p>
+            </div>
           </div>
         </div>
       )}

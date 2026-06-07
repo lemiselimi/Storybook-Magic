@@ -1,8 +1,7 @@
 import { PDFDocument, rgb } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 import { fal } from "@fal-ai/client";
-import fs from "fs";
-import path from "path";
+import { LATO_BOLD_WOFF, LIBRE_REGULAR_WOFF, LIBRE_ITALIC_WOFF } from "./fonts.js";
 
 export const maxDuration = 60;
 
@@ -43,17 +42,11 @@ async function embedImg(doc, bytes) {
   catch { return null; }
 }
 
-const FONT_DIR = path.join(process.cwd(), "node_modules");
-function loadFont(pkg, file) {
-  return fs.readFileSync(path.join(FONT_DIR, pkg, "files", file));
-}
-
-// WOFF (not WOFF2) — fontkit parses WOFF via zlib reliably in serverless.
-// WOFF2 uses Brotli decompression which produces malformed glyph tables on Vercel,
-// causing text to print as dots and dashes.
-const BOLD_BYTES    = loadFont("@fontsource/lato",               "lato-latin-700-normal.woff");
-const REGULAR_BYTES = loadFont("@fontsource/libre-baskerville",  "libre-baskerville-latin-400-normal.woff");
-const ITALIC_BYTES  = loadFont("@fontsource/libre-baskerville",  "libre-baskerville-latin-400-italic.woff");
+// Fonts embedded as base64 at build time — no fs.readFileSync, no process.cwd(),
+// no outputFileTracingIncludes required. Guaranteed present in any serverless runtime.
+const BOLD_BYTES    = LATO_BOLD_WOFF;
+const REGULAR_BYTES = LIBRE_REGULAR_WOFF;
+const ITALIC_BYTES  = LIBRE_ITALIC_WOFF;
 
 function sanitize(str) {
   return (str || "")

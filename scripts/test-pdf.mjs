@@ -12,6 +12,7 @@ import fontkit from "@pdf-lib/fontkit";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { LATO_BOLD_WOFF, LIBRE_REGULAR_WOFF, LIBRE_ITALIC_WOFF } from "../app/api/generate-book-pdf/fonts.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT      = path.join(__dirname, "..");
@@ -30,11 +31,10 @@ const BROWN = rgb(0.165, 0.082, 0.020);
 const GOLD  = rgb(0.910, 0.753, 0.478);
 const WHITE = rgb(1, 1, 1);
 
-// ── Font loading ──────────────────────────────────────────────────────────────
-const FONT_DIR = path.join(ROOT, "node_modules");
-const BOLD_BYTES    = fs.readFileSync(path.join(FONT_DIR, "@fontsource/lato/files/lato-latin-700-normal.woff"));
-const REGULAR_BYTES = fs.readFileSync(path.join(FONT_DIR, "@fontsource/libre-baskerville/files/libre-baskerville-latin-400-normal.woff"));
-const ITALIC_BYTES  = fs.readFileSync(path.join(FONT_DIR, "@fontsource/libre-baskerville/files/libre-baskerville-latin-400-italic.woff"));
+// ── Font bytes — same source as production route (base64-embedded, no fs dependency)
+const BOLD_BYTES    = LATO_BOLD_WOFF;
+const REGULAR_BYTES = LIBRE_REGULAR_WOFF;
+const ITALIC_BYTES  = LIBRE_ITALIC_WOFF;
 
 function wrapText(text, maxChars = 60) {
   const words = (text || "").split(" ").filter(Boolean);

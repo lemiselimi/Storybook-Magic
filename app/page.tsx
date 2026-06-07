@@ -6,7 +6,6 @@ import BookMockup3D from "./components/BookMockup3D";
 // ── Design tokens ──────────────────────────────────────────────────────────────
 const GOLD       = "#E8C07A";
 const GOLD_WARM  = "#D4A24C";
-const MOON       = "#A78BFA";
 const TEXT       = "#F5F0E0";
 const MUTED      = "rgba(245,240,224,0.65)";
 const BG_BASE    = "#0F0B1F";
@@ -71,14 +70,14 @@ function TrustShieldSVG() {
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 const EXAMPLES = [
-  { tag: "The Big Adventure", title: "A Real Hero", caption: "Your child as the hero — brave, kind, and unforgettable", img: "/examples/example-1.webp", quote: '"Loki was a real hero! He learned that being brave and kind saves the day. What an amazing adventure!"', child: "Loki, Age 4 — Adventure theme" },
-  { tag: "To The Stars",       title: "She Reached the Stars", caption: "Every page packed with heart — your child's real face in every scene", img: "/examples/example-2.webp", quote: '"Aria blasted off into the cosmos and discovered that the bravest explorers carry kindness in their hearts."', child: "Aria, Age 6 — Space theme" },
-  { tag: "Dragon Tamer",       title: "The Dragon Needed Him", caption: "Cinematic Disney-style illustrations made just for them", img: "/examples/example-3.webp", quote: '"Only Noah had what it took. He walked right up to the great dragon and said: I\'m here to help."', child: "Noah, Age 5 — Dragon theme" },
+  { tag: "The Big Adventure", title: "A Real Hero", caption: "Your child as the hero: brave, kind, and unforgettable.", img: "/examples/example-1.webp", quote: '"Loki was a real hero! He learned that being brave and kind saves the day. What an amazing adventure!"', child: "Loki, Age 4, Adventure theme" },
+  { tag: "To The Stars",       title: "She Reached the Stars", caption: "Every page packed with heart. Your child's real face in every scene.", img: "/examples/example-2.webp", quote: '"Aria blasted off into the cosmos and discovered that the bravest explorers carry kindness in their hearts."', child: "Aria, Age 6, Space theme" },
+  { tag: "Dragon Tamer",       title: "The Dragon Needed Him", caption: "Cinematic Pixar-style illustrations made just for them.", img: "/examples/example-3.webp", quote: '"Only Noah had what it took. He walked right up to the great dragon and said: I\'m here to help."', child: "Noah, Age 5, Dragon theme" },
 ];
 
 const STEPS = [
   { num: "01", title: "Upload a Photo",        desc: "One clear photo is all we need. Our AI reads your child's features to create a cinematic 3D character that looks just like them." },
-  { num: "02", title: "Personalise the Story", desc: "Enter their name, age, and choose an adventure theme. AI writes a story crafted just for them — every word, every scene." },
+  { num: "02", title: "Personalise the Story", desc: "Enter their name, age, and choose an adventure theme. AI writes a story crafted just for them: every word, every scene." },
   { num: "03", title: "Preview Free",           desc: "See the first 2 pages of your book completely free. Love it? Unlock all 6 pages and download instantly." },
 ];
 
@@ -95,11 +94,11 @@ const PRINT_FEATURES = [
   "Everything in Digital",
   "Premium hardcover book",
   "Lay-flat binding",
-  "Ships within 5–7 days",
+  "Ships within 5-7 days",
 ];
 
 const REVIEWS = [
-  { name: "Sarah M.",  role: "Mum of Emma, age 5",    initials: "SM", text: "My daughter screamed with joy when she saw herself as the hero! We've read it together every single night for a week. The most personal gift I've ever given her — worth every penny." },
+  { name: "Sarah M.",  role: "Mum of Emma, age 5",    initials: "SM", text: "My daughter screamed with joy when she saw herself as the hero! We've read it together every single night for a week. The most personal gift I've ever given her. Worth every penny." },
   { name: "James T.",  role: "Dad of Oliver & Finn",  initials: "JT", text: "Ordered on a Tuesday afternoon. By dinner my son had a personalised storybook with HIM as the hero, fighting dragons in a magical forest. The illustrations are stunning. He's completely obsessed." },
   { name: "Priya K.",  role: "Grandmother of Aisha",  initials: "PK", text: "I'm not very tech-savvy but this was so easy. Uploaded a photo, chose a theme, and by that evening had a beautiful illustrated book. I'm ordering copies for every grandchild for Christmas!" },
 ];
@@ -185,13 +184,10 @@ export default function LandingPage() {
     <div style={{ fontFamily: "var(--font-inter, 'Inter', sans-serif)", color: TEXT, overflowX: "hidden", background: `linear-gradient(180deg, ${BG_BASE} 0%, ${BG_EL} 100%)`, minHeight: "100vh" }}>
       <style>{`
         html { scroll-behavior: smooth; }
-        @keyframes float      { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
-        @keyframes fadeUp     { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes sparkleAni { 0%,100%{opacity:0.25;transform:scale(1)} 50%{opacity:1;transform:scale(1.35)} }
-        @keyframes kenBurns   { from{transform:scale(1)} to{transform:scale(1.05)} }
-        @keyframes slideEx    { from{opacity:0;transform:translateX(28px)} to{opacity:1;transform:translateX(0)} }
-        @keyframes shimmer    { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
-        @keyframes badgeFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+        @keyframes float    { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+        @keyframes fadeUp   { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes kenBurns { from{transform:scale(1)} to{transform:scale(1.05)} }
+        @keyframes slideEx  { from{opacity:0;transform:translateX(28px)} to{opacity:1;transform:translateX(0)} }
         .card-hover { transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease; }
         .card-hover:hover { transform: translateY(-4px) !important; border-color: rgba(255,255,255,0.16) !important; box-shadow: 0 24px 64px rgba(0,0,0,0.4) !important; }
         .nav-link { color: rgba(245,240,224,0.65); font-size: 14px; text-decoration: none; font-weight: 500; transition: color 0.2s; }
@@ -220,9 +216,6 @@ export default function LandingPage() {
 
         {/* Right actions */}
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          {!isMobile && (
-            <a href="#" className="nav-link" style={{ padding: "8px 14px", border: "1px solid rgba(245,240,224,0.18)", borderRadius: 8 }}>Sign in</a>
-          )}
           <Link href="/create" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 7, padding: isMobile ? "8px 16px" : "10px 20px", borderRadius: 50, background: `linear-gradient(135deg, ${GOLD}, ${GOLD_WARM})`, color: BG_BASE, fontWeight: 700, fontSize: isMobile ? 12 : 14, boxShadow: "0 4px 16px rgba(232,192,122,0.25)", transition: "box-shadow 0.2s, transform 0.2s", whiteSpace: "nowrap" }}>
             Create your book <span style={{ display: "inline-block", transition: "transform 0.2s" }}>→</span>
           </Link>
@@ -256,21 +249,10 @@ export default function LandingPage() {
           <div aria-hidden="true" style={{ position: "absolute", bottom: "-25%", right: "-15%", width: 900, height: 900, borderRadius: "50%", background: "radial-gradient(circle, rgba(90,60,180,0.15) 0%, transparent 70%)", filter: "blur(120px)", pointerEvents: "none" }} />
         </>}
 
-        {/* Sparkles — skip on mobile */}
-        {!isMobile && (["10%,15%", "85%,10%", "90%,75%", "6%,80%"] as const).map((pos, i) => (
-          <div key={i} aria-hidden="true" style={{ position: "absolute", left: pos.split(",")[0], top: pos.split(",")[1], animation: `sparkleAni ${2.8 + i * 0.6}s ease-in-out infinite`, animationDelay: `${i * 0.5}s`, pointerEvents: "none" }}>
-            <SparkSVG size={[18, 12, 22, 14][i]} color={GOLD} glow />
-          </div>
-        ))}
-
         <div style={{ maxWidth: 1200, width: "100%", display: "flex", alignItems: "center", gap: isMobile ? 0 : 72, flexDirection: isMobile ? "column" : "row" }}>
           {/* Left content */}
           <div style={{ flex: 1, animation: "fadeUp 0.9s ease both" }}>
-            {/* Pill badge */}
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(232,192,122,0.08)", border: "1px solid rgba(232,192,122,0.22)", borderRadius: 50, padding: "6px 16px", marginBottom: 28 }}>
-              <SparkSVG size={13} color={GOLD} />
-              <span style={{ color: GOLD, fontSize: 12, fontWeight: 600, letterSpacing: "0.04em" }}>Personalised Storybooks</span>
-            </div>
+            <p style={{ color: GOLD, fontSize: 11, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", margin: "0 0 20px" }}>My Tiny Tales</p>
 
             {/* H1 */}
             <h1 style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: isMobile ? 36 : 58, fontWeight: 600, lineHeight: 1.12, color: TEXT, margin: "0 0 22px", letterSpacing: "-0.8px" }}>
@@ -286,7 +268,7 @@ export default function LandingPage() {
 
             {/* Subtext — tighter, ≤18 words */}
             <p style={{ fontSize: isMobile ? 16 : 19, color: MUTED, lineHeight: 1.7, margin: "0 0 36px", maxWidth: 530 }}>
-              A unique book starring your child's real face — cinematic 3D illustrations, a story written just for them.
+              A unique book starring your child's real face: cinematic 3D illustrations, a story written just for them.
             </p>
 
             {/* CTAs */}
@@ -295,7 +277,7 @@ export default function LandingPage() {
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 12px 40px rgba(232,192,122,0.4), inset 0 1px 0 rgba(255,255,255,0.3)"; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ""; (e.currentTarget as HTMLElement).style.boxShadow = "0 8px 32px rgba(232,192,122,0.25), inset 0 1px 0 rgba(255,255,255,0.3)"; }}
               >
-                Try Free — No Card Needed <span>→</span>
+                Try Free, No Card Needed <span>→</span>
               </Link>
               <a href="#examples" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", padding: isMobile ? "15px 24px" : "17px 32px", borderRadius: 50, border: "1px solid rgba(245,240,224,0.28)", background: "transparent", color: "rgba(245,240,224,0.85)", fontWeight: 600, fontSize: isMobile ? 14 : 16, transition: "background 0.2s" }}
                 onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "rgba(245,240,224,0.06)"}
@@ -318,23 +300,13 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Right — book card with Ken Burns + floating badges */}
+          {/* Right — book image */}
           {!isMobile && (
-            <div style={{ flexShrink: 0, position: "relative", animation: "fadeUp 1s ease 0.3s both" }}>
-              {/* Glow */}
-              <div aria-hidden="true" style={{ position: "absolute", inset: -40, borderRadius: 40, background: `radial-gradient(ellipse, rgba(232,192,122,0.18) 0%, transparent 70%)`, filter: "blur(28px)", pointerEvents: "none" }} />
-              <div style={{ width: 340, height: 440, borderRadius: 20, overflow: "hidden", boxShadow: "0 40px 80px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.07)", position: "relative" }}>
+            <div style={{ flexShrink: 0, animation: "fadeUp 1s ease 0.3s both" }}>
+              <div style={{ width: 340, height: 440, borderRadius: 16, overflow: "hidden", boxShadow: "0 40px 80px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.07)" }}>
                 <img src="/examples/example-1.webp" alt="Sample storybook page" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", animation: reducedMotion ? "none" : "kenBurns 20s ease-in-out infinite alternate", display: "block" }} />
               </div>
-              {/* Floating badge — bottom left */}
-              <div style={{ position: "absolute", bottom: 30, left: -32, background: SURFACE, backdropFilter: "blur(16px)", border: `1px solid ${SURF_BDR}`, borderRadius: 14, padding: "10px 16px", display: "flex", alignItems: "center", gap: 8, animation: `badgeFloat 4s ease-in-out infinite`, boxShadow: "0 8px 24px rgba(0,0,0,0.35)" }}>
-                <StarSVG size={14} color={GOLD} />
-                <span style={{ fontSize: 12, fontWeight: 600, color: TEXT, whiteSpace: "nowrap" }}>6 unique pages</span>
-              </div>
-              {/* Floating badge — top right */}
-              <div style={{ position: "absolute", top: 22, right: -28, background: SURFACE, backdropFilter: "blur(16px)", border: `1px solid ${SURF_BDR}`, borderRadius: 14, padding: "8px 14px", animation: `badgeFloat 4.5s ease-in-out 0.8s infinite`, boxShadow: "0 8px 24px rgba(0,0,0,0.35)" }}>
-                <span style={{ fontSize: 11, fontWeight: 600, color: GOLD, whiteSpace: "nowrap" }}>Disney-style art ✦</span>
-              </div>
+              <p style={{ color: "rgba(245,240,224,0.35)", fontSize: 11, letterSpacing: "0.06em", marginTop: 12, textAlign: "center" }}>Pixar-style illustrations from a real book</p>
             </div>
           )}
         </div>
@@ -346,7 +318,7 @@ export default function LandingPage() {
       <section style={{ borderTop: `1px solid ${SURF_BDR}`, borderBottom: `1px solid ${SURF_BDR}`, background: "rgba(255,255,255,0.02)" }}>
         <div style={{ maxWidth: 900, margin: "0 auto", padding: isMobile ? "22px 24px" : "22px 48px", display: "flex", alignItems: "center", justifyContent: "space-around", flexWrap: "wrap", gap: 16 }}>
           {[
-            { icon: <TrustStarSVG />,   value: "5-Star Rated",    label: "Launch families, Aug–Nov 2025" },
+            { icon: <TrustStarSVG />,   value: "5-Star Rated",    label: "Launch families, Aug-Nov 2025" },
             { icon: <TrustFlashSVG />,  value: "Ready in 5 min",  label: "From photo to preview" },
             { icon: <TrustLockSVG />,   value: "Never Stored",    label: "Photos deleted after use" },
             { icon: <TrustShieldSVG />, value: "No Subscription", label: "Pay once, keep forever" },
@@ -418,7 +390,7 @@ export default function LandingPage() {
                 <h3 style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: isMobile ? 18 : 22, fontWeight: 600, color: TEXT, margin: 0, lineHeight: 1.3 }}>{ex.title}</h3>
                 <p style={{ color: MUTED, fontSize: 12, margin: 0 }}>{ex.caption}</p>
                 <p style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: isMobile ? 14 : 16, lineHeight: 1.85, color: TEXT, margin: 0, fontStyle: "italic" }}>{ex.quote}</p>
-                <p style={{ color: "rgba(245,240,224,0.35)", fontSize: 12, margin: 0, fontStyle: "italic" }}>— Created for {ex.child}</p>
+                <p style={{ color: "rgba(245,240,224,0.35)", fontSize: 12, margin: 0, fontStyle: "italic" }}>Created for {ex.child}</p>
               </div>
             </div>
 
@@ -450,8 +422,8 @@ export default function LandingPage() {
       ════════════════════════════════════════════════════ */}
       <section id="pricing" style={{ padding: isMobile ? "72px 24px" : "104px 48px", borderTop: `1px solid ${SURF_BDR}` }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
-          <div className="reveal" style={{ textAlign: "center", marginBottom: isMobile ? 44 : 64 }}>
-            <h2 style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: isMobile ? 30 : 44, fontWeight: 600, color: TEXT, margin: "0 0 12px", letterSpacing: "-0.5px" }}>One Book, Infinite Memories</h2>
+          <div className="reveal" style={{ marginBottom: isMobile ? 44 : 64 }}>
+            <h2 style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: isMobile ? 30 : 44, fontWeight: 600, color: TEXT, margin: "0 0 10px", letterSpacing: "-0.5px" }}>One Book, Infinite Memories</h2>
             <p style={{ color: MUTED, fontSize: 15, margin: 0 }}>No subscription. No hidden fees. Pay once, keep forever.</p>
           </div>
 
@@ -477,7 +449,7 @@ export default function LandingPage() {
                 onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "rgba(245,240,224,0.06)"}
                 onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}
               >
-                Try Free — No Card Needed →
+                Try Free, No Card Needed →
               </Link>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 14 }}>
                 <StripeSVG /><VisaSVG /><McSVG />
@@ -498,7 +470,7 @@ export default function LandingPage() {
                 <span style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: 52, fontWeight: 600, color: TEXT, lineHeight: 1 }}>37</span>
                 <span style={{ fontSize: 22, color: MUTED, marginTop: 14, fontWeight: 600 }}>.99</span>
               </div>
-              <p style={{ color: "rgba(245,240,224,0.38)", fontSize: 13, margin: "0 0 20px" }}>Delivered to your door in 5–7 days</p>
+              <p style={{ color: "rgba(245,240,224,0.38)", fontSize: 13, margin: "0 0 20px" }}>Delivered to your door in 5-7 days</p>
 
               {/* 3D book mockup inside the card */}
               <div style={{ display: "flex", justifyContent: "center", marginBottom: 22 }}>
@@ -578,24 +550,20 @@ export default function LandingPage() {
       ════════════════════════════════════════════════════ */}
       <section style={{ padding: isMobile ? "80px 24px" : "112px 48px", textAlign: "center", position: "relative", overflow: "hidden", borderTop: `1px solid ${SURF_BDR}` }}>
         {!isMobile && (
-          <div aria-hidden="true" style={{ position: "absolute", top: "20%", left: "10%", width: 600, height: 600, borderRadius: "50%", background: "radial-gradient(circle, rgba(120,80,200,0.2) 0%, transparent 70%)", filter: "blur(80px)", pointerEvents: "none" }} />
+          <div aria-hidden="true" style={{ position: "absolute", top: "20%", left: "10%", width: 600, height: 600, borderRadius: "50%", background: "radial-gradient(circle, rgba(232,192,122,0.08) 0%, transparent 70%)", filter: "blur(80px)", pointerEvents: "none" }} />
         )}
-        <div className="reveal" style={{ maxWidth: 600, margin: "0 auto", position: "relative", zIndex: 1 }}>
-          <div style={{ marginBottom: 18, animation: (isMobile || reducedMotion) ? "none" : "float 4s ease-in-out infinite" }}><SparkSVG size={isMobile ? 40 : 52} color={GOLD} glow /></div>
+        <div className="reveal" style={{ maxWidth: 560, margin: "0 auto", position: "relative", zIndex: 1 }}>
           <h2 style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: isMobile ? 32 : 48, fontWeight: 600, color: TEXT, margin: "0 0 18px", lineHeight: 1.12, letterSpacing: "-0.6px" }}>
-            Give Them a Story Only{" "}
-            <span style={{ background: `linear-gradient(90deg, ${GOLD}, ${GOLD_WARM}, ${GOLD})`, backgroundSize: "200% 100%", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", animation: "shimmer 3s ease infinite" }}>
-              They Can Star In
-            </span>
+            Give Them a Story Only <em style={{ fontStyle: "italic", color: GOLD }}>They Can Star In</em>
           </h2>
           <p style={{ color: MUTED, fontSize: isMobile ? 15 : 17, lineHeight: 1.7, margin: "0 0 40px" }}>
-            Preview your child's book for free — see 2 pages before you spend a penny. No subscription, no commitment.
+            Preview your child's book for free. See 2 pages before you spend a penny. No subscription, no commitment.
           </p>
           <Link href="/create" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 8, padding: isMobile ? "16px 36px" : "18px 52px", borderRadius: 50, background: `linear-gradient(135deg, ${GOLD}, ${GOLD_WARM})`, color: BG_BASE, fontWeight: 700, fontSize: isMobile ? 16 : 18, boxShadow: "0 12px 40px rgba(232,192,122,0.3), inset 0 1px 0 rgba(255,255,255,0.3)", transition: "transform 0.2s, box-shadow 0.2s" }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 16px 48px rgba(232,192,122,0.45), inset 0 1px 0 rgba(255,255,255,0.3)"; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ""; (e.currentTarget as HTMLElement).style.boxShadow = "0 12px 40px rgba(232,192,122,0.3), inset 0 1px 0 rgba(255,255,255,0.3)"; }}
           >
-            Try Free — No Card Needed →
+            Try Free, No Card Needed →
           </Link>
           <p style={{ color: "rgba(245,240,224,0.28)", fontSize: 13, marginTop: 18 }}>See 2 pages free · No subscription required</p>
         </div>

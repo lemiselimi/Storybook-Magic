@@ -75,7 +75,7 @@ export default function BookPage() {
         <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 15, margin: "0 0 32px", textAlign: "center", maxWidth: 380, lineHeight: 1.6 }}>
           {isPdf
             ? "All illustrations are done — generating your print-ready PDF."
-            : "Our AI illustrators are painting each scene. This usually takes 5–10 minutes."}
+            : "Our AI illustrators are painting each scene. This usually takes about 5 minutes."}
         </p>
 
         {data?.story?.pages && (
@@ -101,7 +101,7 @@ export default function BookPage() {
 
         <Spinner size={32} />
         <p style={{ color: "rgba(255,255,255,0.25)", fontSize: 12, marginTop: 20, textAlign: "center" }}>
-          You can close this tab — we'll email you when it's ready.
+          Keep this tab open — your book will appear here automatically.
         </p>
       </div>
     );

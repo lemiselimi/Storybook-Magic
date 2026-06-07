@@ -97,36 +97,6 @@ export async function POST(request) {
 
       console.log("Webhook: all jobs submitted for ref", ref);
 
-      // Email customer — "your book is being illustrated"
-      if (process.env.RESEND_API_KEY && contactEmail) {
-        const firstName = customerName.split(" ")[0] || "there";
-        fetch("https://api.resend.com/emails", {
-          method:  "POST",
-          headers: { "Authorization": `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
-          body: JSON.stringify({
-            from:    "My Tiny Tales <hello@mytinytales.studio>",
-            to:      [contactEmail],
-            subject: `🎨 We're illustrating your storybook now, ${firstName}!`,
-            html: `
-              <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;">
-                <div style="background:linear-gradient(135deg,#1a0a2e,#2d1b4e);padding:32px;text-align:center;">
-                  <div style="font-size:40px;margin-bottom:8px;">🎨</div>
-                  <h1 style="color:white;font-size:22px;margin:0;">Your storybook is being illustrated!</h1>
-                </div>
-                <div style="padding:32px;">
-                  <p style="color:#3d2b1f;font-size:15px;line-height:1.7;">Hi ${firstName}! We've received your order and our AI illustrators are painting your personalised storybook right now.</p>
-                  <p style="color:#3d2b1f;font-size:15px;line-height:1.7;">We'll email you a link to your finished book in <strong>5–10 minutes</strong>. You can close this tab — we'll take it from here.</p>
-                  <p style="color:#8a6d5a;font-size:13px;">Questions? Reply to this email or reach us at <a href="mailto:hello@mytinytales.studio">hello@mytinytales.studio</a>.</p>
-                </div>
-                <div style="background:#1a0a2e;padding:20px;text-align:center;">
-                  <p style="color:rgba(255,255,255,0.35);font-size:11px;margin:0;">© ${new Date().getFullYear()} My Tiny Tales</p>
-                </div>
-              </div>
-            `,
-          }),
-        }).catch(e => console.error("Prep email failed:", e.message));
-      }
-
     } catch (err) {
       console.error("Webhook: background generation failed to start:", err.message);
       // Alert admin

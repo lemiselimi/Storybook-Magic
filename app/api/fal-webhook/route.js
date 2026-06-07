@@ -86,40 +86,6 @@ export async function POST(request) {
 
     console.log("fal-webhook: book ready for ref", ref);
 
-    // Email customer their book link
-    if (process.env.RESEND_API_KEY && result.contactEmail) {
-      const bookUrl   = `${siteUrl}/book/${ref}`;
-      const firstName = (result.customerName || "").split(" ")[0] || "there";
-      fetch("https://api.resend.com/emails", {
-        method:  "POST",
-        headers: { "Authorization": `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          from:    "My Tiny Tales <hello@mytinytales.studio>",
-          to:      [result.contactEmail],
-          subject: `📖 Your storybook is ready, ${firstName}!`,
-          html: `
-            <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;">
-              <div style="background:linear-gradient(135deg,#1a0a2e,#2d1b4e);padding:32px;text-align:center;">
-                <div style="font-size:40px;margin-bottom:8px;">📖</div>
-                <h1 style="color:white;font-size:22px;margin:0;">Your storybook is ready!</h1>
-              </div>
-              <div style="padding:32px;">
-                <p style="color:#3d2b1f;font-size:15px;line-height:1.7;">Hi ${firstName}! <strong>${result.story?.title || "Your personalised storybook"}</strong> has been beautifully illustrated and is ready to read.</p>
-                <a href="${bookUrl}" style="display:block;margin:24px 0;padding:16px 28px;background:linear-gradient(135deg,#E8C07A,#D4A24C);color:#1a0a2e;font-weight:700;font-size:16px;text-decoration:none;border-radius:50px;text-align:center;">
-                  Read My Storybook →
-                </a>
-                ${result.plan === "print" ? `<p style="color:#8a6d5a;font-size:13px;margin-top:0;">Your printed copy has also been sent to our printer and will ship within 3–5 business days.</p>` : `<p style="color:#8a6d5a;font-size:13px;margin-top:0;">Your PDF download is available on the book page.</p>`}
-                <p style="color:#8a6d5a;font-size:13px;">Questions? Reply to this email or reach us at <a href="mailto:hello@mytinytales.studio">hello@mytinytales.studio</a>.</p>
-              </div>
-              <div style="background:#1a0a2e;padding:20px;text-align:center;">
-                <p style="color:rgba(255,255,255,0.35);font-size:11px;margin:0;">© ${new Date().getFullYear()} My Tiny Tales</p>
-              </div>
-            </div>
-          `,
-        }),
-      }).catch(e => console.error("Customer ready email failed:", e.message));
-    }
-
     // Submit print order to Gelato if needed
     if (result.plan === "print" && result.sessionId) {
       try {

@@ -153,8 +153,8 @@ export async function POST(request) {
     const arcJson = JSON.stringify(theme.arc);
 
     const response = await client.messages.create({
-      model: "claude-sonnet-4-6",
-      max_tokens: 2000,
+      model: "claude-opus-4-7",
+      max_tokens: 4000,
       system: `You are a children's book author writing personalized illustrated storybooks for "My Tiny Tales." Each book is 6 pages, one short story moment per page. The book is being made as a keepsake — emotional, beautiful, and treasured.
 
 YOUR TASK:

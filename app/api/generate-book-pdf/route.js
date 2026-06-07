@@ -1,7 +1,7 @@
 import { PDFDocument, rgb } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 import { fal } from "@fal-ai/client";
-import { LATO_BOLD_WOFF, LIBRE_REGULAR_WOFF, LIBRE_ITALIC_WOFF } from "./fonts.js";
+import { LATO_BOLD_TTF, LIBRE_REGULAR_TTF, LIBRE_ITALIC_TTF } from "./fonts.js";
 
 export const maxDuration = 60;
 
@@ -44,9 +44,9 @@ async function embedImg(doc, bytes) {
 
 // Fonts embedded as base64 at build time — no fs.readFileSync, no process.cwd(),
 // no outputFileTracingIncludes required. Guaranteed present in any serverless runtime.
-const BOLD_BYTES    = LATO_BOLD_WOFF;
-const REGULAR_BYTES = LIBRE_REGULAR_WOFF;
-const ITALIC_BYTES  = LIBRE_ITALIC_WOFF;
+const BOLD_BYTES    = LATO_BOLD_TTF;
+const REGULAR_BYTES = LIBRE_REGULAR_TTF;
+const ITALIC_BYTES  = LIBRE_ITALIC_TTF;
 
 function sanitize(str) {
   return (str || "")
@@ -97,9 +97,9 @@ export async function POST(request) {
     // ── COVER PDF — perfect-bound wrap (back | spine | front) ────────────────
     const coverDoc  = await PDFDocument.create();
     coverDoc.registerFontkit(fontkit);
-    const cBoldFont = await coverDoc.embedFont(BOLD_BYTES);
-    const cItalFont = await coverDoc.embedFont(ITALIC_BYTES);
-    const cNormFont = await coverDoc.embedFont(REGULAR_BYTES);
+    const cBoldFont = await coverDoc.embedFont(BOLD_BYTES,    { subset: true });
+    const cItalFont = await coverDoc.embedFont(ITALIC_BYTES,  { subset: true });
+    const cNormFont = await coverDoc.embedFont(REGULAR_BYTES, { subset: true });
 
     const coverPage = coverDoc.addPage([CW, CH]);
 
@@ -146,9 +146,9 @@ export async function POST(request) {
     // 1 blank + title + dedication + 6×2 story spreads + The End + 3 blanks = 20
     const doc   = await PDFDocument.create();
     doc.registerFontkit(fontkit);
-    const hFont = await doc.embedFont(BOLD_BYTES);
-    const bFont = await doc.embedFont(REGULAR_BYTES);
-    const iFont = await doc.embedFont(ITALIC_BYTES);
+    const hFont = await doc.embedFont(BOLD_BYTES,    { subset: true });
+    const bFont = await doc.embedFont(REGULAR_BYTES, { subset: true });
+    const iFont = await doc.embedFont(ITALIC_BYTES,  { subset: true });
 
     const addBlank = (bg = CREAM) => {
       const p = doc.addPage([PS, PS]);

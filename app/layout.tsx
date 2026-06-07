@@ -1,20 +1,21 @@
 import type { Metadata } from "next";
-import { Fraunces, Inter } from "next/font/google";
+import { Playfair_Display, Outfit } from "next/font/google";
 import "./globals.css";
 import CookieBanner from "./components/CookieBanner";
 import Analytics from "./components/Analytics";
 
-const fraunces = Fraunces({
+const playfair = Playfair_Display({
   variable: "--font-fraunces",
   subsets: ["latin"],
   display: "swap",
-  weight: ["600", "700"],
+  weight: ["600", "700", "900"],
 });
 
-const inter = Inter({
+const outfit = Outfit({
   variable: "--font-inter",
   subsets: ["latin"],
   display: "swap",
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -47,7 +48,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${fraunces.variable} ${inter.variable} h-full antialiased`}
+      className={`${playfair.variable} ${outfit.variable} h-full antialiased`}
     >
       <head>
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />

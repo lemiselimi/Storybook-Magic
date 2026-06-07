@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import BookMockup3D from "./components/BookMockup3D";
 
@@ -34,6 +34,37 @@ function CheckSVG({ size = 14, color = GOLD }: { size?: number; color?: string }
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <polyline points="20 6 9 17 4 12" />
+    </svg>
+  );
+}
+
+// ── Trust bar inline SVG icons ────────────────────────────────────────────────
+function TrustStarSVG() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill={GOLD} aria-hidden="true">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+    </svg>
+  );
+}
+function TrustFlashSVG() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill={GOLD} aria-hidden="true">
+      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+    </svg>
+  );
+}
+function TrustLockSVG() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+      <rect x="3" y="11" width="18" height="11" rx="2" />
+      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </svg>
+  );
+}
+function TrustShieldSVG() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
     </svg>
   );
 }
@@ -104,11 +135,10 @@ function McSVG() {
 
 // ── Main component ────────────────────────────────────────────────────────────
 export default function LandingPage() {
-  const [scrolled,   setScrolled]   = useState(false);
-  const [isMobile,   setIsMobile]   = useState(false);
-  const [menuOpen,   setMenuOpen]   = useState(false);
-  const [exIdx,      setExIdx]      = useState(0);
-  const [cursorPos,  setCursorPos]  = useState({ x: -200, y: -200 });
+  const [scrolled,      setScrolled]      = useState(false);
+  const [isMobile,      setIsMobile]      = useState(false);
+  const [menuOpen,      setMenuOpen]      = useState(false);
+  const [exIdx,         setExIdx]         = useState(0);
   const [reducedMotion, setReducedMotion] = useState(false);
 
   useEffect(() => {
@@ -127,14 +157,6 @@ export default function LandingPage() {
       mq.removeEventListener("change", mqHandler);
     };
   }, []);
-
-  // Cursor follower (desktop, reduced-motion-off)
-  useEffect(() => {
-    if (isMobile || reducedMotion) return;
-    const fn = (e: MouseEvent) => setCursorPos({ x: e.clientX, y: e.clientY });
-    window.addEventListener("mousemove", fn, { passive: true });
-    return () => window.removeEventListener("mousemove", fn);
-  }, [isMobile, reducedMotion]);
 
   // Scroll reveal
   useEffect(() => {
@@ -176,11 +198,6 @@ export default function LandingPage() {
         .nav-link:hover { color: #F5F0E0; }
         * { box-sizing: border-box; }
       `}</style>
-
-      {/* ── Cursor follower ── */}
-      {!isMobile && !reducedMotion && (
-        <div aria-hidden="true" style={{ position: "fixed", left: cursorPos.x - 8, top: cursorPos.y - 8, width: 16, height: 16, borderRadius: "50%", background: `rgba(232,192,122,0.35)`, filter: "blur(3px)", pointerEvents: "none", zIndex: 9998, transition: "left 0.07s, top 0.07s", mixBlendMode: "screen" }} />
-      )}
 
       {/* ════════════════════════════════════════════════════
           HEADER
@@ -233,10 +250,10 @@ export default function LandingPage() {
           HERO
       ════════════════════════════════════════════════════ */}
       <section style={{ minHeight: "90vh", display: "flex", alignItems: "center", justifyContent: "center", padding: isMobile ? "100px 24px 64px" : "120px 48px 80px", position: "relative", overflow: "hidden" }}>
-        {/* Aurora blobs — skip on mobile (GPU-expensive blur) */}
+        {/* Aurora blobs — warm amber/indigo, skip on mobile */}
         {!isMobile && <>
-          <div aria-hidden="true" style={{ position: "absolute", top: "-25%", left: "-15%", width: 800, height: 800, borderRadius: "50%", background: "radial-gradient(circle, rgba(100,70,200,0.4) 0%, transparent 70%)", filter: "blur(100px)", pointerEvents: "none" }} />
-          <div aria-hidden="true" style={{ position: "absolute", bottom: "-25%", right: "-15%", width: 900, height: 900, borderRadius: "50%", background: "radial-gradient(circle, rgba(80,40,160,0.28) 0%, transparent 70%)", filter: "blur(120px)", pointerEvents: "none" }} />
+          <div aria-hidden="true" style={{ position: "absolute", top: "-25%", left: "-15%", width: 800, height: 800, borderRadius: "50%", background: "radial-gradient(circle, rgba(232,192,122,0.12) 0%, transparent 70%)", filter: "blur(100px)", pointerEvents: "none" }} />
+          <div aria-hidden="true" style={{ position: "absolute", bottom: "-25%", right: "-15%", width: 900, height: 900, borderRadius: "50%", background: "radial-gradient(circle, rgba(90,60,180,0.15) 0%, transparent 70%)", filter: "blur(120px)", pointerEvents: "none" }} />
         </>}
 
         {/* Sparkles — skip on mobile */}
@@ -249,10 +266,10 @@ export default function LandingPage() {
         <div style={{ maxWidth: 1200, width: "100%", display: "flex", alignItems: "center", gap: isMobile ? 0 : 72, flexDirection: isMobile ? "column" : "row" }}>
           {/* Left content */}
           <div style={{ flex: 1, animation: "fadeUp 0.9s ease both" }}>
-            {/* Badge */}
+            {/* Pill badge */}
             <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(232,192,122,0.08)", border: "1px solid rgba(232,192,122,0.22)", borderRadius: 50, padding: "6px 16px", marginBottom: 28 }}>
               <SparkSVG size={13} color={GOLD} />
-              <span style={{ color: GOLD, fontSize: 12, fontWeight: 600, letterSpacing: "0.04em" }}>AI-Powered Personalised Storybooks</span>
+              <span style={{ color: GOLD, fontSize: 12, fontWeight: 600, letterSpacing: "0.04em" }}>Personalised Storybooks</span>
             </div>
 
             {/* H1 */}
@@ -264,26 +281,13 @@ export default function LandingPage() {
                   <path d="M3 10 C35 3, 75 14, 115 7 C155 0, 182 12, 197 8" fill="none" stroke={GOLD} strokeWidth="2.5" strokeLinecap="round" />
                 </svg>
               </span>{" "}
-              of Their Own Story
+              of Their Story
             </h1>
 
-            <p style={{ fontSize: isMobile ? 16 : 19, color: MUTED, lineHeight: 1.7, margin: "0 0 30px", maxWidth: 530 }}>
-              A unique AI-generated book starring your child — a heartwarming story written just for them, with cinematic 3D-style illustrations treasured for years.
+            {/* Subtext — tighter, ≤18 words */}
+            <p style={{ fontSize: isMobile ? 16 : 19, color: MUTED, lineHeight: 1.7, margin: "0 0 36px", maxWidth: 530 }}>
+              A unique book starring your child's real face — cinematic 3D illustrations, a story written just for them.
             </p>
-
-            {/* Bullet list */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 36 }}>
-              {[
-                "Your child feels like the hero of their own story",
-                "A bedtime ritual they'll ask for every night",
-                "The most personal gift you'll ever give",
-              ].map((text, i) => (
-                <div key={i} style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <span style={{ width: 22, height: 22, borderRadius: "50%", background: "rgba(232,192,122,0.1)", border: "1px solid rgba(232,192,122,0.25)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><CheckSVG size={11} color={GOLD} /></span>
-                  <span style={{ color: "rgba(245,240,224,0.85)", fontSize: isMobile ? 14 : 15, fontWeight: 500 }}>{text}</span>
-                </div>
-              ))}
-            </div>
 
             {/* CTAs */}
             <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
@@ -297,7 +301,7 @@ export default function LandingPage() {
                 onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "rgba(245,240,224,0.06)"}
                 onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}
               >
-                See Example Books
+                See Examples
               </a>
             </div>
 
@@ -342,13 +346,13 @@ export default function LandingPage() {
       <section style={{ borderTop: `1px solid ${SURF_BDR}`, borderBottom: `1px solid ${SURF_BDR}`, background: "rgba(255,255,255,0.02)" }}>
         <div style={{ maxWidth: 900, margin: "0 auto", padding: isMobile ? "22px 24px" : "22px 48px", display: "flex", alignItems: "center", justifyContent: "space-around", flexWrap: "wrap", gap: 16 }}>
           {[
-            { icon: "⭐", value: "5-Star Rated",    label: "Launch families, Aug–Nov 2025" },
-            { icon: "⚡", value: "Ready in 5 min",  label: "From photo to preview" },
-            { icon: "🔒", value: "Never Stored",    label: "Photos deleted after use" },
-            { icon: "🛡️", value: "No Subscription", label: "Pay once, keep forever" },
+            { icon: <TrustStarSVG />,   value: "5-Star Rated",    label: "Launch families, Aug–Nov 2025" },
+            { icon: <TrustFlashSVG />,  value: "Ready in 5 min",  label: "From photo to preview" },
+            { icon: <TrustLockSVG />,   value: "Never Stored",    label: "Photos deleted after use" },
+            { icon: <TrustShieldSVG />, value: "No Subscription", label: "Pay once, keep forever" },
           ].map((t, i) => (
             <div key={i} style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <span style={{ fontSize: 20 }}>{t.icon}</span>
+              <span style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>{t.icon}</span>
               <div>
                 <div style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontWeight: 600, fontSize: isMobile ? 16 : 19, color: TEXT, lineHeight: 1 }}>{t.value}</div>
                 <div style={{ fontSize: 12, color: MUTED, marginTop: 3 }}>{t.label}</div>
@@ -364,7 +368,6 @@ export default function LandingPage() {
       <section id="how-it-works" style={{ padding: isMobile ? "72px 24px" : "104px 48px" }}>
         <div style={{ maxWidth: 1000, margin: "0 auto" }}>
           <div className="reveal" style={{ textAlign: "center", marginBottom: isMobile ? 52 : 72 }}>
-            <p style={{ color: GOLD, fontWeight: 700, fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase", margin: "0 0 14px" }}>Simple &amp; Fast</p>
             <h2 style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: isMobile ? 30 : 44, fontWeight: 600, color: TEXT, margin: 0, lineHeight: 1.15, letterSpacing: "-0.5px" }}>How It Works</h2>
           </div>
 
@@ -375,29 +378,20 @@ export default function LandingPage() {
             )}
 
             {STEPS.map((s, i) => (
-              <div key={i} className="reveal" style={{ flex: 1, textAlign: "center", padding: isMobile ? "0 0 0 16px" : "0 28px", position: "relative", zIndex: 1, display: "flex", flexDirection: isMobile ? "row" : "column", alignItems: isMobile ? "flex-start" : "center", gap: isMobile ? 18 : 0, animationDelay: `${i * 0.15}s` }}>
-                {/* Giant numeral */}
-                <div aria-hidden="true" style={{ position: isMobile ? "static" : "absolute", top: -16, left: "50%", transform: isMobile ? "none" : "translateX(-50%)", fontSize: isMobile ? 56 : 120, fontWeight: 700, fontFamily: "var(--font-fraunces, Georgia, serif)", color: GOLD, opacity: 0.08, lineHeight: 1, pointerEvents: "none", userSelect: "none", flexShrink: 0, width: isMobile ? 64 : undefined, textAlign: "center" }}>{s.num}</div>
-                <div style={{ position: "relative" }}>
-                  <div style={{ width: 76, height: 76, borderRadius: "50%", background: SURFACE, border: `1.5px solid ${SURF_BDR}`, backdropFilter: "blur(12px)", display: "flex", alignItems: "center", justifyContent: "center", margin: isMobile ? "0" : "0 auto 22px", boxShadow: `0 0 0 1px rgba(232,192,122,0.1), 0 12px 32px rgba(0,0,0,0.3)` }}>
-                    <SparkSVG size={28} color={GOLD} glow />
-                  </div>
-                </div>
+              <div key={i} className="reveal" style={{ flex: 1, textAlign: isMobile ? "left" : "center", padding: isMobile ? "0 0 0 16px" : "0 28px", position: "relative", zIndex: 1, display: "flex", flexDirection: isMobile ? "row" : "column", alignItems: isMobile ? "flex-start" : "center", gap: isMobile ? 18 : 0, animationDelay: `${i * 0.15}s` }}>
+                {isMobile ? (
+                  /* Mobile: large muted numeral as left-side element */
+                  <div style={{ fontSize: 56, fontWeight: 700, fontFamily: "var(--font-fraunces, Georgia, serif)", color: GOLD, opacity: 0.18, lineHeight: 1, flexShrink: 0, width: 64, textAlign: "center", userSelect: "none" }}>{s.num}</div>
+                ) : (
+                  /* Desktop: bold display number as explicit visual anchor */
+                  <div style={{ fontSize: 72, fontWeight: 700, fontFamily: "var(--font-fraunces, Georgia, serif)", color: GOLD, opacity: 0.6, lineHeight: 1, marginBottom: 18, userSelect: "none" }}>{s.num}</div>
+                )}
                 <div style={{ textAlign: isMobile ? "left" : "center" }}>
-                  <div style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontWeight: 600, fontSize: isMobile ? 17 : 19, color: TEXT, marginBottom: 10 }}>{s.title}</div>
+                  <div style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontWeight: 600, fontSize: isMobile ? 17 : 18, color: TEXT, marginBottom: 10 }}>{s.title}</div>
                   <p style={{ color: MUTED, fontSize: 14, lineHeight: 1.75, margin: 0 }}>{s.desc}</p>
                 </div>
               </div>
             ))}
-          </div>
-
-          <div className="reveal" style={{ textAlign: "center", marginTop: isMobile ? 52 : 72 }}>
-            <Link href="/create" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 8, padding: "15px 40px", borderRadius: 50, background: `linear-gradient(135deg, ${GOLD}, ${GOLD_WARM})`, color: BG_BASE, fontWeight: 700, fontSize: 16, boxShadow: "0 8px 32px rgba(232,192,122,0.22)", transition: "transform 0.2s, box-shadow 0.2s" }}
-              onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)"}
-              onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = ""}
-            >
-              Try Free — No Card Needed →
-            </Link>
           </div>
         </div>
       </section>
@@ -408,7 +402,7 @@ export default function LandingPage() {
       <section id="examples" style={{ padding: isMobile ? "72px 24px" : "104px 48px", borderTop: `1px solid ${SURF_BDR}` }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <div className="reveal" style={{ textAlign: "center", marginBottom: isMobile ? 44 : 60 }}>
-            <p style={{ color: GOLD, fontWeight: 700, fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase", margin: "0 0 14px" }}>Real Examples</p>
+            <p style={{ color: GOLD, fontWeight: 700, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", margin: "0 0 14px" }}>Real Examples</p>
             <h2 style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: isMobile ? 30 : 44, fontWeight: 600, color: TEXT, margin: "0 0 14px", lineHeight: 1.15, letterSpacing: "-0.5px" }}>See What Your Book Looks Like</h2>
             <p style={{ color: MUTED, fontSize: 15, margin: 0, maxWidth: 480, marginLeft: "auto", marginRight: "auto" }}>Real pages from a My Tiny Tales book. Every illustration features your child's actual face.</p>
           </div>
@@ -448,12 +442,6 @@ export default function LandingPage() {
               <button key={i} onClick={() => setExIdx(i)} aria-label={`Example ${i + 1}`} style={{ width: i === exIdx ? 24 : 8, height: 8, borderRadius: 4, background: i === exIdx ? GOLD : "rgba(245,240,224,0.18)", border: "none", cursor: "pointer", transition: "all 0.25s ease", padding: 0 }} />
             ))}
           </div>
-
-          <div style={{ textAlign: "center", marginTop: 44 }}>
-            <Link href="/create" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 8, padding: "15px 40px", borderRadius: 50, background: `linear-gradient(135deg, ${GOLD}, ${GOLD_WARM})`, color: BG_BASE, fontWeight: 700, fontSize: 16, boxShadow: "0 8px 32px rgba(232,192,122,0.22)" }}>
-              Try Free — No Card Needed →
-            </Link>
-          </div>
         </div>
       </section>
 
@@ -463,7 +451,6 @@ export default function LandingPage() {
       <section id="pricing" style={{ padding: isMobile ? "72px 24px" : "104px 48px", borderTop: `1px solid ${SURF_BDR}` }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <div className="reveal" style={{ textAlign: "center", marginBottom: isMobile ? 44 : 64 }}>
-            <p style={{ color: GOLD, fontWeight: 700, fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase", margin: "0 0 14px" }}>Simple Pricing</p>
             <h2 style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: isMobile ? 30 : 44, fontWeight: 600, color: TEXT, margin: "0 0 12px", letterSpacing: "-0.5px" }}>One Book, Infinite Memories</h2>
             <p style={{ color: MUTED, fontSize: 15, margin: 0 }}>No subscription. No hidden fees. Pay once, keep forever.</p>
           </div>
@@ -535,7 +522,7 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <p className="reveal" style={{ textAlign: "center", color: MUTED, fontSize: 13, marginTop: 24 }}>🛡️ 30-day happiness promise. We're committed to making sure you love your book.</p>
+          <p className="reveal" style={{ textAlign: "center", color: MUTED, fontSize: 13, marginTop: 24 }}>30-day happiness promise. We're committed to making sure you love your book.</p>
         </div>
       </section>
 
@@ -545,19 +532,36 @@ export default function LandingPage() {
       <section style={{ padding: isMobile ? "72px 24px" : "104px 48px", borderTop: `1px solid ${SURF_BDR}` }}>
         <div style={{ maxWidth: 1000, margin: "0 auto" }}>
           <div className="reveal" style={{ textAlign: "center", marginBottom: isMobile ? 44 : 64 }}>
-            <p style={{ color: GOLD, fontWeight: 700, fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase", margin: "0 0 14px" }}>Early Families</p>
             <h2 style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: isMobile ? 30 : 44, fontWeight: 600, color: TEXT, margin: 0, letterSpacing: "-0.5px" }}>What Parents Are Saying</h2>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: 20 }}>
-            {REVIEWS.map((r, i) => (
-              <div key={i} className="card-hover reveal" style={{ background: SURFACE, backdropFilter: "blur(16px)", border: `1px solid ${SURF_BDR}`, borderRadius: 24, padding: "28px 24px", display: "flex", flexDirection: "column", boxShadow: "0 8px 32px rgba(0,0,0,0.2)", animationDelay: `${i * 0.12}s` }}>
-                {/* Giant gold opening quote */}
+
+          {/* Featured review — full width, horizontal */}
+          <div className="card-hover reveal" style={{ background: SURFACE, backdropFilter: "blur(16px)", border: `1px solid ${SURF_BDR}`, borderRadius: 24, padding: isMobile ? "28px 24px" : "36px 40px", display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 20 : 40, alignItems: isMobile ? "flex-start" : "center", boxShadow: "0 8px 32px rgba(0,0,0,0.2)", marginBottom: 20 }}>
+            {/* Left: avatar + name */}
+            <div style={{ display: "flex", flexDirection: isMobile ? "row" : "column", alignItems: isMobile ? "center" : "flex-start", gap: 14, flexShrink: 0 }}>
+              <div style={{ width: 48, height: 48, borderRadius: "50%", overflow: "hidden", flexShrink: 0 }}>{AVATARS[0]}</div>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 15, color: TEXT }}>{REVIEWS[0].name}</div>
+                <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>{REVIEWS[0].role}</div>
+              </div>
+            </div>
+            {/* Right: stars + quote */}
+            <div style={{ flex: 1 }}>
+              <div style={{ display: "flex", gap: 3, marginBottom: 14 }}>{[0,1,2,3,4].map(j => <StarSVG key={j} size={15} color={GOLD} />)}</div>
+              <p style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: isMobile ? 15 : 17, lineHeight: 1.8, color: TEXT, margin: 0, fontStyle: "italic" }}>{REVIEWS[0].text}</p>
+            </div>
+          </div>
+
+          {/* 2-col grid for remaining reviews */}
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 20 }}>
+            {REVIEWS.slice(1).map((r, i) => (
+              <div key={i} className="card-hover reveal" style={{ background: SURFACE, backdropFilter: "blur(16px)", border: `1px solid ${SURF_BDR}`, borderRadius: 24, padding: "28px 24px", display: "flex", flexDirection: "column", boxShadow: "0 8px 32px rgba(0,0,0,0.2)", animationDelay: `${(i + 1) * 0.12}s` }}>
                 <div aria-hidden="true" style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: 72, lineHeight: 0.7, color: GOLD, opacity: 0.22, marginBottom: 16, fontWeight: 700, userSelect: "none" }}>"</div>
                 <div style={{ display: "flex", gap: 3, marginBottom: 14 }}>{[0,1,2,3,4].map(j => <StarSVG key={j} size={14} color={GOLD} />)}</div>
                 <p style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: 15, lineHeight: 1.8, color: TEXT, margin: "0 0 24px", fontStyle: "italic", flex: 1 }}>{r.text}</p>
                 <div style={{ height: 1, background: "rgba(255,255,255,0.06)", marginBottom: 18 }} />
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: "50%", overflow: "hidden", flexShrink: 0 }}>{AVATARS[i]}</div>
+                  <div style={{ width: 44, height: 44, borderRadius: "50%", overflow: "hidden", flexShrink: 0 }}>{AVATARS[i + 1]}</div>
                   <div>
                     <div style={{ fontWeight: 700, fontSize: 14, color: TEXT }}>{r.name}</div>
                     <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>{r.role}</div>
@@ -573,14 +577,9 @@ export default function LandingPage() {
           FINAL CTA
       ════════════════════════════════════════════════════ */}
       <section style={{ padding: isMobile ? "80px 24px" : "112px 48px", textAlign: "center", position: "relative", overflow: "hidden", borderTop: `1px solid ${SURF_BDR}` }}>
-        {!isMobile && <>
+        {!isMobile && (
           <div aria-hidden="true" style={{ position: "absolute", top: "20%", left: "10%", width: 600, height: 600, borderRadius: "50%", background: "radial-gradient(circle, rgba(120,80,200,0.2) 0%, transparent 70%)", filter: "blur(80px)", pointerEvents: "none" }} />
-          {["12%,22%", "83%,28%", "42%,78%"].map((pos, i) => (
-            <div key={i} aria-hidden="true" style={{ position: "absolute", left: pos.split(",")[0], top: pos.split(",")[1], animation: `sparkleAni ${3 + i * 0.8}s ease-in-out infinite`, animationDelay: `${i * 0.4}s`, opacity: 0.18, pointerEvents: "none" }}>
-              <SparkSVG size={[28, 18, 22][i]} color={GOLD} glow />
-            </div>
-          ))}
-        </>}
+        )}
         <div className="reveal" style={{ maxWidth: 600, margin: "0 auto", position: "relative", zIndex: 1 }}>
           <div style={{ marginBottom: 18, animation: (isMobile || reducedMotion) ? "none" : "float 4s ease-in-out infinite" }}><SparkSVG size={isMobile ? 40 : 52} color={GOLD} glow /></div>
           <h2 style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: isMobile ? 32 : 48, fontWeight: 600, color: TEXT, margin: "0 0 18px", lineHeight: 1.12, letterSpacing: "-0.6px" }}>
@@ -616,8 +615,7 @@ export default function LandingPage() {
               </div>
               <p style={{ color: MUTED, fontSize: 14, lineHeight: 1.7, margin: "0 0 16px", maxWidth: 280 }}>Personalised AI storybooks starring your child. Created with love, treasured for years.</p>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <span style={{ fontSize: 16 }}>🇺🇸</span>
-                <span style={{ color: MUTED, fontSize: 13 }}>Made with love in the US</span>
+                <span style={{ color: MUTED, fontSize: 13 }}>Made in the USA</span>
               </div>
             </div>
 

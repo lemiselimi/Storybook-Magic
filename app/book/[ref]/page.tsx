@@ -14,7 +14,7 @@ type BookStatus = {
   completedAt?: string | null;
 };
 
-const DARK  = "#0F0B1F";
+const DARK  = "#07090F";
 const CREAM = "#fdfcf7";
 const GOLD  = "#E8C07A";
 const BROWN = "#2a1505";
@@ -134,7 +134,7 @@ export default function BookPage() {
   const capName = childName ? childName.charAt(0).toUpperCase() + childName.slice(1).toLowerCase() : "You";
 
   return (
-    <div style={{ minHeight: "100vh", background: "#1a0f2e", fontFamily: "Georgia, 'Times New Roman', serif" }}>
+    <div style={{ minHeight: "100vh", background: "#07090F", fontFamily: "Georgia, 'Times New Roman', serif" }}>
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
@@ -142,7 +142,7 @@ export default function BookPage() {
       `}</style>
 
       {/* Header */}
-      <div style={{ background: "linear-gradient(135deg, #0F0B1F, #1a0a2e)", padding: isMobile ? "28px 20px" : "36px 48px", textAlign: "center", borderBottom: "1px solid rgba(232,192,122,0.1)" }}>
+      <div style={{ background: "linear-gradient(135deg, #07090F, #0E1118)", padding: isMobile ? "28px 20px" : "36px 48px", textAlign: "center", borderBottom: "1px solid rgba(232,192,122,0.1)" }}>
         <p style={{ color: GOLD, fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", margin: "0 0 8px", opacity: 0.7 }}>My Tiny Tales</p>
         <h1 style={{ color: "white", fontSize: isMobile ? 24 : 32, margin: "0 0 8px", fontWeight: 700 }}>{story?.title || "Your Storybook"}</h1>
         <p style={{ color: "rgba(232,192,122,0.6)", fontSize: 13, margin: 0, fontStyle: "italic" }}>{story?.dedication || `A story starring ${capName}`}</p>

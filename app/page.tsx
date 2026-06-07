@@ -8,8 +8,8 @@ const GOLD       = "#E8C07A";
 const GOLD_WARM  = "#D4A24C";
 const TEXT       = "#F5F0E0";
 const MUTED      = "rgba(245,240,224,0.65)";
-const BG_BASE    = "#0F0B1F";
-const BG_EL      = "#1A1535";
+const BG_BASE    = "#07090F";
+const BG_EL      = "#0E1118";
 const SURFACE    = "rgba(255,255,255,0.04)";
 const SURF_BDR   = "rgba(255,255,255,0.08)";
 
@@ -458,7 +458,7 @@ export default function LandingPage() {
             </div>
 
             {/* Print + Digital — popular — lifted 12px */}
-            <div className="card-hover reveal" style={{ background: `linear-gradient(145deg, rgba(35,25,75,0.9), rgba(25,15,55,0.95))`, backdropFilter: "blur(20px)", border: `1px solid rgba(232,192,122,0.28)`, borderRadius: 24, padding: "36px 32px", display: "flex", flexDirection: "column", boxShadow: "0 16px 48px rgba(0,0,0,0.4), 0 0 0 1px rgba(232,192,122,0.12)", position: "relative", overflow: "hidden", transform: "translateY(-12px)" }}>
+            <div className="card-hover reveal" style={{ background: `linear-gradient(145deg, rgba(14,17,24,0.95), rgba(7,9,15,0.98))`, backdropFilter: "blur(20px)", border: `1px solid rgba(232,192,122,0.28)`, borderRadius: 24, padding: "36px 32px", display: "flex", flexDirection: "column", boxShadow: "0 16px 48px rgba(0,0,0,0.4), 0 0 0 1px rgba(232,192,122,0.12)", position: "relative", overflow: "hidden", transform: "translateY(-12px)" }}>
               {/* Gold top gradient accent */}
               <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${GOLD}, ${GOLD_WARM})` }} />
               {/* Most Popular ribbon */}

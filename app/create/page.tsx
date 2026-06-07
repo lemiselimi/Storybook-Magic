@@ -3,8 +3,8 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 
 const THEMES = [
-  { id: "july4",      emoji: "🎆", title: "Fireworks Night",    subtitle: "A Fourth of July Story", desc: "Your child saves the town's Fourth of July celebration — from parade leader to the big fireworks finale", seasonal: true, popular: true },
-  { id: "worldcup",   emoji: "⚽", title: "World Cup Hero",      subtitle: "USA World Cup 2026",      desc: "Your child is the star striker for the USA at the World Cup final — from tunnel walk to trophy lift", seasonal: true },
+  { id: "july4",      emoji: "🎆", title: "Fireworks Night",    subtitle: "A Fourth of July Story", desc: "Your child saves the town's Fourth of July celebration: from parade leader to the big fireworks finale", seasonal: true, popular: true },
+  { id: "worldcup",   emoji: "⚽", title: "World Cup Hero",      subtitle: "USA World Cup 2026",      desc: "Your child is the star striker for the USA at the World Cup final: from tunnel walk to trophy lift", seasonal: true },
   { id: "adventure",  emoji: "🌋", title: "The Big Adventure",  subtitle: "Quest & Exploration",     desc: "Your child discovers a hidden world and must be brave to save the day" },
   { id: "dragon",     emoji: "🐉", title: "Dragon Tamer",       subtitle: "Fantasy & Magic",          desc: "A magical creature needs help and only your child has what it takes" },
   { id: "space",      emoji: "🚀", title: "To The Stars",       subtitle: "Space & Science",          desc: "Your child blasts off into the cosmos on a mission to save the universe" },
@@ -22,22 +22,22 @@ const TRAINING_MESSAGES = [
   "Teaching the AI their smile...",
   "Perfecting every little detail...",
   "Adding the finishing touches to their look...",
-  "Almost there — magic takes a moment...",
+  "Almost there, magic takes a moment...",
   "Making sure every illustration looks just right...",
   "Bringing your child to life on the page...",
   "Getting the character just perfect...",
-  "Nearly ready — good things take time...",
-  "One moment — weaving a little magic...",
+  "Nearly ready. Good things take time...",
+  "One moment, weaving a little magic...",
 ];
 
 const THEME_CLOSING: Record<string, (name: string) => string> = {
-  adventure:  (n) => `Remember, ${n}: every great adventure begins with one brave step. The world is full of magic — and you have everything it takes to find it.`,
+  adventure:  (n) => `Remember, ${n}: every great adventure begins with one brave step. The world is full of magic, and you have everything it takes to find it.`,
   dragon:     (n) => `${n}, you showed the world that kindness is the greatest power of all. Even the most fearsome things become friends when met with a gentle heart.`,
-  space:      (n) => `Reach for the stars, ${n} — because you already proved that one small, brave explorer is all it takes to light up the universe.`,
-  ocean:      (n) => `The ocean is deep and full of mystery — but so is your courage, ${n}. Never stop diving deeper into the wonder of the world.`,
+  space:      (n) => `Reach for the stars, ${n}, because you already proved that one small, brave explorer is all it takes to light up the universe.`,
+  ocean:      (n) => `The ocean is deep and full of mystery, but so is your courage, ${n}. Never stop diving deeper into the wonder of the world.`,
   jungle:     (n) => `You are the ruler of your own kingdom, ${n}. Lead with kindness, speak with courage, and the world will always follow.`,
   superpower: (n) => `Your superpower is real, ${n}. It lives inside you every single day. The world is a brighter, better place because you are in it.`,
-  worldcup:   (n) => `You proved it, ${n}: champions are made of heart, not just skill. Keep chasing your dreams — the world is watching, and it is cheering for you.`,
+  worldcup:   (n) => `You proved it, ${n}: champions are made of heart, not just skill. Keep chasing your dreams. The world is watching, and it is cheering for you.`,
 };
 
 const HAIR_COLORS = [
@@ -71,7 +71,7 @@ const PAGE_BACKGROUNDS = [
 const TOTAL_STEPS     = 5;
 
 // LoRA uses trigger word TOK — all prompts must start with "a photo of TOK"
-const CLOTHING = " Fully dressed at all times in age-appropriate adventure clothing — long-sleeved top, full-length trousers or skirt, shoes or boots. No bare skin visible below the neckline or above the wrist. No logos, no brand names, no text, no character prints, no emblems on clothing.";
+const CLOTHING = " Fully dressed at all times in age-appropriate adventure clothing: long-sleeved top, full-length trousers or skirt, shoes or boots. No bare skin visible below the neckline or above the wrist. No logos, no brand names, no text, no character prints, no emblems on clothing.";
 
 // Reusable style token — prepended to every page prompt for visual consistency across all 6 pages
 // Prepended to every scene prompt — style anchor must stay identical across all 6 pages
@@ -426,10 +426,10 @@ const DEMO_STORY = {
   title: "Aria Saves the Universe",
   dedication: "For Aria, the bravest explorer in the cosmos",
   pages: [
-    { pageNum: 1, text: "Once upon a time, Aria gazed up at the night sky and noticed something strange — the stars were going out, one by one.", illustration: "A young girl standing in her backyard at night, looking up at a dimming starry sky with wonder and determination" },
+    { pageNum: 1, text: "Once upon a time, Aria gazed up at the night sky and noticed something strange: the stars were going out, one by one.", illustration: "A young girl standing in her backyard at night, looking up at a dimming starry sky with wonder and determination" },
     { pageNum: 2, text: "'Mission Control needs our best astronaut!' Aria buckled her helmet, pressed the launch button, and WHOOOOSH — she blasted off!", illustration: "A brave young girl in a spacesuit launching into space aboard a gleaming silver rocket, leaving a trail of golden light" },
     { pageNum: 3, text: "In the heart of Galaxy 7, Aria discovered tiny star creatures whose home had gone cold and dark.", illustration: "A girl floating in deep space surrounded by small glowing star creatures looking sad, a dark galaxy behind them" },
-    { pageNum: 4, text: "Aria had an idea! She shared her warmth with each little star — and one by one, they began to glow again.", illustration: "A girl in a spacesuit reaching out to touch star creatures that light up and sparkle with joy one by one" },
+    { pageNum: 4, text: "Aria had an idea! She shared her warmth with each little star, and one by one, they began to glow again.", illustration: "A girl in a spacesuit reaching out to touch star creatures that light up and sparkle with joy one by one" },
     { pageNum: 5, text: "The creatures cheered! Together they reignited every star in the galaxy, filling the sky with dazzling, magical light.", illustration: "A girl and star creatures celebrating as the entire galaxy lights up in brilliant colours around them" },
     { pageNum: 6, text: "Aria floated home beneath a million shining stars. 'Best adventure ever,' she whispered, smiling all the way.", illustration: "A girl in a spacesuit floating peacefully back toward Earth through a spectacular starry galaxy full of warm golden light" },
   ],
@@ -779,7 +779,7 @@ export default function StorybookCreator() {
       const [storyRes, trainRes] = await Promise.all([storyPromise, trainPromise]);
 
       if (storyRes?.error === "limit_reached") {
-        setPreviewMsg("Preview limit reached — please purchase to continue.");
+        setPreviewMsg("Preview limit reached. Purchase once to unlock unlimited generations.");
         setPreviewStatus("done");
         releaseWakeLock();
         setPreviewStory({ title: "", dedication: "", pages: [], _limitReached: true });
@@ -903,7 +903,7 @@ export default function StorybookCreator() {
         ], sceneConcurrency);
       }
     } catch (err: any) {
-      const msg = err?.name === "AbortError" ? "Connection timed out — please check your signal and try again." : "Something went wrong — please try again.";
+      const msg = err?.name === "AbortError" ? "Connection timed out. Please check your signal and try again." : "Something went wrong — please try again.";
       setGenerationError(msg);
       setPreviewStory(getFallbackStory(childName));
     }
@@ -1107,7 +1107,7 @@ export default function StorybookCreator() {
       setCurrentPage(-2); setDisplayedPage(-2); setMainStep("book");
     } catch (err: any) {
       console.error(err);
-      const msg = err?.name === "AbortError" ? "Connection timed out — check your signal and try again." : "Something went wrong — please try again.";
+      const msg = err?.name === "AbortError" ? "Connection timed out. Check your signal and try again." : "Something went wrong — please try again.";
       setGenerationError(msg);
       setStory(getFallbackStory(_name)); setCurrentPage(-2); setDisplayedPage(-2); setMainStep("book");
     }
@@ -1282,7 +1282,7 @@ export default function StorybookCreator() {
       .then(r => r.json())
       .then(res => {
         if (res.ok) setPrintOrdered(true);
-        else setPrintOrderError(res.error || "Print order failed — please contact us at hello@mytinytales.studio");
+        else setPrintOrderError(res.error || "Print order failed. Please contact us at hello@mytinytales.studio");
       })
       .catch(err => setPrintOrderError(err.message))
       .finally(() => setPrintFulfilling(false));
@@ -1358,7 +1358,7 @@ export default function StorybookCreator() {
 
           <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 6 : 9, marginTop: isMobile ? 12 : 26 }}>
             <div style={{ height: 1, width: isMobile ? 18 : 34, background: "rgba(120,80,30,0.22)", flexShrink: 0 }} />
-            <span style={{ color: "rgba(120,80,30,0.38)", fontFamily: "Georgia, serif", fontSize: isMobile ? 7 : 9, letterSpacing: "0.14em" }}>— {page.pageNum} —</span>
+            <span style={{ color: "rgba(120,80,30,0.38)", fontFamily: "Georgia, serif", fontSize: isMobile ? 7 : 9, letterSpacing: "0.14em" }}>{page.pageNum}</span>
           </div>
         </div>
 
@@ -1453,7 +1453,7 @@ export default function StorybookCreator() {
       return <BookSpread spreadIndex={page} />;
     }
     // Closing page
-    const closingText = THEME_CLOSING[theme]?.(capName) || ('Remember, ' + capName + ': every great adventure begins with one brave step. The world is full of magic — and you have everything it takes to find it.');
+    const closingText = THEME_CLOSING[theme]?.(capName) || ('Remember, ' + capName + ': every great adventure begins with one brave step. The world is full of magic, and you have everything it takes to find it.');
     const bgImg = (pageImages[5] && pageImages[5] !== '__failed__') ? pageImages[5] : (pageImages[4] && pageImages[4] !== '__failed__') ? pageImages[4] : null;
     return (
       <div style={{ position: 'relative', minHeight: isMobile ? 420 : 560, background: '#07090F' }}>
@@ -1519,7 +1519,7 @@ export default function StorybookCreator() {
     <div style={{ minHeight: "100vh", background: "#07090F", fontFamily: "var(--font-inter, sans-serif)", display: "flex", flexDirection: "column", alignItems: "center", padding: isMobile ? "20px 12px 50px" : "36px 16px 70px", position: "relative", overflow: "hidden" }}>
       {/* Aurora blobs */}
       <div style={{ position: "fixed", top: "-20%", left: "-15%", width: 700, height: 700, borderRadius: "50%", background: "radial-gradient(circle, rgba(232,192,122,0.07) 0%, transparent 70%)", filter: "blur(90px)", pointerEvents: "none", zIndex: 0 }} />
-      <div style={{ position: "fixed", bottom: "-20%", right: "-15%", width: 800, height: 800, borderRadius: "50%", background: "radial-gradient(circle, rgba(167,139,250,0.05) 0%, transparent 70%)", filter: "blur(110px)", pointerEvents: "none", zIndex: 0 }} />
+      <div style={{ position: "fixed", bottom: "-20%", right: "-15%", width: 800, height: 800, borderRadius: "50%", background: "radial-gradient(circle, rgba(232,192,122,0.04) 0%, transparent 70%)", filter: "blur(110px)", pointerEvents: "none", zIndex: 0 }} />
       <div style={{ position: "relative", zIndex: 1, width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
       <style>{`
         @keyframes float     { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
@@ -1685,7 +1685,7 @@ export default function StorybookCreator() {
 
                   {photos.length > 0 && (
                     <div style={{ textAlign: "center", marginTop: 12, color: "#4caf50", fontWeight: 700, fontSize: 14 }}>
-                      ✓ {photos.length === 2 ? "2 photos — best likeness!" : "1 photo added — add a 2nd for better results"}
+                      ✓ {photos.length === 2 ? "2 photos (best likeness!)" : "1 photo added. Add a 2nd for better results."}
                     </div>
                   )}
                 </div>
@@ -1695,7 +1695,7 @@ export default function StorybookCreator() {
                 {/* Privacy reassurance */}
                 <div style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(76,175,80,0.08)", border: "1px solid rgba(76,175,80,0.2)", borderRadius: 12, padding: "10px 14px", marginTop: 12 }}>
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4caf50" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }} aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                  <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, margin: 0, lineHeight: 1.5 }}>Your photos are <strong style={{ color: "#4caf50" }}>never stored on our servers</strong> — processed securely to personalise your book, then permanently deleted.</p>
+                  <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, margin: 0, lineHeight: 1.5 }}>Your photos are <strong style={{ color: "#4caf50" }}>never stored on our servers.</strong> Processed securely to personalise your book, then permanently deleted.</p>
                 </div>
 
                 <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap", justifyContent: "center" }}>
@@ -1805,7 +1805,7 @@ export default function StorybookCreator() {
                   </button>
                 </div>
                 <p style={{ color: "rgba(255,255,255,0.28)", fontSize: 12, textAlign: "center", marginTop: 12, lineHeight: 1.6 }}>
-                  Takes 3–4 minutes — we&apos;re painting every illustration just for {childName || "your child"}
+                  Takes 3-4 minutes. We&apos;re painting every illustration just for {childName || "your child"}
                 </p>
               </div>
             )}
@@ -1836,7 +1836,7 @@ export default function StorybookCreator() {
                     </h2>
                     {!trainingFailed && (
                       <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 12, margin: "0 0 12px" }}>
-                        Takes 3–4 minutes — we&apos;re painting every illustration to look just like {childName || "your child"}
+                        Takes 3-4 minutes. We&apos;re painting every illustration to look just like {childName || "your child"}
                       </p>
                     )}
                     <p style={{ color: trainingFailed ? "rgba(255,180,100,0.9)" : "rgba(232,192,122,0.9)", fontSize: 15, fontWeight: 600, margin: "0 0 8px", minHeight: 24 }}>{previewMsg}</p>
@@ -1844,7 +1844,7 @@ export default function StorybookCreator() {
                     {tabHidden && (
                       <div style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(255,160,0,0.12)", border: "1px solid rgba(255,160,0,0.35)", borderRadius: 10, padding: "9px 14px", margin: "0 0 12px", maxWidth: 320, marginLeft: "auto", marginRight: "auto" }}>
                         <span style={{ fontSize: 16 }}>⚠️</span>
-                        <p style={{ color: "rgba(255,200,100,0.95)", fontSize: 11, margin: 0, lineHeight: 1.5 }}>Keep this tab open — generation pauses when the browser is minimised</p>
+                        <p style={{ color: "rgba(255,200,100,0.95)", fontSize: 11, margin: 0, lineHeight: 1.5 }}>Keep this tab open. Generation pauses when the browser is minimised.</p>
                       </div>
                     )}
                     {!trainingFailed && previewDone > 0 && (
@@ -1872,7 +1872,7 @@ export default function StorybookCreator() {
                     <h2 style={{ color: "white", fontSize: isMobile ? 20 : 24, fontWeight: 700, margin: "0 0 10px" }}>Free preview limit reached</h2>
                     <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 15, margin: "0 0 24px" }}>You've used 5 free previews in 24 hours. Purchase once to unlock unlimited generations.</p>
                     <button onClick={() => handlePurchase("digital")} disabled={!!checkoutLoading} style={{ padding: "15px 36px", borderRadius: 16, border: "none", background: checkoutLoading ? "rgba(232,192,122,0.5)" : "linear-gradient(135deg, #E8C07A, #D4A24C)", color: "#07090F", fontSize: 16, fontWeight: 800, cursor: checkoutLoading ? "not-allowed" : "pointer" }}>
-                      {checkoutLoading === "digital" ? "Redirecting..." : "Unlock My Book — $17.99 →"}
+                      {checkoutLoading === "digital" ? "Redirecting..." : "Unlock My Book ($17.99) →"}
                     </button>
                   </div>
                 )}
@@ -1880,7 +1880,7 @@ export default function StorybookCreator() {
                 {/* Revealed preview — fades in once ALL 7 done */}
                 {previewStatus === "done" && previewStory && !previewStory._limitReached && (
                   <div style={{ animation: "fadeIn 0.7s ease both" }}>
-                    <Mascot msg={`Here's a sneak peek of ${childName || "your child"}'s story — take a look!`} />
+                    <Mascot msg={`Here's a sneak peek of ${childName || "your child"}'s story. Take a look!`} />
 
                     {/* Cover thumbnail */}
                     {previewCoverUrl && (
@@ -1891,14 +1891,14 @@ export default function StorybookCreator() {
                           <div style={{ color: "#E8C07A", fontWeight: 800, fontSize: isMobile ? 16 : 19, textShadow: "0 2px 8px rgba(0,0,0,0.6)", marginBottom: 3 }}>{previewStory.title}</div>
                           <div style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, fontStyle: "italic" }}>{previewStory.dedication}</div>
                         </div>
-                        <div style={{ position: "absolute", top: 10, right: 10, background: "rgba(232,192,122,0.95)", borderRadius: 8, padding: "3px 9px", fontSize: 10, fontWeight: 700, color: "#07090F" }}>✨ Cover</div>
+                        <div style={{ position: "absolute", top: 10, right: 10, background: "rgba(232,192,122,0.95)", borderRadius: 8, padding: "3px 9px", fontSize: 10, fontWeight: 700, color: "#07090F" }}>Preview</div>
                       </div>
                     )}
 
                     {/* Retry failed scenes */}
                     {previewImages.some(img => img === "__failed__") && (
                       <div style={{ background: "rgba(255,100,100,0.08)", border: "1px solid rgba(255,100,100,0.2)", borderRadius: 14, padding: "12px 16px", marginBottom: 14, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-                        <p style={{ color: "rgba(255,200,200,0.9)", fontSize: 13, margin: 0 }}>Some scenes didn't load — tap to retry them.</p>
+                        <p style={{ color: "rgba(255,200,200,0.9)", fontSize: 13, margin: 0 }}>Some scenes didn't load. Tap to retry them.</p>
                         <button onClick={retryFailedPreviewScenes} disabled={retryingScenes} style={{ flexShrink: 0, padding: "8px 16px", borderRadius: 10, border: "none", background: retryingScenes ? "rgba(255,255,255,0.15)" : "rgba(255,100,100,0.25)", color: "white", fontSize: 12, fontWeight: 700, cursor: retryingScenes ? "not-allowed" : "pointer", whiteSpace: "nowrap" }}>
                           {retryingScenes ? "Retrying..." : "Retry scenes"}
                         </button>
@@ -1934,12 +1934,12 @@ export default function StorybookCreator() {
                               <p style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: isMobile ? 13 : 15.5, lineHeight: isMobile ? 1.7 : 1.85, color: "#2a1505", margin: 0, letterSpacing: "0.01em" }}>{page.text}</p>
                               <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 6 : 9, marginTop: isMobile ? 12 : 26 }}>
                                 <div style={{ height: 1, width: isMobile ? 18 : 34, background: "rgba(120,80,30,0.22)", flexShrink: 0 }} />
-                                <span style={{ color: "rgba(120,80,30,0.38)", fontFamily: "Georgia, serif", fontSize: isMobile ? 7 : 9, letterSpacing: "0.14em" }}>— {page.pageNum} —</span>
+                                <span style={{ color: "rgba(120,80,30,0.38)", fontFamily: "Georgia, serif", fontSize: isMobile ? 7 : 9, letterSpacing: "0.14em" }}>{page.pageNum}</span>
                               </div>
                             </div>
 
                             {/* Illustration — right, full bleed */}
-                            <div style={{ order: isMobile ? 1 : undefined, position: "relative", height: isMobile ? 240 : undefined, overflow: "hidden", background: "#1a1a2e" }}>
+                            <div style={{ order: isMobile ? 1 : undefined, position: "relative", height: isMobile ? 240 : undefined, overflow: "hidden", background: "#07090F" }}>
                               {img && img !== "__failed__" ? (
                                 <img src={img} alt={`Page ${page.pageNum}`} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                               ) : (
@@ -1964,7 +1964,7 @@ export default function StorybookCreator() {
                                   <div style={{ height: 8, background: "#d8cec4", borderRadius: 4, width: "90%" }} />
                                   <div style={{ height: 8, background: "#d8cec4", borderRadius: 4, width: "55%" }} />
                                 </div>
-                                <div style={{ background: img ? "#1a1a2e" : PAGE_BACKGROUNDS[(idx + 2) % PAGE_BACKGROUNDS.length], position: "relative", overflow: "hidden" }}>
+                                <div style={{ background: img ? "#07090F" : PAGE_BACKGROUNDS[(idx + 2) % PAGE_BACKGROUNDS.length], position: "relative", overflow: "hidden" }}>
                                   {img && img !== "__failed__" && <img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
                                 </div>
                               </div>
@@ -2009,11 +2009,11 @@ export default function StorybookCreator() {
                       <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, textAlign: "center", margin: "0 0 18px" }}>6 personalised cinematic 3D-illustrated pages starring {childName || "your child"}</p>
                       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                         <button onClick={() => handlePurchase("digital")} disabled={!!checkoutLoading} style={{ width: "100%", padding: "17px", borderRadius: 16, border: "none", background: checkoutLoading === "digital" ? "rgba(232,192,122,0.5)" : "linear-gradient(135deg, #E8C07A, #D4A24C)", color: "#07090F", fontSize: 17, fontWeight: 800, cursor: checkoutLoading ? "not-allowed" : "pointer" }}>
-                          {checkoutLoading === "digital" ? "Redirecting..." : PAYMENTS_ENABLED ? "Get Digital Book — $17.99 →" : "✨ Create My Storybook!"}
+                          {checkoutLoading === "digital" ? "Redirecting..." : PAYMENTS_ENABLED ? "Get Digital Book ($17.99) →" : "Create My Storybook"}
                         </button>
                         {PAYMENTS_ENABLED && (
                           <button onClick={() => handlePurchase("print")} disabled={!!checkoutLoading} style={{ width: "100%", padding: "15px", borderRadius: 16, border: "2px solid rgba(232,192,122,0.35)", background: "rgba(232,192,122,0.07)", color: "#E8C07A", fontSize: 16, fontWeight: 700, cursor: checkoutLoading ? "not-allowed" : "pointer" }}>
-                            {checkoutLoading === "print" ? "Redirecting..." : "Print + Digital — $37.99"}
+                            {checkoutLoading === "print" ? "Redirecting..." : "Print + Digital ($37.99)"}
                           </button>
                         )}
                       </div>
@@ -2070,7 +2070,7 @@ export default function StorybookCreator() {
           {falError    && <div style={{ background: "rgba(255,100,100,0.09)", border: "1px solid rgba(255,100,100,0.25)", borderRadius: 10, padding: "9px 14px", marginBottom: 12, color: "#ffaaaa", fontSize: 13, textAlign: "center" }}>⚠️ {falError}</div>}
           {generationError && <div style={{ background: "rgba(255,100,100,0.09)", border: "1px solid rgba(255,100,100,0.25)", borderRadius: 10, padding: "9px 14px", marginBottom: 12, color: "#ffaaaa", fontSize: 13, textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, flexWrap: "wrap" }}>⚠️ {generationError} <button onClick={() => { setGenerationError(null); setOnboardingStep(5); setMainStep("onboarding"); previewStarted.current = false; }} style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 8, padding: "4px 12px", color: "white", fontSize: 12, cursor: "pointer" }}>Try again</button></div>}
           {isSharedView && <div style={{ background: "rgba(232,192,122,0.07)", border: "1px solid rgba(232,192,122,0.2)", borderRadius: 10, padding: "8px 14px", marginBottom: 12, color: "rgba(232,192,122,0.8)", fontSize: 13, textAlign: "center" }}>📖 Viewing a shared storybook</div>}
-          {isDemo && <div style={{ background: "rgba(232,192,122,0.12)", border: "1px solid rgba(232,192,122,0.35)", borderRadius: 10, padding: "8px 14px", marginBottom: 12, color: "#E8C07A", fontSize: 13, textAlign: "center", fontWeight: 600 }}>⚡ Demo Mode — no credits used · <a href="/create" style={{ color: "#E8C07A", textDecoration: "underline", cursor: "pointer" }} onClick={e => { e.preventDefault(); resetAll(); }}>Create your own</a></div>}
+          {isDemo && <div style={{ background: "rgba(232,192,122,0.12)", border: "1px solid rgba(232,192,122,0.35)", borderRadius: 10, padding: "8px 14px", marginBottom: 12, color: "#E8C07A", fontSize: 13, textAlign: "center", fontWeight: 600 }}>⚡ Demo Mode — no credits used ) · <a href="/create" style={{ color: "#E8C07A", textDecoration: "underline", cursor: "pointer" }} onClick={e => { e.preventDefault(); resetAll(); }}>Create your own</a></div>}
 
           {/* ── Book frame with 3D page-turn flip ─────────────────────────── */}
           <div style={{ perspective: "2000px", perspectiveOrigin: "50% 50%", position: "relative" }}>
@@ -2227,7 +2227,7 @@ export default function StorybookCreator() {
                 type="url"
                 value={kontextImageUrl}
                 onChange={e => setKontextImageUrl(e.target.value)}
-                placeholder="Paste a photo URL to test with (optional — defaults to sample portrait)"
+                placeholder="Paste a photo URL to test with (optional, defaults to sample portrait)"
                 style={{ flex: 1, padding: "9px 14px", borderRadius: 10, border: "1px solid rgba(232,192,122,0.25)", background: "rgba(255,255,255,0.06)", color: "white", fontSize: 13, outline: "none" }}
               />
               {kontextImageUrl && (
@@ -2240,7 +2240,7 @@ export default function StorybookCreator() {
           {isDemo && kontextResults && (
             <div style={{ margin: "16px auto 0", maxWidth: 900, background: "rgba(255,255,255,0.06)", borderRadius: 16, padding: "24px", border: "1px solid rgba(232,192,122,0.2)" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-                <p style={{ color: "#E8C07A", fontWeight: 700, fontSize: 14, margin: 0 }}>🧪 fal-ai/flux-pro/kontext — 3-scene consistency test</p>
+                <p style={{ color: "#E8C07A", fontWeight: 700, fontSize: 14, margin: 0 }}>🧪 fal-ai/flux-pro/kontext: 3-scene consistency test</p>
                 <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 12 }}>Pixar-style prompt, same reference photo</span>
               </div>
               {kontextResults === "error" ? (
@@ -2340,7 +2340,7 @@ export default function StorybookCreator() {
           {(() => {
             const capName = childName ? childName.charAt(0).toUpperCase() + childName.slice(1).toLowerCase() : "";
             const closingText = THEME_CLOSING[theme]?.(capName) ||
-              ("Remember, " + capName + ": every great adventure begins with one brave step. The world is full of magic — and you have everything it takes to find it.");
+              ("Remember, " + capName + ": every great adventure begins with one brave step. The world is full of magic, and you have everything it takes to find it.");
             const bgImgPrint = (pageImages[5] && pageImages[5] !== "__failed__") ? pageImages[5] : null;
             return (
               <div className="print-page" style={{ position: "relative", background: "#07090F", alignItems: "center", justifyContent: "center", flexDirection: "column" }}>

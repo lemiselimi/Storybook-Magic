@@ -21,6 +21,7 @@ export async function GET(request) {
       pageUrls:       [0,1,2,3,4,5].map(i => proxied(result.images?.[i])),
       interiorPdfUrl: result.interiorPdfUrl ?? null,
       completedAt:    result.completedAt ?? null,
+      printApproval:  result.printApproval ?? null,
     });
   } catch (err) {
     console.error("book-status error:", err.message);

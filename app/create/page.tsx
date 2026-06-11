@@ -92,6 +92,83 @@ const STYLE_TOKEN =
 
 const SAFETY = "The child is completely and fully clothed in an age-appropriate adventure outfit at all times — long-sleeved top, full-length trousers or skirt, shoes. Absolutely no bare chest, no bare torso, no shirtless, no sleeveless, no exposed midriff, no bare arms or legs. Background contains only nature, animals, and magical storybook elements. Safe for young children.";
 
+// ── Waiting-screen motion helpers ─────────────────────────────────────────────
+const phaseOf = (m: string) => {
+  const s = m.toLowerCase();
+  if (s.includes("writ") || s.includes("story")) return "write";
+  if (s.includes("paint") || s.includes("illustrat") || s.includes("scene")) return "paint";
+  return "magic";
+};
+
+function PhaseBadgeIcon({ phase }: { phase: string }) {
+  const common = { width: 20, height: 20, viewBox: "0 0 24 24", fill: "none", stroke: "#07090F", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+  if (phase === "write") return <svg {...common} aria-hidden="true"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg>;
+  if (phase === "paint") return <svg {...common} aria-hidden="true"><path d="m9.06 11.9 8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08"/><path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1.08 1.1 2.49 2.02 4 2.02 2.2 0 4-1.8 4-4.04a3.01 3.01 0 0 0-3-3.02z"/></svg>;
+  return <svg {...common} strokeWidth={1.8} aria-hidden="true"><line x1="3" y1="21" x2="21" y2="3"/><line x1="15" y1="9" x2="19" y2="5"/><line x1="5" y1="19" x2="9" y2="15"/><circle cx="19.5" cy="4.5" r="1.5" fill="rgba(7,9,15,0.6)" stroke="none"/></svg>;
+}
+
+// Gold dust particles drifting up the waiting screen
+function MagicDust({ count = 14 }: { count?: number }) {
+  return (
+    <div aria-hidden="true" style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none" }}>
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} style={{
+          position: "absolute", left: `${(i * 37 + 11) % 100}%`, bottom: -6,
+          width: 2 + (i % 3), height: 2 + (i % 3), borderRadius: "50%",
+          background: "#E8C07A", opacity: 0, boxShadow: "0 0 6px rgba(232,192,122,0.8)",
+          "--sway": `${(i % 2 ? 1 : -1) * (8 + (i % 4) * 6)}px`,
+          animation: `dustRise ${4 + (i % 4)}s linear ${(i * 0.7) % 5}s infinite`,
+        } as React.CSSProperties} />
+      ))}
+    </div>
+  );
+}
+
+// Book that visibly assembles as scenes complete
+function BookAssembly({ done, total, msg }: { done: number; total: number; msg: string }) {
+  const phase = phaseOf(msg);
+  return (
+    <div style={{ position: "relative", width: 170, height: 132, margin: "0 auto 22px" }}>
+      {/* Gold cover base */}
+      <div style={{ position: "absolute", left: "50%", bottom: 0, transform: "translateX(-50%)", width: 100, height: 122, borderRadius: "4px 10px 10px 4px", background: "linear-gradient(135deg, #E8C07A, #D4A24C)", boxShadow: "0 14px 36px rgba(232,192,122,0.3)" }}>
+        <div style={{ position: "absolute", left: 8, top: 0, bottom: 0, width: 1.5, background: "rgba(7,9,15,0.25)" }} />
+      </div>
+      {/* Pages slot in as scenes finish */}
+      {Array.from({ length: total }).map((_, i) => i < done && (
+        <div key={i} style={{ position: "absolute", left: "50%", bottom: 8, width: 82, height: 104, background: "#F5F0E0", borderRadius: "2px 6px 6px 2px", boxShadow: "0 2px 8px rgba(0,0,0,0.3)", transform: `translateX(-50%) rotate(${(i - (total - 1) / 2) * 1.7}deg)`, transformOrigin: "bottom center", animation: "pageSlot 0.55s cubic-bezier(0.22,0.7,0.3,1) both", padding: "14px 12px" }}>
+          {[78, 92, 64].map((w, j) => <div key={j} style={{ width: `${w}%`, height: 3.5, borderRadius: 2, background: "rgba(20,16,8,0.13)", marginBottom: 6 }} />)}
+        </div>
+      ))}
+      {/* Phase badge — crossfades when the pipeline stage changes */}
+      <div key={phase} style={{ position: "absolute", right: 14, bottom: -6, width: 44, height: 44, borderRadius: "50%", background: "linear-gradient(135deg, #E8C07A, #D4A24C)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 20px rgba(232,192,122,0.45)", animation: "phaseIn 0.45s ease both", zIndex: 2 }}>
+        <PhaseBadgeIcon phase={phase} />
+      </div>
+    </div>
+  );
+}
+
+// One-time gold spark burst when the book reveals
+function GoldBurst() {
+  return (
+    <div aria-hidden="true" style={{ position: "absolute", left: "50%", top: 110, pointerEvents: "none", zIndex: 5 }}>
+      {Array.from({ length: 18 }).map((_, i) => {
+        const ang = (i / 18) * Math.PI * 2;
+        const dist = 70 + (i % 3) * 32;
+        return <div key={i} style={{
+          position: "absolute",
+          width: i % 2 ? 5 : 7, height: i % 2 ? 5 : 7,
+          borderRadius: i % 3 ? "50%" : 1,
+          background: i % 2 ? "#E8C07A" : "#D4A24C",
+          boxShadow: "0 0 8px rgba(232,192,122,0.8)",
+          "--bx": `${Math.cos(ang) * dist}px`,
+          "--by": `${Math.sin(ang) * dist}px`,
+          animation: `burst 1.3s cubic-bezier(0.2,0.6,0.3,1) ${(i % 4) * 0.06}s both`,
+        } as React.CSSProperties} />;
+      })}
+    </div>
+  );
+}
+
 // Injects gender, age, and explicit clothing description into every prompt at generation time.
 // This is the primary guard against wrong gender features and any exposed skin.
 function buildGenderedPrompt(prompt: string, gender: string, age: number, hairColor?: string, eyeColor?: string): string {
@@ -1381,7 +1458,7 @@ export default function StorybookCreator() {
               <span style={{ fontSize: 40, opacity: 0.4 }}>✨</span>
             </div>
           ) : sceneImg ? (
-            <img crossOrigin="anonymous" src={sceneImg} alt={`Page ${page.pageNum}`} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", display: "block" }} />
+            <img crossOrigin="anonymous" className="img-develop" src={sceneImg} alt={`Page ${page.pageNum}`} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", display: "block" }} />
           ) : (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
               <div style={{ width: 28, height: 28, border: "3px solid rgba(120,80,30,0.12)", borderTop: "3px solid rgba(120,80,30,0.4)", borderRadius: "50%", animation: "spin 1.2s linear infinite" }} />
@@ -1530,6 +1607,12 @@ export default function StorybookCreator() {
         @keyframes spin      { to{transform:rotate(360deg)} }
         @keyframes pulseDot  { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.7)} }
         @keyframes fwdBar    { from{width:5%} to{width:95%} }
+        @keyframes dustRise  { 0%{transform:translate(0,0);opacity:0} 10%{opacity:0.85} 100%{transform:translate(var(--sway,12px),-300px);opacity:0} }
+        @keyframes pageSlot  { from{transform:translateX(-50%) translateY(-48px) rotate(7deg);opacity:0} }
+        @keyframes phaseIn   { from{opacity:0;transform:translateY(8px) scale(0.92)} to{opacity:1;transform:translateY(0) scale(1)} }
+        @keyframes imgDevelop{ from{opacity:0;filter:blur(14px) saturate(0.7)} to{opacity:1;filter:blur(0) saturate(1)} }
+        @keyframes burst     { 0%{transform:translate(0,0) scale(0.4);opacity:0} 12%{opacity:1} 100%{transform:translate(var(--bx,40px),var(--by,-40px)) scale(1);opacity:0} }
+        .img-develop { animation: imgDevelop 0.8s ease both; }
         .book-flip-card { transform-style: preserve-3d; border-radius: 12px; }
         .book-flip-card.flipping-fwd  { transition: transform 0.6s ease-in-out; transform: rotateY(-180deg); }
         .book-flip-card.flipping-back { transition: transform 0.6s ease-in-out; transform: rotateY(180deg); }
@@ -1815,7 +1898,8 @@ export default function StorybookCreator() {
               <div>
                 {/* Full-screen loading — shown until ALL scenes done */}
                 {previewStatus !== "done" && (
-                  <div style={{ textAlign: "center", padding: isMobile ? "56px 20px" : "72px 32px", background: "rgba(255,255,255,0.06)", backdropFilter: "blur(12px)", borderRadius: 28, border: "1px solid rgba(255,255,255,0.12)", boxShadow: "0 8px 48px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08)" }}>
+                  <div style={{ textAlign: "center", padding: isMobile ? "56px 20px" : "72px 32px", background: "rgba(255,255,255,0.06)", backdropFilter: "blur(12px)", borderRadius: 28, border: "1px solid rgba(255,255,255,0.12)", boxShadow: "0 8px 48px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08)", position: "relative", overflow: "hidden" }}>
+                    {!trainingFailed && <MagicDust />}
                     {/* Mobile keep-tab-open notice */}
                     {isMobile && (
                       <div style={{ background: "rgba(232,192,122,0.1)", border: "1px solid rgba(232,192,122,0.25)", borderRadius: 10, padding: "8px 14px", marginBottom: 24, display: "flex", alignItems: "center", gap: 8 }}>
@@ -1823,14 +1907,18 @@ export default function StorybookCreator() {
                         <p style={{ color: "rgba(232,192,122,0.85)", fontSize: 12, margin: 0, textAlign: "left" }}>Keep this tab open while we create your book</p>
                       </div>
                     )}
-                    <div style={{ width: 80, height: 80, borderRadius: "50%", background: trainingFailed ? "linear-gradient(135deg, #804040, #c06060)" : "linear-gradient(135deg, #E8C07A, #D4A24C)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", animation: "float 2s ease-in-out infinite", boxShadow: trainingFailed ? "0 8px 32px rgba(192,64,64,0.5)" : "0 8px 32px rgba(232,192,122,0.35)" }}>
-                      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#07090F" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <line x1="3" y1="21" x2="21" y2="3"/>
-                        <line x1="15" y1="9" x2="19" y2="5"/>
-                        <line x1="5" y1="19" x2="9" y2="15"/>
-                        <circle cx="19.5" cy="4.5" r="1.5" fill="rgba(15,11,31,0.6)" stroke="none"/>
-                      </svg>
-                    </div>
+                    {trainingFailed ? (
+                      <div style={{ width: 80, height: 80, borderRadius: "50%", background: "linear-gradient(135deg, #804040, #c06060)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", animation: "float 2s ease-in-out infinite", boxShadow: "0 8px 32px rgba(192,64,64,0.5)" }}>
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#07090F" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <line x1="3" y1="21" x2="21" y2="3"/>
+                          <line x1="15" y1="9" x2="19" y2="5"/>
+                          <line x1="5" y1="19" x2="9" y2="15"/>
+                          <circle cx="19.5" cy="4.5" r="1.5" fill="rgba(15,11,31,0.6)" stroke="none"/>
+                        </svg>
+                      </div>
+                    ) : (
+                      <BookAssembly done={previewDone} total={7} msg={previewMsg} />
+                    )}
                     <h2 style={{ color: "white", fontSize: isMobile ? 20 : 24, fontWeight: 700, margin: "0 0 6px" }}>
                       {trainingFailed ? "Story ready!" : "Creating your story..."}
                     </h2>
@@ -1839,7 +1927,7 @@ export default function StorybookCreator() {
                         Takes 3-4 minutes. We&apos;re painting every illustration to look just like {childName || "your child"}
                       </p>
                     )}
-                    <p style={{ color: trainingFailed ? "rgba(255,180,100,0.9)" : "rgba(232,192,122,0.9)", fontSize: 15, fontWeight: 600, margin: "0 0 8px", minHeight: 24 }}>{previewMsg}</p>
+                    <p key={previewMsg} style={{ color: trainingFailed ? "rgba(255,180,100,0.9)" : "rgba(232,192,122,0.9)", fontSize: 15, fontWeight: 600, margin: "0 0 8px", minHeight: 24, animation: "phaseIn 0.45s ease both", position: "relative" }}>{previewMsg}</p>
                     {/* Tab-backgrounded warning */}
                     {tabHidden && (
                       <div style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(255,160,0,0.12)", border: "1px solid rgba(255,160,0,0.35)", borderRadius: 10, padding: "9px 14px", margin: "0 0 12px", maxWidth: 320, marginLeft: "auto", marginRight: "auto" }}>
@@ -1879,13 +1967,14 @@ export default function StorybookCreator() {
 
                 {/* Revealed preview — fades in once ALL 7 done */}
                 {previewStatus === "done" && previewStory && !previewStory._limitReached && (
-                  <div style={{ animation: "fadeIn 0.7s ease both" }}>
+                  <div style={{ animation: "fadeIn 0.7s ease both", position: "relative" }}>
+                    <GoldBurst />
                     <Mascot msg={`Here's a sneak peek of ${childName || "your child"}'s story. Take a look!`} />
 
                     {/* Cover thumbnail */}
                     {previewCoverUrl && (
                       <div style={{ position: "relative", borderRadius: 18, overflow: "hidden", marginBottom: 14, boxShadow: "0 12px 40px rgba(0,0,0,0.4)" }}>
-                        <img src={previewCoverUrl} alt="Book cover" style={{ width: "100%", height: isMobile ? 180 : 220, objectFit: "cover", display: "block" }} />
+                        <img src={previewCoverUrl} className="img-develop" alt="Book cover" style={{ width: "100%", height: isMobile ? 180 : 220, objectFit: "cover", display: "block" }} />
                         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.82) 40%, rgba(0,0,0,0.15) 100%)" }} />
                         <div style={{ position: "absolute", bottom: 16, left: 18, right: 18 }}>
                           <div style={{ color: "#E8C07A", fontWeight: 800, fontSize: isMobile ? 16 : 19, textShadow: "0 2px 8px rgba(0,0,0,0.6)", marginBottom: 3 }}>{previewStory.title}</div>
@@ -2038,17 +2127,11 @@ export default function StorybookCreator() {
 
       {/* ══ GENERATING ══════════════════════════════════════════════════════════ */}
       {mainStep === "generating" && (
-        <div style={{ textAlign: "center", animation: "fadeUp 0.5s ease both", maxWidth: 400, width: "100%", padding: "0 16px" }}>
-          <div style={{ width: 88, height: 88, borderRadius: "50%", background: "linear-gradient(135deg, #E8C07A, #D4A24C)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", animation: "float 2s ease-in-out infinite", boxShadow: "0 8px 40px rgba(232,192,122,0.35)" }}>
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#07090F" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <line x1="3" y1="21" x2="21" y2="3"/>
-              <line x1="15" y1="9" x2="19" y2="5"/>
-              <line x1="5" y1="19" x2="9" y2="15"/>
-              <circle cx="19.5" cy="4.5" r="1.5" fill="rgba(15,11,31,0.6)" stroke="none"/>
-            </svg>
-          </div>
+        <div style={{ textAlign: "center", animation: "fadeUp 0.5s ease both", maxWidth: 400, width: "100%", padding: "0 16px", position: "relative" }}>
+          <MagicDust />
+          <BookAssembly done={scenesCompleted} total={7} msg={loadingMsg} />
           <h2 style={{ color: "white", fontSize: 22, fontWeight: 700, margin: "0 0 10px" }}>Creating your magical book...</h2>
-          <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 15, margin: "0 0 8px" }}>{loadingMsg}</p>
+          <p key={loadingMsg} style={{ color: "rgba(255,255,255,0.55)", fontSize: 15, margin: "0 0 8px", animation: "phaseIn 0.45s ease both" }}>{loadingMsg}</p>
           <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 13, margin: "0 0 24px" }}>Painting your cover and 6 unique illustrated scenes</p>
           {scenesCompleted > 0 && (
             <div style={{ maxWidth: 260, margin: "0 auto 24px" }}>

@@ -5,9 +5,11 @@ interface Props {
   width?: number;
   height?: number;
   animate?: boolean;
+  /** Cover swings open as the ancestor's --book-open CSS var goes 0 → 1 */
+  scrollOpen?: boolean;
 }
 
-export default function BookMockup3D({ coverImg, width = 200, height = 272, animate = true }: Props) {
+export default function BookMockup3D({ coverImg, width = 200, height = 272, animate = true, scrollOpen = false }: Props) {
   const T = 34; // spine/thickness
 
   return (
@@ -17,20 +19,60 @@ export default function BookMockup3D({ coverImg, width = 200, height = 272, anim
         height,
         position: "relative",
         transformStyle: "preserve-3d",
-        transform: "rotateY(-28deg) rotateX(4deg)",
-        animation: animate ? "float3d 6s ease-in-out infinite alternate" : "none",
+        transform: scrollOpen
+          ? "rotateY(calc(-28deg + var(--book-open, 0) * 22deg)) rotateX(calc(4deg - var(--book-open, 0) * 2deg))"
+          : "rotateY(-28deg) rotateX(4deg)",
+        animation: animate && !scrollOpen ? "float3d 6s ease-in-out infinite alternate" : "none",
       }}>
-        {/* Front cover */}
+        {/* Inside page — revealed when the cover opens */}
+        {scrollOpen && (
+          <div aria-hidden="true" style={{
+            position: "absolute", left: T, top: 2, width: width - 3, height: height - 4,
+            borderRadius: "0 5px 5px 0",
+            background: "#F5F0E0",
+            boxShadow: "inset 14px 0 22px rgba(0,0,0,0.14)",
+            padding: "10% 9%",
+            overflow: "hidden",
+            transform: "translateZ(-1px)",
+          }}>
+            <div style={{ width: "72%", height: "44%", borderRadius: 6, overflow: "hidden", marginBottom: "8%" }}>
+              <img src={coverImg} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top", filter: "saturate(0.92)", display: "block" }} />
+            </div>
+            {[82, 94, 76, 88, 58].map((w, i) => (
+              <div key={i} style={{ width: `${w}%`, height: 5, borderRadius: 3, background: "rgba(20,16,8,0.16)", marginBottom: 7 }} />
+            ))}
+          </div>
+        )}
+
+        {/* Front cover — flips open around the spine when scrollOpen */}
         <div style={{
           position: "absolute", left: T, top: 0, width, height,
-          borderRadius: "0 6px 6px 0",
-          overflow: "hidden",
-          backfaceVisibility: "hidden",
-          boxShadow: "inset -5px 0 12px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.06)",
+          transformStyle: "preserve-3d",
+          transformOrigin: "left center",
+          transform: scrollOpen ? "rotateY(calc(var(--book-open, 0) * -130deg))" : undefined,
         }}>
-          <img src={coverImg} alt="Book cover" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top", display: "block" }} />
-          {/* Sheen */}
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(120deg, rgba(255,255,255,0.12) 0%, transparent 45%)", pointerEvents: "none" }} />
+          <div style={{
+            position: "absolute", inset: 0,
+            borderRadius: "0 6px 6px 0",
+            overflow: "hidden",
+            backfaceVisibility: "hidden",
+            boxShadow: "inset -5px 0 12px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.06)",
+          }}>
+            <img src={coverImg} alt="Book cover" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top", display: "block" }} />
+            {/* Sheen */}
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(120deg, rgba(255,255,255,0.12) 0%, transparent 45%)", pointerEvents: "none" }} />
+          </div>
+          {/* Inside of the cover — visible mid-flip */}
+          {scrollOpen && (
+            <div aria-hidden="true" style={{
+              position: "absolute", inset: 0,
+              borderRadius: "6px 0 0 6px",
+              background: "linear-gradient(105deg, #EFE8D2, #E2D8BC)",
+              transform: "rotateY(180deg)",
+              backfaceVisibility: "hidden",
+              boxShadow: "inset 6px 0 14px rgba(0,0,0,0.12)",
+            }} />
+          )}
         </div>
 
         {/* Spine — perpendicular to cover */}

@@ -29,10 +29,10 @@ function StarSVG({ size = 16, color = GOLD }: { size?: number; color?: string })
     </svg>
   );
 }
-function CheckSVG({ size = 14, color = GOLD }: { size?: number; color?: string }) {
+function CheckSVG({ size = 14, color = GOLD, delay = 0 }: { size?: number; color?: string; delay?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <polyline points="20 6 9 17 4 12" />
+      <polyline className="check-draw" pathLength={1} style={{ animationDelay: `${delay}s` }} points="20 6 9 17 4 12" />
     </svg>
   );
 }
@@ -163,14 +163,14 @@ export default function LandingPage() {
   // Scroll reveal
   useEffect(() => {
     if (reducedMotion) {
-      document.querySelectorAll<HTMLElement>(".reveal").forEach(el => el.classList.add("visible"));
+      document.querySelectorAll<HTMLElement>(".reveal, .draw-line").forEach(el => el.classList.add("visible"));
       return;
     }
     const obs = new IntersectionObserver(
       entries => entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add("visible"); obs.unobserve(e.target); } }),
       { threshold: 0.08 }
     );
-    document.querySelectorAll(".reveal").forEach(el => obs.observe(el));
+    document.querySelectorAll(".reveal, .draw-line").forEach(el => obs.observe(el));
     return () => obs.disconnect();
   }, [reducedMotion]);
 
@@ -202,6 +202,47 @@ export default function LandingPage() {
     };
   }, [isMobile, reducedMotion]);
 
+  // Scroll-driven book opening: --book-open goes 0 → 1 over the first ~55vh of scroll
+  useEffect(() => {
+    if (isMobile || reducedMotion) return;
+    let raf = 0;
+    const onScroll = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        const p = Math.min(1, Math.max(0, window.scrollY / (window.innerHeight * 0.55)));
+        bookRef.current?.style.setProperty("--book-open", p.toFixed(3));
+      });
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [isMobile, reducedMotion]);
+
+  // Card tilt: rotate gently toward the cursor
+  const tiltCard = (e: React.MouseEvent<HTMLElement>) => {
+    if (reducedMotion || isMobile) return;
+    const el = e.currentTarget;
+    const r = el.getBoundingClientRect();
+    const rx = ((e.clientY - r.top) / r.height - 0.5) * -4;
+    const ry = ((e.clientX - r.left) / r.width - 0.5) * 4;
+    el.style.transform = `perspective(900px) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg)`;
+  };
+  const untiltCard = (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.transform = ""; };
+
+  // Magnetic CTA: drift a few px toward the cursor
+  const magnetMove = (e: React.MouseEvent<HTMLElement>) => {
+    if (reducedMotion || isMobile) return;
+    const el = e.currentTarget;
+    const r = el.getBoundingClientRect();
+    const x = Math.max(-5, Math.min(5, (e.clientX - r.left - r.width / 2) * 0.06));
+    const y = Math.max(-4, Math.min(4, (e.clientY - r.top - r.height / 2) * 0.14));
+    el.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`;
+  };
+
   const ex = EXAMPLES[exIdx];
 
   const NAV_LINKS = [
@@ -225,8 +266,25 @@ export default function LandingPage() {
         .underline-draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation: drawLine 0.7s ease 0.95s both; }
         .cta-arrow { display:inline-block; transition: transform 0.2s; }
         a:hover .cta-arrow { transform: translateX(3px); }
+        @keyframes spinGlow { to { transform: rotate(360deg) } }
+        @keyframes shimmer  { 0%, 86% { transform: translateX(-220%) skewX(-18deg) } 97%, 100% { transform: translateX(340%) skewX(-18deg) } }
+        @keyframes starIn   { from { opacity: 0; transform: scale(0.4) } to { opacity: 1; transform: scale(1) } }
+        .glow-spin { position: absolute; inset: -150%; background: conic-gradient(from 0deg, transparent 0%, transparent 68%, rgba(232,192,122,0.9) 80%, rgba(232,192,122,0.15) 90%, transparent 100%); animation: spinGlow 7s linear infinite; }
+        .cta-shimmer { position: relative; overflow: hidden; }
+        .cta-shimmer::after { content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 55%; background: linear-gradient(100deg, transparent, rgba(255,255,255,0.38), transparent); transform: translateX(-220%) skewX(-18deg); animation: shimmer 7s ease-in-out infinite; pointer-events: none; }
+        .draw-line { clip-path: inset(-4px 100% -4px 0); transition: clip-path 1.4s ease 0.25s; }
+        .draw-line.visible { clip-path: inset(-4px 0 -4px 0); }
+        .check-draw { stroke-dasharray: 1; stroke-dashoffset: 1; }
+        .visible .check-draw { animation: drawLine 0.45s ease both; }
+        .star-pop { display: inline-flex; opacity: 0; }
+        .visible .star-pop { animation: starIn 0.35s cubic-bezier(0.34,1.56,0.64,1) both; }
+        .card-tilt { transition: transform 0.18s ease-out, box-shadow 0.25s ease, border-color 0.25s ease; }
+        .card-tilt:hover { border-color: rgba(255,255,255,0.16) !important; box-shadow: 0 24px 64px rgba(0,0,0,0.45) !important; }
         @media (prefers-reduced-motion: reduce) {
-          .word-reveal, .underline-draw { animation: none; opacity: 1; stroke-dashoffset: 0; }
+          .word-reveal, .underline-draw, .star-pop { animation: none; opacity: 1; stroke-dashoffset: 0; }
+          .check-draw { stroke-dashoffset: 0; }
+          .draw-line { clip-path: none; }
+          .glow-spin, .cta-shimmer::after { animation: none; }
         }
         .card-hover { transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease; }
         .card-hover:hover { transform: translateY(-4px) !important; border-color: rgba(255,255,255,0.16) !important; box-shadow: 0 24px 64px rgba(0,0,0,0.4) !important; }
@@ -316,8 +374,9 @@ export default function LandingPage() {
 
             {/* CTAs */}
             <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
-              <Link href="/create" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 8, padding: isMobile ? "15px 28px" : "17px 40px", borderRadius: 50, background: `linear-gradient(135deg, ${GOLD}, ${GOLD_WARM})`, color: BG_BASE, fontWeight: 700, fontSize: isMobile ? 15 : 17, boxShadow: "0 8px 32px rgba(232,192,122,0.25), inset 0 1px 0 rgba(255,255,255,0.3)", transition: "transform 0.2s, box-shadow 0.2s" }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 12px 40px rgba(232,192,122,0.4), inset 0 1px 0 rgba(255,255,255,0.3)"; }}
+              <Link href="/create" className="cta-shimmer" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 8, padding: isMobile ? "15px 28px" : "17px 40px", borderRadius: 50, background: `linear-gradient(135deg, ${GOLD}, ${GOLD_WARM})`, color: BG_BASE, fontWeight: 700, fontSize: isMobile ? 15 : 17, boxShadow: "0 8px 32px rgba(232,192,122,0.25), inset 0 1px 0 rgba(255,255,255,0.3)", transition: "transform 0.2s ease-out, box-shadow 0.2s" }}
+                onMouseMove={magnetMove}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = "0 12px 40px rgba(232,192,122,0.4), inset 0 1px 0 rgba(255,255,255,0.3)"; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ""; (e.currentTarget as HTMLElement).style.boxShadow = "0 8px 32px rgba(232,192,122,0.25), inset 0 1px 0 rgba(255,255,255,0.3)"; }}
               >
                 Try Free, No Card Needed <span className="cta-arrow">→</span>
@@ -346,10 +405,10 @@ export default function LandingPage() {
           {/* Right — book image */}
           {!isMobile && (
             <div style={{ flexShrink: 0, animation: "fadeUp 1s ease 0.3s both" }}>
-              <div ref={bookRef} style={{ width: 340, height: 440, borderRadius: 16, overflow: "hidden", boxShadow: "0 40px 80px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.07)", transition: "transform 0.3s ease-out", willChange: "transform" }}>
-                <img src="/examples/example-1.webp" alt="Sample storybook page" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", animation: reducedMotion ? "none" : "kenBurns 20s ease-in-out infinite alternate", display: "block" }} />
+              <div ref={bookRef} style={{ transition: "transform 0.3s ease-out", willChange: "transform" }}>
+                <BookMockup3D coverImg="/examples/example-1.webp" width={300} height={400} animate={!reducedMotion} scrollOpen={!reducedMotion} />
               </div>
-              <p style={{ color: "rgba(245,240,224,0.35)", fontSize: 11, letterSpacing: "0.06em", marginTop: 12, textAlign: "center" }}>Pixar-style illustrations from a real book</p>
+              <p style={{ color: "rgba(245,240,224,0.35)", fontSize: 11, letterSpacing: "0.06em", marginTop: 12, textAlign: "center" }}>Pixar-style illustrations from a real book · Scroll to peek inside</p>
             </div>
           )}
         </div>
@@ -389,7 +448,7 @@ export default function LandingPage() {
           <div style={{ display: "flex", gap: isMobile ? 40 : 0, flexDirection: isMobile ? "column" : "row", alignItems: "flex-start", justifyContent: "space-between", position: "relative" }}>
             {/* Dotted connecting line */}
             {!isMobile && (
-              <div aria-hidden="true" style={{ position: "absolute", top: 52, left: "16%", right: "16%", height: 0, borderTop: `2px dashed rgba(232,192,122,0.28)`, zIndex: 0 }} />
+              <div className="draw-line" aria-hidden="true" style={{ position: "absolute", top: 52, left: "16%", right: "16%", height: 0, borderTop: `2px dashed rgba(232,192,122,0.28)`, zIndex: 0 }} />
             )}
 
             {STEPS.map((s, i) => (
@@ -472,7 +531,7 @@ export default function LandingPage() {
 
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 20, alignItems: "end" }}>
             {/* Digital */}
-            <div className="card-hover reveal" style={{ background: SURFACE, backdropFilter: "blur(20px)", border: `1px solid ${SURF_BDR}`, borderRadius: 24, padding: "36px 32px", display: "flex", flexDirection: "column", boxShadow: "0 8px 32px rgba(0,0,0,0.2)" }}>
+            <div className="card-tilt reveal" onMouseMove={tiltCard} onMouseLeave={untiltCard} style={{ background: SURFACE, backdropFilter: "blur(20px)", border: `1px solid ${SURF_BDR}`, borderRadius: 24, padding: "36px 32px", display: "flex", flexDirection: "column", boxShadow: "0 8px 32px rgba(0,0,0,0.2)" }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>Digital Book</div>
               <div style={{ display: "flex", alignItems: "flex-start", gap: 2, marginBottom: 6 }}>
                 <span style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: 20, fontWeight: 600, color: GOLD, lineHeight: 1, marginTop: 10 }}>$</span>
@@ -483,7 +542,7 @@ export default function LandingPage() {
               <ul style={{ listStyle: "none", padding: 0, margin: "0 0 28px", display: "flex", flexDirection: "column", gap: 12, flex: 1 }}>
                 {DIGITAL_FEATURES.map((f, i) => (
                   <li key={i} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: MUTED }}>
-                    <span style={{ width: 20, height: 20, borderRadius: "50%", background: "rgba(232,192,122,0.08)", border: "1px solid rgba(232,192,122,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><CheckSVG size={11} color={GOLD} /></span>
+                    <span style={{ width: 20, height: 20, borderRadius: "50%", background: "rgba(232,192,122,0.08)", border: "1px solid rgba(232,192,122,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><CheckSVG size={11} color={GOLD} delay={0.2 + i * 0.08} /></span>
                     {f}
                   </li>
                 ))}
@@ -501,7 +560,12 @@ export default function LandingPage() {
             </div>
 
             {/* Print + Digital — popular — lifted 12px */}
-            <div className="card-hover reveal" style={{ background: `linear-gradient(145deg, rgba(14,17,24,0.95), rgba(7,9,15,0.98))`, backdropFilter: "blur(20px)", border: `1px solid rgba(232,192,122,0.28)`, borderRadius: 24, padding: "36px 32px", display: "flex", flexDirection: "column", boxShadow: "0 16px 48px rgba(0,0,0,0.4), 0 0 0 1px rgba(232,192,122,0.12)", position: "relative", overflow: "hidden", transform: "translateY(-12px)" }}>
+            <div className="reveal" style={{ position: "relative", borderRadius: 25, padding: 1.5, transform: "translateY(-12px)", boxShadow: "0 16px 48px rgba(0,0,0,0.4)" }}>
+              {/* Rotating gold glow border */}
+              <div aria-hidden="true" style={{ position: "absolute", inset: 0, borderRadius: 25, overflow: "hidden" }}>
+                <div className="glow-spin" />
+              </div>
+            <div className="card-tilt" onMouseMove={tiltCard} onMouseLeave={untiltCard} style={{ background: `linear-gradient(145deg, rgba(14,17,24,0.97), rgba(7,9,15,0.99))`, backdropFilter: "blur(20px)", borderRadius: 24, padding: "36px 32px", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}>
               {/* Gold top gradient accent */}
               <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${GOLD}, ${GOLD_WARM})` }} />
               {/* Most Popular ribbon */}
@@ -523,17 +587,18 @@ export default function LandingPage() {
               <ul style={{ listStyle: "none", padding: 0, margin: "0 0 28px", display: "flex", flexDirection: "column", gap: 12, flex: 1 }}>
                 {PRINT_FEATURES.map((f, i) => (
                   <li key={i} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: i === 0 ? "rgba(245,240,224,0.45)" : TEXT }}>
-                    <span style={{ width: 20, height: 20, borderRadius: "50%", background: "rgba(232,192,122,0.12)", border: "1px solid rgba(232,192,122,0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><CheckSVG size={11} color={GOLD} /></span>
+                    <span style={{ width: 20, height: 20, borderRadius: "50%", background: "rgba(232,192,122,0.12)", border: "1px solid rgba(232,192,122,0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><CheckSVG size={11} color={GOLD} delay={0.2 + i * 0.08} /></span>
                     {f}
                   </li>
                 ))}
               </ul>
-              <Link href="/create" style={{ textDecoration: "none", display: "block", width: "100%", padding: "14px", borderRadius: 50, border: "none", background: `linear-gradient(135deg, ${GOLD}, ${GOLD_WARM})`, textAlign: "center", color: BG_BASE, fontWeight: 700, fontSize: 15, boxShadow: "0 8px 28px rgba(232,192,122,0.3)" }}>
-                Order Print Book →
+              <Link href="/create" className="cta-shimmer" style={{ textDecoration: "none", display: "block", width: "100%", padding: "14px", borderRadius: 50, border: "none", background: `linear-gradient(135deg, ${GOLD}, ${GOLD_WARM})`, textAlign: "center", color: BG_BASE, fontWeight: 700, fontSize: 15, boxShadow: "0 8px 28px rgba(232,192,122,0.3)" }}>
+                Order Print Book <span className="cta-arrow">→</span>
               </Link>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 14 }}>
                 <StripeSVG /><VisaSVG /><McSVG />
               </div>
+            </div>
             </div>
           </div>
 
@@ -551,7 +616,7 @@ export default function LandingPage() {
           </div>
 
           {/* Featured review — full width, horizontal */}
-          <div className="card-hover reveal" style={{ background: SURFACE, backdropFilter: "blur(16px)", border: `1px solid ${SURF_BDR}`, borderRadius: 24, padding: isMobile ? "28px 24px" : "36px 40px", display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 20 : 40, alignItems: isMobile ? "flex-start" : "center", boxShadow: "0 8px 32px rgba(0,0,0,0.2)", marginBottom: 20 }}>
+          <div className="card-tilt reveal" onMouseMove={tiltCard} onMouseLeave={untiltCard} style={{ background: SURFACE, backdropFilter: "blur(16px)", border: `1px solid ${SURF_BDR}`, borderRadius: 24, padding: isMobile ? "28px 24px" : "36px 40px", display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 20 : 40, alignItems: isMobile ? "flex-start" : "center", boxShadow: "0 8px 32px rgba(0,0,0,0.2)", marginBottom: 20 }}>
             {/* Left: avatar + name */}
             <div style={{ display: "flex", flexDirection: isMobile ? "row" : "column", alignItems: isMobile ? "center" : "flex-start", gap: 14, flexShrink: 0 }}>
               <div style={{ width: 48, height: 48, borderRadius: "50%", overflow: "hidden", flexShrink: 0 }}>{AVATARS[0]}</div>
@@ -562,7 +627,7 @@ export default function LandingPage() {
             </div>
             {/* Right: stars + quote */}
             <div style={{ flex: 1 }}>
-              <div style={{ display: "flex", gap: 3, marginBottom: 14 }}>{[0,1,2,3,4].map(j => <StarSVG key={j} size={15} color={GOLD} />)}</div>
+              <div style={{ display: "flex", gap: 3, marginBottom: 14 }}>{[0,1,2,3,4].map(j => <span key={j} className="star-pop" style={{ animationDelay: `${0.25 + j * 0.1}s` }}><StarSVG size={15} color={GOLD} /></span>)}</div>
               <p style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: isMobile ? 15 : 17, lineHeight: 1.8, color: TEXT, margin: 0, fontStyle: "italic" }}>{REVIEWS[0].text}</p>
             </div>
           </div>
@@ -570,9 +635,9 @@ export default function LandingPage() {
           {/* 2-col grid for remaining reviews */}
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 20 }}>
             {REVIEWS.slice(1).map((r, i) => (
-              <div key={i} className="card-hover reveal" style={{ background: SURFACE, backdropFilter: "blur(16px)", border: `1px solid ${SURF_BDR}`, borderRadius: 24, padding: "28px 24px", display: "flex", flexDirection: "column", boxShadow: "0 8px 32px rgba(0,0,0,0.2)", animationDelay: `${(i + 1) * 0.12}s` }}>
+              <div key={i} className="card-tilt reveal" onMouseMove={tiltCard} onMouseLeave={untiltCard} style={{ background: SURFACE, backdropFilter: "blur(16px)", border: `1px solid ${SURF_BDR}`, borderRadius: 24, padding: "28px 24px", display: "flex", flexDirection: "column", boxShadow: "0 8px 32px rgba(0,0,0,0.2)", animationDelay: `${(i + 1) * 0.12}s` }}>
                 <div aria-hidden="true" style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: 72, lineHeight: 0.7, color: GOLD, opacity: 0.22, marginBottom: 16, fontWeight: 700, userSelect: "none" }}>"</div>
-                <div style={{ display: "flex", gap: 3, marginBottom: 14 }}>{[0,1,2,3,4].map(j => <StarSVG key={j} size={14} color={GOLD} />)}</div>
+                <div style={{ display: "flex", gap: 3, marginBottom: 14 }}>{[0,1,2,3,4].map(j => <span key={j} className="star-pop" style={{ animationDelay: `${0.25 + j * 0.1}s` }}><StarSVG size={14} color={GOLD} /></span>)}</div>
                 <p style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: 15, lineHeight: 1.8, color: TEXT, margin: "0 0 24px", fontStyle: "italic", flex: 1 }}>{r.text}</p>
                 <div style={{ height: 1, background: "rgba(255,255,255,0.06)", marginBottom: 18 }} />
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -602,8 +667,9 @@ export default function LandingPage() {
           <p style={{ color: MUTED, fontSize: isMobile ? 15 : 17, lineHeight: 1.7, margin: "0 0 40px" }}>
             Preview your child's book for free. See 2 pages before you spend a penny. No subscription, no commitment.
           </p>
-          <Link href="/create" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 8, padding: isMobile ? "16px 36px" : "18px 52px", borderRadius: 50, background: `linear-gradient(135deg, ${GOLD}, ${GOLD_WARM})`, color: BG_BASE, fontWeight: 700, fontSize: isMobile ? 16 : 18, boxShadow: "0 12px 40px rgba(232,192,122,0.3), inset 0 1px 0 rgba(255,255,255,0.3)", transition: "transform 0.2s, box-shadow 0.2s" }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 16px 48px rgba(232,192,122,0.45), inset 0 1px 0 rgba(255,255,255,0.3)"; }}
+          <Link href="/create" className="cta-shimmer" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 8, padding: isMobile ? "16px 36px" : "18px 52px", borderRadius: 50, background: `linear-gradient(135deg, ${GOLD}, ${GOLD_WARM})`, color: BG_BASE, fontWeight: 700, fontSize: isMobile ? 16 : 18, boxShadow: "0 12px 40px rgba(232,192,122,0.3), inset 0 1px 0 rgba(255,255,255,0.3)", transition: "transform 0.2s ease-out, box-shadow 0.2s" }}
+            onMouseMove={magnetMove}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = "0 16px 48px rgba(232,192,122,0.45), inset 0 1px 0 rgba(255,255,255,0.3)"; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ""; (e.currentTarget as HTMLElement).style.boxShadow = "0 12px 40px rgba(232,192,122,0.3), inset 0 1px 0 rgba(255,255,255,0.3)"; }}
           >
             Try Free, No Card Needed <span className="cta-arrow">→</span>

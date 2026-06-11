@@ -115,6 +115,7 @@ export async function POST(request) {
               { type: "default", url: interiorPdfUrl },
             ],
             quantity: 1,
+            pageCount: 20,
             title: result.story?.title || "My Tiny Tales",
           }],
           shipmentMethodUid: "normal",
@@ -156,6 +157,9 @@ export async function POST(request) {
       } catch (printErr) {
         console.error("fal-webhook: Gelato submission failed:", printErr.message);
         if (process.env.RESEND_API_KEY) {
+          const retryLink = process.env.ADMIN_RETRY_KEY
+            ? `<p><a href="${siteUrl}/api/retry-print?ref=${ref}&key=${process.env.ADMIN_RETRY_KEY}">Click here to retry the print order</a></p>`
+            : "";
           fetch("https://api.resend.com/emails", {
             method: "POST",
             headers: { "Authorization": `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
@@ -163,7 +167,7 @@ export async function POST(request) {
               from:    "My Tiny Tales <hello@mytinytales.studio>",
               to:      ["hello@mytinytales.studio"],
               subject: `⚠️ Print submission failed — ref: ${ref}`,
-              html:    `<p><strong>Error:</strong> ${printErr.message}</p><p><strong>Ref:</strong> ${ref}</p><p><strong>Session:</strong> ${result.sessionId}</p>`,
+              html:    `<p><strong>Error:</strong> ${printErr.message}</p><p><strong>Ref:</strong> ${ref}</p><p><strong>Session:</strong> ${result.sessionId}</p>${retryLink}`,
             }),
           }).catch(() => {});
         }
@@ -180,6 +184,9 @@ export async function POST(request) {
     }, { ex: 2_592_000 }).catch(() => {});
 
     if (process.env.RESEND_API_KEY) {
+      const retryLink = result.plan === "print" && process.env.ADMIN_RETRY_KEY
+        ? `<p><a href="${siteUrl}/api/retry-print?ref=${ref}&key=${process.env.ADMIN_RETRY_KEY}">Click here to retry the print order</a></p>`
+        : "";
       fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: { "Authorization": `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
@@ -187,7 +194,7 @@ export async function POST(request) {
           from:    "My Tiny Tales <hello@mytinytales.studio>",
           to:      ["hello@mytinytales.studio"],
           subject: `⚠️ Book completion failed — ref: ${ref}`,
-          html:    `<p><strong>Error:</strong> ${err.message}</p><p><strong>Ref:</strong> ${ref}</p>`,
+          html:    `<p><strong>Error:</strong> ${err.message}</p><p><strong>Ref:</strong> ${ref}</p>${retryLink}`,
         }),
       }).catch(() => {});
     }

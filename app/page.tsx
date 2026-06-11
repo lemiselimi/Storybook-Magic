@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import BookMockup3D from "./components/BookMockup3D";
 
@@ -139,6 +139,9 @@ export default function LandingPage() {
   const [menuOpen,      setMenuOpen]      = useState(false);
   const [exIdx,         setExIdx]         = useState(0);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const blobARef = useRef<HTMLDivElement>(null);
+  const blobBRef = useRef<HTMLDivElement>(null);
+  const bookRef  = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60);
@@ -171,6 +174,34 @@ export default function LandingPage() {
     return () => obs.disconnect();
   }, [reducedMotion]);
 
+  // Lock body scroll while the mobile menu is open
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [menuOpen]);
+
+  // Hero pointer parallax — blobs and book drift at different depths
+  useEffect(() => {
+    if (isMobile || reducedMotion) return;
+    let raf = 0;
+    const onMove = (e: MouseEvent) => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        const x = e.clientX / window.innerWidth  - 0.5;
+        const y = e.clientY / window.innerHeight - 0.5;
+        if (blobARef.current) blobARef.current.style.transform = `translate3d(${x * 26}px, ${y * 26}px, 0)`;
+        if (blobBRef.current) blobBRef.current.style.transform = `translate3d(${x * -20}px, ${y * -20}px, 0)`;
+        if (bookRef.current)  bookRef.current.style.transform  = `translate3d(${x * 9}px, ${y * 9}px, 0)`;
+      });
+    };
+    window.addEventListener("mousemove", onMove, { passive: true });
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [isMobile, reducedMotion]);
+
   const ex = EXAMPLES[exIdx];
 
   const NAV_LINKS = [
@@ -188,6 +219,15 @@ export default function LandingPage() {
         @keyframes fadeUp   { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
         @keyframes kenBurns { from{transform:scale(1)} to{transform:scale(1.05)} }
         @keyframes slideEx  { from{opacity:0;transform:translateX(28px)} to{opacity:1;transform:translateX(0)} }
+        @keyframes wordUp   { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes drawLine { to{stroke-dashoffset:0} }
+        .word-reveal { display:inline-block; opacity:0; animation: wordUp 0.6s cubic-bezier(0.22,0.7,0.3,1) both; }
+        .underline-draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation: drawLine 0.7s ease 0.95s both; }
+        .cta-arrow { display:inline-block; transition: transform 0.2s; }
+        a:hover .cta-arrow { transform: translateX(3px); }
+        @media (prefers-reduced-motion: reduce) {
+          .word-reveal, .underline-draw { animation: none; opacity: 1; stroke-dashoffset: 0; }
+        }
         .card-hover { transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease; }
         .card-hover:hover { transform: translateY(-4px) !important; border-color: rgba(255,255,255,0.16) !important; box-shadow: 0 24px 64px rgba(0,0,0,0.4) !important; }
         .nav-link { color: rgba(245,240,224,0.65); font-size: 14px; text-decoration: none; font-weight: 500; transition: color 0.2s; }
@@ -217,7 +257,7 @@ export default function LandingPage() {
         {/* Right actions */}
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <Link href="/create" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 7, padding: isMobile ? "8px 16px" : "10px 20px", borderRadius: 50, background: `linear-gradient(135deg, ${GOLD}, ${GOLD_WARM})`, color: BG_BASE, fontWeight: 700, fontSize: isMobile ? 12 : 14, boxShadow: "0 4px 16px rgba(232,192,122,0.25)", transition: "box-shadow 0.2s, transform 0.2s", whiteSpace: "nowrap" }}>
-            Create your book <span style={{ display: "inline-block", transition: "transform 0.2s" }}>→</span>
+            Create your book <span className="cta-arrow">→</span>
           </Link>
 
           {/* Hamburger */}
@@ -245,8 +285,8 @@ export default function LandingPage() {
       <section style={{ minHeight: "90vh", display: "flex", alignItems: "center", justifyContent: "center", padding: isMobile ? "100px 24px 64px" : "120px 48px 80px", position: "relative", overflow: "hidden" }}>
         {/* Aurora blobs — warm amber/indigo, skip on mobile */}
         {!isMobile && <>
-          <div aria-hidden="true" style={{ position: "absolute", top: "-25%", left: "-15%", width: 800, height: 800, borderRadius: "50%", background: "radial-gradient(circle, rgba(232,192,122,0.12) 0%, transparent 70%)", filter: "blur(100px)", pointerEvents: "none" }} />
-          <div aria-hidden="true" style={{ position: "absolute", bottom: "-25%", right: "-15%", width: 900, height: 900, borderRadius: "50%", background: "radial-gradient(circle, rgba(90,60,180,0.15) 0%, transparent 70%)", filter: "blur(120px)", pointerEvents: "none" }} />
+          <div ref={blobARef} aria-hidden="true" style={{ position: "absolute", top: "-25%", left: "-15%", width: 800, height: 800, borderRadius: "50%", background: "radial-gradient(circle, rgba(232,192,122,0.12) 0%, transparent 70%)", filter: "blur(100px)", pointerEvents: "none", transition: "transform 0.4s ease-out", willChange: "transform" }} />
+          <div ref={blobBRef} aria-hidden="true" style={{ position: "absolute", bottom: "-25%", right: "-15%", width: 900, height: 900, borderRadius: "50%", background: "radial-gradient(circle, rgba(90,60,180,0.15) 0%, transparent 70%)", filter: "blur(120px)", pointerEvents: "none", transition: "transform 0.4s ease-out", willChange: "transform" }} />
         </>}
 
         <div style={{ maxWidth: 1200, width: "100%", display: "flex", alignItems: "center", gap: isMobile ? 0 : 72, flexDirection: isMobile ? "column" : "row" }}>
@@ -256,14 +296,17 @@ export default function LandingPage() {
 
             {/* H1 */}
             <h1 style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: isMobile ? 36 : 58, fontWeight: 600, lineHeight: 1.12, color: TEXT, margin: "0 0 22px", letterSpacing: "-0.8px" }}>
-              Your Child,{" "}
-              <span style={{ position: "relative", display: "inline-block" }}>
+              <span className="word-reveal" style={{ animationDelay: "0.05s" }}>Your</span>{" "}
+              <span className="word-reveal" style={{ animationDelay: "0.14s" }}>Child,</span>{" "}
+              <span className="word-reveal" style={{ position: "relative", animationDelay: "0.23s" }}>
                 The Hero
                 <svg aria-hidden="true" style={{ position: "absolute", bottom: -10, left: -4, width: "calc(100% + 8px)", height: 14 }} viewBox="0 0 200 14" preserveAspectRatio="none">
-                  <path d="M3 10 C35 3, 75 14, 115 7 C155 0, 182 12, 197 8" fill="none" stroke={GOLD} strokeWidth="2.5" strokeLinecap="round" />
+                  <path className="underline-draw" pathLength={1} d="M3 10 C35 3, 75 14, 115 7 C155 0, 182 12, 197 8" fill="none" stroke={GOLD} strokeWidth="2.5" strokeLinecap="round" />
                 </svg>
               </span>{" "}
-              of Their Story
+              <span className="word-reveal" style={{ animationDelay: "0.38s" }}>of</span>{" "}
+              <span className="word-reveal" style={{ animationDelay: "0.47s" }}>Their</span>{" "}
+              <span className="word-reveal" style={{ animationDelay: "0.56s" }}>Story</span>
             </h1>
 
             {/* Subtext — tighter, ≤18 words */}
@@ -277,7 +320,7 @@ export default function LandingPage() {
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 12px 40px rgba(232,192,122,0.4), inset 0 1px 0 rgba(255,255,255,0.3)"; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ""; (e.currentTarget as HTMLElement).style.boxShadow = "0 8px 32px rgba(232,192,122,0.25), inset 0 1px 0 rgba(255,255,255,0.3)"; }}
               >
-                Try Free, No Card Needed <span>→</span>
+                Try Free, No Card Needed <span className="cta-arrow">→</span>
               </Link>
               <a href="#examples" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", padding: isMobile ? "15px 24px" : "17px 32px", borderRadius: 50, border: "1px solid rgba(245,240,224,0.28)", background: "transparent", color: "rgba(245,240,224,0.85)", fontWeight: 600, fontSize: isMobile ? 14 : 16, transition: "background 0.2s" }}
                 onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "rgba(245,240,224,0.06)"}
@@ -303,7 +346,7 @@ export default function LandingPage() {
           {/* Right — book image */}
           {!isMobile && (
             <div style={{ flexShrink: 0, animation: "fadeUp 1s ease 0.3s both" }}>
-              <div style={{ width: 340, height: 440, borderRadius: 16, overflow: "hidden", boxShadow: "0 40px 80px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.07)" }}>
+              <div ref={bookRef} style={{ width: 340, height: 440, borderRadius: 16, overflow: "hidden", boxShadow: "0 40px 80px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.07)", transition: "transform 0.3s ease-out", willChange: "transform" }}>
                 <img src="/examples/example-1.webp" alt="Sample storybook page" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", animation: reducedMotion ? "none" : "kenBurns 20s ease-in-out infinite alternate", display: "block" }} />
               </div>
               <p style={{ color: "rgba(245,240,224,0.35)", fontSize: 11, letterSpacing: "0.06em", marginTop: 12, textAlign: "center" }}>Pixar-style illustrations from a real book</p>
@@ -563,7 +606,7 @@ export default function LandingPage() {
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 16px 48px rgba(232,192,122,0.45), inset 0 1px 0 rgba(255,255,255,0.3)"; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ""; (e.currentTarget as HTMLElement).style.boxShadow = "0 12px 40px rgba(232,192,122,0.3), inset 0 1px 0 rgba(255,255,255,0.3)"; }}
           >
-            Try Free, No Card Needed →
+            Try Free, No Card Needed <span className="cta-arrow">→</span>
           </Link>
           <p style={{ color: "rgba(245,240,224,0.28)", fontSize: 13, marginTop: 18 }}>See 2 pages free · No subscription required</p>
         </div>

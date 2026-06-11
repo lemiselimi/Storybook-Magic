@@ -23,6 +23,7 @@ async function createGelatoOrder(apiKey, { coverPdfUrl, interiorPdfUrl, shipping
         { type: "default", url: interiorPdfUrl },
       ],
       quantity: 1,
+      pageCount: 20,
       title,
     }],
     shipmentMethodUid: "normal",

@@ -15,21 +15,6 @@ const THEMES = [
 
 const CHAPTER_NAMES = ["One", "Two", "Three", "Four", "Five", "Six"];
 
-const TRAINING_MESSAGES = [
-  "Studying your child's face...",
-  "Learning their unique features...",
-  "Capturing the sparkle in their eyes...",
-  "Teaching the AI their smile...",
-  "Perfecting every little detail...",
-  "Adding the finishing touches to their look...",
-  "Almost there, magic takes a moment...",
-  "Making sure every illustration looks just right...",
-  "Bringing your child to life on the page...",
-  "Getting the character just perfect...",
-  "Nearly ready. Good things take time...",
-  "One moment, weaving a little magic...",
-];
-
 const THEME_CLOSING: Record<string, (name: string) => string> = {
   adventure:  (n) => `Remember, ${n}: every great adventure begins with one brave step. The world is full of magic, and you have everything it takes to find it.`,
   dragon:     (n) => `${n}, you showed the world that kindness is the greatest power of all. Even the most fearsome things become friends when met with a gentle heart.`,
@@ -574,7 +559,8 @@ export default function StorybookCreator() {
   // ── Photos (1–2) ─────────────────────────────────────────────────────────────
   const [photos,       setPhotos]       = useState<string[]>([]);   // object URLs for display
   const [photosBase64, setPhotosBase64] = useState<string[]>([]);   // compressed base64
-  const [loraUrl,      setLoraUrl]      = useState<string | null>(null); // trained LoRA weights URL
+  const [loraUrl,      setLoraUrl]      = useState<string | null>(null); // trained LoRA weights URL (dormant fallback)
+  const [referenceUrl, setReferenceUrl] = useState<string | null>(null); // fal-hosted reference photo for PuLID
   const [dragOver,     setDragOver]     = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -601,6 +587,7 @@ export default function StorybookCreator() {
   const previewStarted  = useRef(false);
   const bookSeedRef     = useRef<number | null>(null);      // shared seed: preview → full book
   const loraUrlRef      = useRef<string | null>(null);      // mirrors loraUrl for use inside callbacks
+  const referenceUrlRef = useRef<string | null>(null);      // cached fal-hosted reference photo for PuLID
   const pendingStoryRef = useRef<Promise<any> | null>(null); // pre-warmed story promise
 
   // ── Full book ─────────────────────────────────────────────────────────────────
@@ -634,9 +621,18 @@ export default function StorybookCreator() {
   const [isSharedView,     setIsSharedView]     = useState(false);
   const [isDemo,           setIsDemo]           = useState(false);
   const [showNewBookConfirm, setShowNewBookConfirm] = useState(false);
-  const [kontextResults,   setKontextResults]   = useState<{ scene: string; url: string }[] | "error" | null>(null);
+  type SceneResult = { scene: string; url: string | null; tookMs?: number | null };
+  type IdentityTest = {
+    kontext: { results: SceneResult[] };
+    pulid: { results: SceneResult[]; idWeight: number };
+    meta: { wallMs: number; total: number };
+  } | "error" | null;
+  const [kontextResults,   setKontextResults]   = useState<IdentityTest>(null);
   const [kontextLoading,   setKontextLoading]   = useState(false);
   const [kontextImageUrl,  setKontextImageUrl]  = useState("");
+  const [pulidIdWeight,    setPulidIdWeight]    = useState(1.0);
+  const [kontextUploading, setKontextUploading] = useState(false);
+  const [kontextError,     setKontextError]     = useState<string | null>(null);
 
   // ── Email lead capture ────────────────────────────────────────────────────────
   const [leadEmail,    setLeadEmail]    = useState("");
@@ -685,6 +681,9 @@ export default function StorybookCreator() {
 
   // Keep loraUrlRef in sync so callbacks always see the latest value
   useEffect(() => { loraUrlRef.current = loraUrl; }, [loraUrl]);
+
+  // Invalidate the cached fal reference photo whenever the uploaded photos change
+  useEffect(() => { referenceUrlRef.current = null; setReferenceUrl(null); }, [photosBase64]);
 
   // Restore LoRA URL from a previous session (valid for 6 hours)
   useEffect(() => {
@@ -831,7 +830,7 @@ export default function StorybookCreator() {
     const sceneConcurrency = window.innerWidth < 680 ? 3 : 4;
 
     try {
-      setPreviewMsg("Writing your story & training your character...");
+      setPreviewMsg("Writing your story & preparing your character...");
 
       // Use the pre-warmed story promise if goToStep already fired it, otherwise fetch now
       const storyPromise = pendingStoryRef.current
@@ -844,16 +843,18 @@ export default function StorybookCreator() {
           }, 60_000).then(r => r.json());
       pendingStoryRef.current = null;
 
-      // Skip training if a cached LoRA URL is still valid (photos haven't changed)
-      const cachedLora = loraUrlRef.current;
-      const trainPromise = photosBase64.length > 0 && !cachedLora
-        ? fetchWithTimeout("/api/train-lora", {
+      // ── Reference photo for PuLID (no per-child training) ─────────────────────
+      // Identity is injected at inference time, so we only need the photo hosted
+      // on fal storage once. Reuse a cached URL if photos haven't changed.
+      const cachedRef = referenceUrlRef.current;
+      const refPromise: Promise<string | null> = photosBase64.length > 0 && !cachedRef
+        ? fetchWithTimeout("/api/upload-photo", {
             method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ photosBase64 }),
-          }, 60_000).then(r => r.json())
-        : Promise.resolve(null);
+            body: JSON.stringify({ photoBase64: photosBase64[0] }),
+          }, 60_000).then(r => r.json()).then(d => d?.url ?? null).catch(() => null)
+        : Promise.resolve(cachedRef);
 
-      const [storyRes, trainRes] = await Promise.all([storyPromise, trainPromise]);
+      const [storyRes, refUrl] = await Promise.all([storyPromise, refPromise]);
 
       if (storyRes?.error === "limit_reached") {
         setPreviewMsg("Preview limit reached. Purchase once to unlock unlimited generations.");
@@ -865,53 +866,19 @@ export default function StorybookCreator() {
       const storyData = storyRes?.pages ? storyRes : getFallbackStory(childName);
       setPreviewStory(storyData);
 
-      // ── Poll for LoRA completion ──────────────────────────────────────────────
-      // Start from cached URL — if photos unchanged we skipped training entirely
-      let trainedLoraUrl: string | null = cachedLora;
-      if (!trainedLoraUrl && cachedLora) setPreviewMsg("Using your saved character...");
-      if (trainRes?.jobId) {
-        let attempts = 0;
-        let trainJobFailed = false;
-        while (!trainedLoraUrl && attempts < 60) {
-          // Adaptive interval: shorter when tab re-gains focus, standard 5 s otherwise
-          const interval = document.hidden ? 8_000 : 5_000;
-          await new Promise<void>(resolve => {
-            const id = setTimeout(resolve, interval);
-            // Resolve immediately when tab becomes visible so polling doesn't freeze
-            const onVisible = () => { if (!document.hidden) { clearTimeout(id); resolve(); } };
-            document.addEventListener("visibilitychange", onVisible, { once: true });
-          });
-          attempts++;
-          try {
-            const checkRes = await fetchWithTimeout("/api/check-lora", {
-              method: "POST", headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ jobId: trainRes.jobId }),
-            }, 25_000).then(r => r.json());
-            if (checkRes.status === "COMPLETED" && checkRes.loraUrl) {
-              trainedLoraUrl = checkRes.loraUrl;
-            } else if (checkRes.status === "FAILED") {
-              trainJobFailed = true;
-              break;
-            }
-          } catch {}
-          if (!trainedLoraUrl) setPreviewMsg(TRAINING_MESSAGES[attempts % TRAINING_MESSAGES.length]);
-        }
-        if (trainedLoraUrl) {
-          setLoraUrl(trainedLoraUrl);
-          try {
-            localStorage.setItem("sb_lora_url", trainedLoraUrl);
-            localStorage.setItem("sb_lora_ts", String(Date.now()));
-          } catch {}
-        } else {
-          setTrainingFailed(true);
-          const reason = trainJobFailed ? "Character training failed" : "Character training timed out";
-          setPreviewMsg(`${reason} — your story is ready but without personalised illustrations.`);
-        }
+      const referenceImageUrl: string | null = refUrl;
+      if (referenceImageUrl) {
+        referenceUrlRef.current = referenceImageUrl;
+        setReferenceUrl(referenceImageUrl);
+      } else if (photosBase64.length > 0) {
+        // Photo provided but the upload failed — story is ready, scenes can't personalise
+        setTrainingFailed(true);
+        setPreviewMsg("Could not prepare your character — your story is ready but without personalised illustrations.");
       }
 
       setPreviewMsg("Illustrating your scenes...");
 
-      if (trainedLoraUrl && storyData.pages) {
+      if (referenceImageUrl && storyData.pages) {
         let done = 0;
         const total = 7;
         const themePrompts = SCENE_PROMPTS_BY_THEME[theme] ?? SCENE_PROMPTS_BY_THEME.adventure;
@@ -922,9 +889,10 @@ export default function StorybookCreator() {
         const callScene = async (prompt: string): Promise<string | null> => {
           const submitRes = await fetchWithTimeout("/api/generate-scene", {
             method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ loraUrl: trainedLoraUrl, prompt: buildGenderedPrompt(prompt, childGender, childAge, hairColor, eyeColor), seed: bookSeed }),
+            body: JSON.stringify({ referenceImageUrl, prompt: buildGenderedPrompt(prompt, childGender, childAge, hairColor, eyeColor), seed: bookSeed }),
           }, 30_000).then(r => r.json());
           if (!submitRes.jobId) return null;
+          const model = submitRes.model;
           // Poll until the scene is ready
           for (let a = 0; a < 40; a++) {
             const interval = document.hidden ? 6_000 : 4_000;
@@ -936,7 +904,7 @@ export default function StorybookCreator() {
             try {
               const check = await fetchWithTimeout("/api/check-scene", {
                 method: "POST", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ jobId: submitRes.jobId }),
+                body: JSON.stringify({ jobId: submitRes.jobId, model }),
               }, 20_000).then(r => r.json());
               if (check.status === "COMPLETED" && check.url) return check.url;
               if (check.status === "FAILED") return null;
@@ -1000,7 +968,7 @@ export default function StorybookCreator() {
 
   // Retry scenes that failed in the preview
   const retryFailedPreviewScenes = useCallback(async () => {
-    if (!loraUrl || retryingScenes) return;
+    if (!referenceUrl || retryingScenes) return;
     const failedIdxs = previewImages.map((img, i) => img === "__failed__" ? i : -1).filter(i => i >= 0);
     if (failedIdxs.length === 0) return;
     setRetryingScenes(true);
@@ -1009,14 +977,14 @@ export default function StorybookCreator() {
       try {
         const sub = await fetchWithTimeout("/api/generate-scene", {
           method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ loraUrl, prompt: buildGenderedPrompt(themePrompts[idx], childGender, childAge, hairColor, eyeColor) }),
+          body: JSON.stringify({ referenceImageUrl: referenceUrl, prompt: buildGenderedPrompt(themePrompts[idx], childGender, childAge, hairColor, eyeColor), seed: bookSeedRef.current ?? undefined }),
         }, 30_000).then(r => r.json());
         if (sub.jobId) {
           for (let a = 0; a < 40; a++) {
             await new Promise<void>(r => setTimeout(r, 4_000));
             const check = await fetchWithTimeout("/api/check-scene", {
               method: "POST", headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ jobId: sub.jobId }),
+              body: JSON.stringify({ jobId: sub.jobId, model: sub.model }),
             }, 20_000).then(r => r.json());
             if (check.status === "COMPLETED" && check.url) {
               setPreviewImages(prev => { const n = [...prev]; n[idx] = `/api/proxy?url=${encodeURIComponent(check.url)}`; return n; });
@@ -1028,7 +996,7 @@ export default function StorybookCreator() {
       } catch {}
     }
     setRetryingScenes(false);
-  }, [loraUrl, previewImages, childGender, childAge, retryingScenes]);
+  }, [referenceUrl, previewImages, theme, childGender, childAge, hairColor, eyeColor, retryingScenes]);
 
   // ── Full book generation (post-purchase) ─────────────────────────────────────
   const generateFullBook = async (savedData?: any) => {
@@ -1042,7 +1010,7 @@ export default function StorybookCreator() {
     const _savedFalUrls  = savedData?.previewFalUrls as (string | null)[] | undefined;
     const _savedCoverUrl = savedData?.coverFalUrl   as string | undefined;
     const _photosBase64  = (savedData?.photosBase64 as string[] | undefined) ?? photosBase64;
-    const _loraUrl       = savedData?.loraUrl  ?? loraUrl;
+    const _referenceUrl  = savedData?.referenceUrl ?? referenceUrlRef.current;
 
     // Restore cover if it came back from Stripe session
     if (_savedCoverUrl) setCoverImageUrl(`/api/proxy?url=${encodeURIComponent(_savedCoverUrl)}`);
@@ -1082,53 +1050,33 @@ export default function StorybookCreator() {
 
       setStory(storyData);
 
-      // Re-train LoRA if we have photos but no loraUrl
-      let activeLoraUrl = _loraUrl;
-      if (_photosBase64.length > 0 && !activeLoraUrl && storyData?.pages) {
-        setLoadingMsg("Training your character... (~2-3 min)");
-        const trainRes = await fetchWithTimeout("/api/train-lora", {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ photosBase64: _photosBase64 }),
-        }, 60_000).then(r => r.json());
-        if (trainRes.jobId) {
-          let attempts = 0;
-          while (!activeLoraUrl && attempts < 60) {
-            const interval = document.hidden ? 8_000 : 5_000;
-            await new Promise<void>(resolve => {
-              const id = setTimeout(resolve, interval);
-              const onVisible = () => { if (!document.hidden) { clearTimeout(id); resolve(); } };
-              document.addEventListener("visibilitychange", onVisible, { once: true });
-            });
-            attempts++;
-            try {
-              const checkRes = await fetchWithTimeout("/api/check-lora", {
-                method: "POST", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ jobId: trainRes.jobId }),
-              }, 25_000).then(r => r.json());
-              if (checkRes.status === "COMPLETED" && checkRes.loraUrl) {
-                activeLoraUrl = checkRes.loraUrl;
-                setLoraUrl(activeLoraUrl);
-              } else if (checkRes.status === "FAILED") {
-                break;
-              }
-            } catch {}
-            if (!activeLoraUrl) setLoadingMsg(TRAINING_MESSAGES[attempts % TRAINING_MESSAGES.length]);
-          }
-        }
+      // Ensure we have a fal-hosted reference photo for PuLID — upload once if needed.
+      // No per-child training, so this is ~1 s rather than the old ~2-3 min.
+      let activeRef = _referenceUrl;
+      if (_photosBase64.length > 0 && !activeRef && storyData?.pages) {
+        setLoadingMsg("Preparing your character...");
+        try {
+          activeRef = await fetchWithTimeout("/api/upload-photo", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ photoBase64: _photosBase64[0] }),
+          }, 60_000).then(r => r.json()).then(d => d?.url ?? null);
+        } catch { activeRef = null; }
+        if (activeRef) referenceUrlRef.current = activeRef;
       }
 
-      if (activeLoraUrl && storyData?.pages) {
-        setLoadingMsg("Painting your illustrations... (~2 min)");
+      if (activeRef && storyData?.pages) {
+        setLoadingMsg("Painting your illustrations... (~1 min)");
 
-        // Reuse the preview seed for visual consistency — same seed + same LoRA = same character look
+        // Reuse the preview seed for visual consistency — same seed + same reference = same character look
         const bookSeed2 = bookSeedRef.current ?? Math.floor(Math.random() * 2_147_483_647);
 
         const callScene2 = async (prompt: string): Promise<string | null> => {
           const submitRes = await fetchWithTimeout("/api/generate-scene", {
             method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ loraUrl: activeLoraUrl, prompt: buildGenderedPrompt(prompt, _gender, _age, _hair, _eye), seed: bookSeed2 }),
+            body: JSON.stringify({ referenceImageUrl: activeRef, prompt: buildGenderedPrompt(prompt, _gender, _age, _hair, _eye), seed: bookSeed2 }),
           }, 30_000).then(r => r.json());
           if (!submitRes.jobId) return null;
+          const model2 = submitRes.model;
           for (let a = 0; a < 40; a++) {
             const interval = document.hidden ? 6_000 : 4_000;
             await new Promise<void>(res => {
@@ -1139,7 +1087,7 @@ export default function StorybookCreator() {
             try {
               const check = await fetchWithTimeout("/api/check-scene", {
                 method: "POST", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ jobId: submitRes.jobId }),
+                body: JSON.stringify({ jobId: submitRes.jobId, model: model2 }),
               }, 20_000).then(r => r.json());
               if (check.status === "COMPLETED" && check.url) return check.url;
               if (check.status === "FAILED") return null;
@@ -1218,7 +1166,7 @@ export default function StorybookCreator() {
         childName, childAge, childGender, theme, hairColor, eyeColor,
         story:        previewStory,
         photosBase64: photosBase64,
-        loraUrl:      loraUrl,
+        referenceUrl: referenceUrl,
         plan,
         coverPrompt:  buildGenderedPrompt(COVER_PROMPTS_BY_THEME[theme] ?? COVER_PROMPT, childGender, childAge, hairColor, eyeColor),
         scenePrompts,
@@ -1279,7 +1227,7 @@ export default function StorybookCreator() {
 
   // ── Regen / Share / PDF ───────────────────────────────────────────────────────
   const regenerateScene = async (pageIdx: number) => {
-    if (!loraUrl || regeneratingPage !== null) return;
+    if (!referenceUrl || regeneratingPage !== null) return;
     setRegeneratingPage(pageIdx);
     try {
       const illustrationDesc = story?.pages?.[pageIdx]?.illustration;
@@ -1291,14 +1239,14 @@ export default function StorybookCreator() {
       const seed = Math.floor(Math.random() * 2_147_483_647);
       const sub = await fetchWithTimeout("/api/generate-scene", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ loraUrl, prompt, seed }),
+        body: JSON.stringify({ referenceImageUrl: referenceUrl, prompt, seed }),
       }, 30_000).then(r => r.json());
       if (sub.jobId) {
         for (let a = 0; a < 40; a++) {
           await new Promise<void>(r => setTimeout(r, 4_000));
           const check = await fetchWithTimeout("/api/check-scene", {
             method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ jobId: sub.jobId }),
+            body: JSON.stringify({ jobId: sub.jobId, model: sub.model }),
           }, 20_000).then(r => r.json());
           if (check.status === "COMPLETED" && check.url) {
             setPageImages(prev => { const n = [...prev]; n[pageIdx] = `/api/proxy?url=${encodeURIComponent(check.url)}`; return n; });
@@ -1367,7 +1315,7 @@ export default function StorybookCreator() {
 
   const resetAll = () => {
     setMainStep("onboarding"); setOnboardingStep(1); setStepDir("fwd");
-    setPhotos([]); setPhotosBase64([]); setLoraUrl(null);
+    setPhotos([]); setPhotosBase64([]); setLoraUrl(null); setReferenceUrl(null); referenceUrlRef.current = null;
     setHairColor("brown"); setEyeColor("brown");
     setStory(null); setPreviewStory(null); setPreviewImages(Array(6).fill(null));
     setPreviewCoverUrl(null); setCoverImageUrl(null);
@@ -1466,7 +1414,7 @@ export default function StorybookCreator() {
           )}
 
           {/* Redo button */}
-          {!isSharedView && loraUrl && !isRegen && (
+          {!isSharedView && referenceUrl && !isRegen && (
             <button className="regen-btn" onClick={() => regenerateScene(page.pageNum - 1)} style={{ position: "absolute", top: isMobile ? 8 : 10, right: isMobile ? 8 : 10, zIndex: 4, background: "rgba(255,255,255,0.88)", border: "1px solid rgba(120,80,30,0.2)", borderRadius: 8, padding: isMobile ? "4px 8px" : "5px 10px", color: "rgba(100,65,20,0.75)", fontSize: isMobile ? 10 : 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, backdropFilter: "blur(4px)" }}>
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>
               {!isMobile && "Redo"}
@@ -2281,24 +2229,29 @@ export default function StorybookCreator() {
                 onClick={async () => {
                   setKontextLoading(true);
                   setKontextResults(null);
+                  setKontextError(null);
                   try {
                     const res = await fetch("/api/test-kontext", {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({
                         imageUrl: kontextImageUrl || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800",
+                        idWeight: pulidIdWeight,
                       }),
                     });
                     const data = await res.json();
-                    if (data.results) setKontextResults(data.results);
-                    else setKontextResults("error");
-                  } catch { setKontextResults("error"); }
+                    if (data.kontext && data.pulid) setKontextResults(data);
+                    else {
+                      setKontextError(res.status === 429 ? "Rate limit hit — wait a bit and retry." : (data.error || data.message || `Request failed (${res.status})`));
+                      setKontextResults("error");
+                    }
+                  } catch (e) { setKontextError(e instanceof Error ? e.message : "Network error"); setKontextResults("error"); }
                   finally { setKontextLoading(false); }
                 }}
                 disabled={kontextLoading}
                 style={{ padding: "10px 18px", borderRadius: 11, border: "1px solid rgba(232,192,122,0.4)", background: "rgba(244,196,48,0.12)", color: "#E8C07A", fontSize: 13, fontWeight: 600, cursor: kontextLoading ? "not-allowed" : "pointer", opacity: kontextLoading ? 0.6 : 1 }}
               >
-                {kontextLoading ? "⏳ Generating 3 scenes…" : "🧪 Test Kontext (3 scenes)"}
+                {kontextLoading ? "⏳ Generating 6 scenes…" : "🧪 Test likeness (Kontext vs PuLID)"}
               </button>
             )}
           </div>
@@ -2310,46 +2263,113 @@ export default function StorybookCreator() {
                 type="url"
                 value={kontextImageUrl}
                 onChange={e => setKontextImageUrl(e.target.value)}
-                placeholder="Paste a photo URL to test with (optional, defaults to sample portrait)"
+                placeholder="Paste a photo URL, or upload your own →"
                 style={{ flex: 1, padding: "9px 14px", borderRadius: 10, border: "1px solid rgba(232,192,122,0.25)", background: "rgba(255,255,255,0.06)", color: "white", fontSize: 13, outline: "none" }}
               />
+              <label style={{ padding: "9px 14px", borderRadius: 10, border: "1px solid rgba(232,192,122,0.4)", background: "rgba(244,196,48,0.12)", color: "#E8C07A", fontSize: 12, fontWeight: 600, cursor: kontextUploading ? "wait" : "pointer", whiteSpace: "nowrap" }}>
+                {kontextUploading ? "Uploading…" : "Upload photo"}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/heic"
+                  disabled={kontextUploading}
+                  style={{ display: "none" }}
+                  onChange={async e => {
+                    const file = e.target.files?.[0];
+                    e.target.value = ""; // allow re-selecting the same file
+                    if (!file) return;
+                    setKontextUploading(true);
+                    try {
+                      const dataUrl: string = await new Promise((res, rej) => {
+                        const fr = new FileReader();
+                        fr.onload = () => res(fr.result as string);
+                        fr.onerror = () => rej(fr.error);
+                        fr.readAsDataURL(file);
+                      });
+                      const up = await fetch("/api/upload-photo", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ photoBase64: dataUrl }),
+                      });
+                      const data = await up.json();
+                      if (data.url) setKontextImageUrl(data.url);
+                      else alert(data.message || data.error || "Upload failed");
+                    } catch { alert("Upload failed — please try another photo."); }
+                    finally { setKontextUploading(false); }
+                  }}
+                />
+              </label>
               {kontextImageUrl && (
                 <button onClick={() => setKontextImageUrl("")} style={{ padding: "9px 12px", borderRadius: 10, border: "none", background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)", fontSize: 12, cursor: "pointer" }}>✕</button>
               )}
             </div>
           )}
 
-          {/* Kontext test results (demo only) */}
+          {/* PuLID likeness dial (demo only) — the "happy middle" knob */}
+          {isDemo && (
+            <div style={{ margin: "10px auto 0", maxWidth: 900, display: "flex", alignItems: "center", gap: 14 }}>
+              <label htmlFor="idw" style={{ color: "rgba(255,255,255,0.55)", fontSize: 12, whiteSpace: "nowrap" }}>
+                PuLID likeness <span style={{ color: "rgba(255,255,255,0.3)" }}>(id_weight)</span>
+              </label>
+              <input
+                id="idw"
+                type="range" min={0.4} max={1.0} step={0.05}
+                value={pulidIdWeight}
+                onChange={e => setPulidIdWeight(Number(e.target.value))}
+                style={{ flex: 1, accentColor: "#E8C07A" }}
+              />
+              <span style={{ color: "#E8C07A", fontSize: 13, fontWeight: 700, width: 34, textAlign: "right" }}>{pulidIdWeight.toFixed(2)}</span>
+              <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 11, whiteSpace: "nowrap" }}>more scene ← → more face</span>
+            </div>
+          )}
+
+          {/* Identity test results (demo only) — Kontext vs PuLID, no LoRA training */}
           {isDemo && kontextResults && (
             <div style={{ margin: "16px auto 0", maxWidth: 900, background: "rgba(255,255,255,0.06)", borderRadius: 16, padding: "24px", border: "1px solid rgba(232,192,122,0.2)" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-                <p style={{ color: "#E8C07A", fontWeight: 700, fontSize: 14, margin: 0 }}>🧪 fal-ai/flux-pro/kontext: 3-scene consistency test</p>
-                <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 12 }}>Pixar-style prompt, same reference photo</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
+                <p style={{ color: "#E8C07A", fontWeight: 700, fontSize: 14, margin: 0 }}>🧪 Likeness test: Kontext vs PuLID</p>
+                <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 12 }}>same photo, same 3 scenes — no LoRA training</span>
               </div>
               {kontextResults === "error" ? (
-                <p style={{ color: "#ff6b6b", fontSize: 14, margin: 0 }}>Generation failed. Check FAL_API_KEY and that fal-ai/flux-pro/kontext is available on your plan.</p>
+                <p style={{ color: "#ff6b6b", fontSize: 14, margin: 0 }}>{kontextError || "Generation failed."}</p>
               ) : (
                 <>
+                  <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 12, margin: "0 0 18px" }}>
+                    ⚡ both models, all scenes in <strong style={{ color: "#E8C07A" }}>{(kontextResults.meta.wallMs / 1000).toFixed(1)}s</strong> wall-clock
+                    <span style={{ color: "rgba(255,255,255,0.35)" }}> — vs ~3-5 min for the trained-LoRA path</span>
+                  </p>
+
                   {/* Reference photo */}
                   <div style={{ marginBottom: 20 }}>
-                    <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, margin: "0 0 8px" }}>Reference photo</p>
+                    <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, margin: "0 0 8px" }}>Reference photo — compare every face below against this</p>
                     <img
                       src={kontextImageUrl || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800"}
                       alt="Reference"
                       style={{ height: 120, borderRadius: 8, display: "block", objectFit: "cover" }}
                     />
                   </div>
-                  {/* 3 results side by side */}
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
-                    {(kontextResults as { scene: string; url: string }[]).map((r, i) => (
-                      <div key={i}>
-                        <p style={{ color: "rgba(255,255,255,0.45)", fontSize: 11, margin: "0 0 8px", lineHeight: 1.5 }}>
-                          <span style={{ color: "#E8C07A", fontWeight: 700 }}>Scene {i + 1}:</span> {r.scene.slice(0, 60)}…
-                        </p>
-                        <img src={r.url} alt={`Scene ${i + 1}`} style={{ width: "100%", borderRadius: 10, display: "block" }} />
+
+                  {[
+                    { label: "Kontext (image edit)", sub: "fal-ai/flux-pro/kontext", rows: kontextResults.kontext.results },
+                    { label: "PuLID (face injection)", sub: `fal-ai/flux-pulid · id_weight ${kontextResults.pulid.idWeight}`, rows: kontextResults.pulid.results },
+                  ].map(model => (
+                    <div key={model.sub} style={{ marginBottom: 22 }}>
+                      <p style={{ color: "white", fontSize: 13, fontWeight: 700, margin: "0 0 2px" }}>{model.label}</p>
+                      <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, margin: "0 0 10px" }}>{model.sub}</p>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
+                        {model.rows.map((r, i) => (
+                          <div key={i}>
+                            <p style={{ color: "rgba(255,255,255,0.45)", fontSize: 11, margin: "0 0 8px", lineHeight: 1.5 }}>
+                              <span style={{ color: "#E8C07A", fontWeight: 700 }}>Scene {i + 1}</span>
+                              {typeof r.tookMs === "number" && <span style={{ color: "rgba(255,255,255,0.3)" }}> ({(r.tookMs / 1000).toFixed(1)}s)</span>}
+                            </p>
+                            {r.url
+                              ? <img src={r.url} alt={`${model.label} scene ${i + 1}`} style={{ width: "100%", borderRadius: 10, display: "block" }} />
+                              : <div style={{ width: "100%", aspectRatio: "1", borderRadius: 10, background: "rgba(255,80,80,0.08)", border: "1px solid rgba(255,80,80,0.25)", display: "flex", alignItems: "center", justifyContent: "center", color: "#ff8a8a", fontSize: 12 }}>failed</div>}
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
                 </>
               )}
             </div>

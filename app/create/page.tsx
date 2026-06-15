@@ -930,10 +930,15 @@ export default function StorybookCreator() {
           setPreviewMsg(done < total ? `${done} of ${total} scenes ready...` : "All illustrations ready!");
         };
 
+        // Costume-critical themes keep fixed prompts so kit/outfit stays correct;
+        // all others use the per-page illustration so the image matches the text.
+        const USE_FIXED_PROMPTS = new Set(["worldcup", "july4"]);
         const storyScenePrompts = (storyData.pages || []).map((pg: any, idx: number) =>
-          pg.illustration
-            ? `a photo of TOK, ${pg.illustration} Scene context: ${(pg.text || "").substring(0, 120)} ${STYLE_TOKEN} ${SAFETY}`
-            : (themePrompts[idx] ?? themePrompts[0])
+          USE_FIXED_PROMPTS.has(theme)
+            ? (themePrompts[idx] ?? themePrompts[0])
+            : pg.illustration
+              ? `a photo of TOK, ${pg.illustration} Scene context: ${(pg.text || "").substring(0, 120)} ${STYLE_TOKEN} ${SAFETY}`
+              : (themePrompts[idx] ?? themePrompts[0])
         );
 
         // Cap concurrency: 2 on mobile (avoids connection saturation), 4 on desktop

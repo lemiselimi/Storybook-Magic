@@ -153,13 +153,14 @@ export async function POST(request) {
     const arcJson = JSON.stringify(theme.arc);
 
     const response = await client.messages.create({
-      model: "claude-opus-4-7",
-      max_tokens: 4000,
+      model: "claude-opus-4-8",
+      max_tokens: 8000,
+      thinking: { type: "adaptive" },
       system: `You are a children's book author writing personalized illustrated storybooks for "My Tiny Tales." Each book is 6 pages, one short story moment per page. The book is being made as a keepsake — emotional, beautiful, and treasured.
 
 YOUR TASK:
-Write exactly 6 pages of story. Each page is ONE story beat from the story_arc, adapted to the child's age band. Return ONLY valid JSON in this structure:
-{"title":"string — a custom book title using the child's name (e.g. 'Lily's World Cup Magic')","dedication":"string — one warm line dedicated to the child, e.g. 'For Aria, the bravest explorer in the cosmos'","pages":[{"pageNum":1,"text":"..."},{"pageNum":2,"text":"..."},{"pageNum":3,"text":"..."},{"pageNum":4,"text":"..."},{"pageNum":5,"text":"..."},{"pageNum":6,"text":"..."}]}
+Write exactly 6 pages of story. Each page is ONE story beat from the story_arc, adapted to the child's age band. For EACH page also write a matching "illustration" — a concrete visual description of that exact story moment, so the picture on the page shows what the words on the page describe. Return ONLY valid JSON in this structure:
+{"title":"string — a custom book title using the child's name (e.g. 'Lily's World Cup Magic')","dedication":"string — one warm line dedicated to the child, e.g. 'For Aria, the bravest explorer in the cosmos'","pages":[{"pageNum":1,"text":"...","illustration":"..."},{"pageNum":2,"text":"...","illustration":"..."},{"pageNum":3,"text":"...","illustration":"..."},{"pageNum":4,"text":"...","illustration":"..."},{"pageNum":5,"text":"...","illustration":"..."},{"pageNum":6,"text":"...","illustration":"..."}]}
 
 UNIVERSAL RULES (every age band):
 - The CHILD is the hero. Always center them in the action. Never let a sidekick or parent steal the moment.
@@ -196,8 +197,16 @@ SUBTITLE RULE:
 - Examples: "A World Cup Story", "A Fairy-Tale Friendship", "An Ocean Adventure"
 - Put this in the "dedication" field as a companion to the warm dedication line — format: "For [Name], [warm line]. [Subtitle]."
 
+ILLUSTRATION RULE (this is what makes the picture match the words):
+- For each page, the "illustration" must depict the SAME moment the page text describes — same action, same setting, same emotion. If the text says the child is kneeling over a broken generator at dusk, the illustration describes exactly that.
+- Describe it as a single, concrete visual: what the child is physically doing, their expression, the key objects around them, and the setting/time of day. One vivid sentence, 15-30 words.
+- Centre the child performing the page's action. Name the one or two scene elements that anchor this beat (the float, the rope bridge, the glowing portal) so consecutive pages look distinct from each other.
+- Do NOT include art-style words, camera directions, lighting, "Pixar", "3D", or the child's name — only the literal content of the scene. Styling is added later.
+- Keep it physically consistent with the story_arc beat for that page.
+
 FINAL CHECK BEFORE RETURNING:
-- All 6 pages written? ✓
+- All 6 pages written, each with a matching illustration? ✓
+- Does each illustration depict the same moment as its page text? ✓
 - Age band voice consistent across all pages? ✓
 - Child is the hero on every page? ✓
 - Ending warm and resolved? ✓
@@ -213,7 +222,10 @@ FINAL CHECK BEFORE RETURNING:
       }],
     });
 
-    const text  = response.content[0].text;
+    // With adaptive thinking enabled, content[0] may be a thinking block —
+    // pull the text block explicitly rather than assuming index 0.
+    const textBlock = response.content.find(b => b.type === "text");
+    const text = textBlock?.text ?? "";
     console.log("Raw response:", text.substring(0, 200));
     const clean  = text.replace(/```json|```/g, "").trim();
     const parsed = JSON.parse(clean);

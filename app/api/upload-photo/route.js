@@ -92,10 +92,15 @@ export async function POST(request) {
       .jpeg({ quality: 92, mozjpeg: false })
       .toBuffer();
 
-    // 4 — Upload clean (EXIF-free) image to fal.ai storage
+    // 4 — Upload clean (EXIF-free) image to fal.ai storage.
+    // Lifecycle: fal auto-deletes the reference photo 48h after upload. This
+    // matches the 48h book:{ref} TTL (so a delayed purchase can still generate)
+    // and makes our privacy promise enforceable rather than aspirational —
+    // there is no code path that can forget to delete it.
+    const REFERENCE_TTL_SECONDS = 48 * 60 * 60;
     const blob = new Blob([cleanBuffer], { type: "image/jpeg" });
     const file = new File([blob], "reference.jpg", { type: "image/jpeg" });
-    const url  = await fal.storage.upload(file);
+    const url  = await fal.storage.upload(file, { lifecycle: { expiresIn: REFERENCE_TTL_SECONDS } });
 
     return Response.json({ url });
   } catch (err) {

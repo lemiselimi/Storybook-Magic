@@ -22,13 +22,6 @@ function SparkSVG({ size = 20, color = GOLD, glow = false }: { size?: number; co
     </svg>
   );
 }
-function StarSVG({ size = 16, color = GOLD }: { size?: number; color?: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill={color} aria-hidden="true">
-      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-    </svg>
-  );
-}
 function CheckSVG({ size = 14, color = GOLD, delay = 0 }: { size?: number; color?: string; delay?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -97,29 +90,13 @@ const PRINT_FEATURES = [
   "Ships within 5-7 days",
 ];
 
-const REVIEWS = [
-  { name: "Sarah M.",  role: "Mum of Emma, age 5",    initials: "SM", text: "My daughter screamed with joy when she saw herself as the hero! We've read it together every single night for a week. The most personal gift I've ever given her. Worth every penny." },
-  { name: "James T.",  role: "Dad of Oliver & Finn",  initials: "JT", text: "Ordered on a Tuesday afternoon. By dinner my son had a personalised storybook with HIM as the hero, fighting dragons in a magical forest. The illustrations are stunning. He's completely obsessed." },
-  { name: "Priya K.",  role: "Grandmother of Aisha",  initials: "PK", text: "I'm not very tech-savvy but this was so easy. Uploaded a photo, chose a theme, and by that evening had a beautiful illustrated book. I'm ordering copies for every grandchild for Christmas!" },
-];
-
 const FOOTER_LINKS = {
   Product:  [["Examples", "#examples"], ["Pricing", "#pricing"], ["FAQ", "/faq"]],
-  Company:  [["About", "/contact"], ["Contact", "/contact"], ["Blog", "/contact"]],
+  Company:  [["About", "/contact"], ["Contact", "/contact"], ["FAQ", "/faq"]],
   Legal:    [["Privacy", "/privacy"], ["Terms", "/terms"], ["Refunds", "/refunds"], ["Children's Data", "/childrens-data"], ["Cookie Settings", "__cookie__"]],
 };
 
 // ── Illustrated avatars ───────────────────────────────────────────────────────
-function AvatarSM() {
-  return <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="22" fill="#F0C4A0"/><ellipse cx="22" cy="14" rx="13" ry="9" fill="#7B4A2A"/><ellipse cx="9" cy="23" rx="4.5" ry="10" fill="#7B4A2A"/><ellipse cx="35" cy="23" rx="4.5" ry="10" fill="#7B4A2A"/><circle cx="22" cy="25" r="12" fill="#F0C4A0"/><circle cx="18" cy="23" r="1.8" fill="#3D1F0A"/><circle cx="26" cy="23" r="1.8" fill="#3D1F0A"/><circle cx="18.7" cy="22.3" r=".55" fill="white"/><circle cx="26.7" cy="22.3" r=".55" fill="white"/><path d="M17 28 Q22 33 27 28" fill="none" stroke="#C07050" strokeWidth="1.8" strokeLinecap="round"/><circle cx="15" cy="27" r="2.8" fill="#F0A080" opacity=".35"/><circle cx="29" cy="27" r="2.8" fill="#F0A080" opacity=".35"/></svg>;
-}
-function AvatarJT() {
-  return <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="22" fill="#C88A5E"/><path d="M9 19 Q9 8 22 8 Q35 8 35 19 Z" fill="#1A0A05"/><rect x="9" y="18" width="4" height="7" rx="2" fill="#1A0A05"/><rect x="31" y="18" width="4" height="7" rx="2" fill="#1A0A05"/><circle cx="22" cy="25" r="12" fill="#C88A5E"/><circle cx="18" cy="23" r="1.8" fill="#1A0A05"/><circle cx="26" cy="23" r="1.8" fill="#1A0A05"/><circle cx="18.7" cy="22.3" r=".55" fill="white"/><circle cx="26.7" cy="22.3" r=".55" fill="white"/><path d="M17 28 Q22 33 27 28" fill="none" stroke="#7A4020" strokeWidth="1.8" strokeLinecap="round"/></svg>;
-}
-function AvatarPK() {
-  return <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="22" fill="#C07840"/><ellipse cx="22" cy="13" rx="13" ry="8" fill="#140808"/><ellipse cx="8" cy="24" rx="4" ry="13" fill="#140808"/><ellipse cx="36" cy="24" rx="4" ry="13" fill="#140808"/><circle cx="22" cy="25" r="12" fill="#C07840"/><circle cx="18" cy="23" r="1.8" fill="#140808"/><circle cx="26" cy="23" r="1.8" fill="#140808"/><circle cx="18.7" cy="22.3" r=".55" fill="white"/><circle cx="26.7" cy="22.3" r=".55" fill="white"/><path d="M17 28 Q22 33 27 28" fill="none" stroke="#8B4020" strokeWidth="1.8" strokeLinecap="round"/><circle cx="22" cy="19.5" r="1" fill="#CC1020" opacity=".75"/></svg>;
-}
-const AVATARS = [<AvatarSM key="s" />, <AvatarJT key="j" />, <AvatarPK key="p" />];
 
 // ── Stripe / payment SVGs ─────────────────────────────────────────────────────
 function StripeSVG() {
@@ -389,16 +366,13 @@ export default function LandingPage() {
               </a>
             </div>
 
-            {/* Trust row */}
+            {/* Trust row — honest, verifiable signals only */}
             <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 28, flexWrap: "wrap" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                {[0,1,2,3,4].map(i => <StarSVG key={i} size={14} color={GOLD} />)}
-                <span style={{ color: MUTED, fontSize: 13, marginLeft: 6 }}>Rated by our launch families</span>
-              </div>
-              <span style={{ width: 1, height: 16, background: "rgba(245,240,224,0.15)" }} />
-              <span style={{ color: MUTED, fontSize: 13 }}>Free preview</span>
+              <span style={{ color: MUTED, fontSize: 13 }}>Free 2-page preview</span>
               <span style={{ width: 1, height: 16, background: "rgba(245,240,224,0.15)" }} />
               <span style={{ color: MUTED, fontSize: 13 }}>No subscription</span>
+              <span style={{ width: 1, height: 16, background: "rgba(245,240,224,0.15)" }} />
+              <span style={{ color: MUTED, fontSize: 13 }}>30-day money-back promise</span>
             </div>
           </div>
 
@@ -420,10 +394,10 @@ export default function LandingPage() {
       <section style={{ borderTop: `1px solid ${SURF_BDR}`, borderBottom: `1px solid ${SURF_BDR}`, background: "rgba(255,255,255,0.02)" }}>
         <div style={{ maxWidth: 900, margin: "0 auto", padding: isMobile ? "22px 24px" : "22px 48px", display: "flex", alignItems: "center", justifyContent: "space-around", flexWrap: "wrap", gap: 16 }}>
           {[
-            { icon: <TrustStarSVG />,   value: "5-Star Rated",    label: "Launch families, Aug-Nov 2025" },
             { icon: <TrustFlashSVG />,  value: "Ready in 5 min",  label: "From photo to preview" },
-            { icon: <TrustLockSVG />,   value: "Never Stored",    label: "Photos deleted after use" },
-            { icon: <TrustShieldSVG />, value: "No Subscription", label: "Pay once, keep forever" },
+            { icon: <TrustStarSVG />,   value: "Free Preview",    label: "See 2 pages before you pay" },
+            { icon: <TrustLockSVG />,   value: "Private by Default", label: "Photos auto-delete within 48h" },
+            { icon: <TrustShieldSVG />, value: "30-Day Promise",  label: "Love it or your money back" },
           ].map((t, i) => (
             <div key={i} style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <span style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>{t.icon}</span>
@@ -607,48 +581,37 @@ export default function LandingPage() {
       </section>
 
       {/* ════════════════════════════════════════════════════
-          TESTIMONIALS
+          THE PROMISE — honest value section (no fabricated reviews pre-launch)
       ════════════════════════════════════════════════════ */}
       <section style={{ padding: isMobile ? "72px 24px" : "104px 48px", borderTop: `1px solid ${SURF_BDR}` }}>
         <div style={{ maxWidth: 1000, margin: "0 auto" }}>
-          <div className="reveal" style={{ textAlign: "center", marginBottom: isMobile ? 44 : 64 }}>
-            <h2 style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: isMobile ? 30 : 44, fontWeight: 600, color: TEXT, margin: 0, letterSpacing: "-0.5px" }}>What Parents Are Saying</h2>
+          <div className="reveal" style={{ textAlign: "center", marginBottom: isMobile ? 44 : 60 }}>
+            <p style={{ color: GOLD, fontWeight: 700, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", margin: "0 0 14px" }}>Why My Tiny Tales</p>
+            <h2 style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: isMobile ? 30 : 44, fontWeight: 600, color: TEXT, margin: 0, letterSpacing: "-0.5px" }}>Made for One Child. Yours.</h2>
           </div>
 
-          {/* Featured review — full width, horizontal */}
-          <div className="card-tilt reveal" onMouseMove={tiltCard} onMouseLeave={untiltCard} style={{ background: SURFACE, backdropFilter: "blur(16px)", border: `1px solid ${SURF_BDR}`, borderRadius: 24, padding: isMobile ? "28px 24px" : "36px 40px", display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 20 : 40, alignItems: isMobile ? "flex-start" : "center", boxShadow: "0 8px 32px rgba(0,0,0,0.2)", marginBottom: 20 }}>
-            {/* Left: avatar + name */}
-            <div style={{ display: "flex", flexDirection: isMobile ? "row" : "column", alignItems: isMobile ? "center" : "flex-start", gap: 14, flexShrink: 0 }}>
-              <div style={{ width: 48, height: 48, borderRadius: "50%", overflow: "hidden", flexShrink: 0 }}>{AVATARS[0]}</div>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: 15, color: TEXT }}>{REVIEWS[0].name}</div>
-                <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>{REVIEWS[0].role}</div>
-              </div>
-            </div>
-            {/* Right: stars + quote */}
-            <div style={{ flex: 1 }}>
-              <div style={{ display: "flex", gap: 3, marginBottom: 14 }}>{[0,1,2,3,4].map(j => <span key={j} className="star-pop" style={{ animationDelay: `${0.25 + j * 0.1}s` }}><StarSVG size={15} color={GOLD} /></span>)}</div>
-              <p style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: isMobile ? 15 : 17, lineHeight: 1.8, color: TEXT, margin: 0, fontStyle: "italic" }}>{REVIEWS[0].text}</p>
-            </div>
-          </div>
-
-          {/* 2-col grid for remaining reviews */}
-          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 20 }}>
-            {REVIEWS.slice(1).map((r, i) => (
-              <div key={i} className="card-tilt reveal" onMouseMove={tiltCard} onMouseLeave={untiltCard} style={{ background: SURFACE, backdropFilter: "blur(16px)", border: `1px solid ${SURF_BDR}`, borderRadius: 24, padding: "28px 24px", display: "flex", flexDirection: "column", boxShadow: "0 8px 32px rgba(0,0,0,0.2)", animationDelay: `${(i + 1) * 0.12}s` }}>
-                <div aria-hidden="true" style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: 72, lineHeight: 0.7, color: GOLD, opacity: 0.22, marginBottom: 16, fontWeight: 700, userSelect: "none" }}>"</div>
-                <div style={{ display: "flex", gap: 3, marginBottom: 14 }}>{[0,1,2,3,4].map(j => <span key={j} className="star-pop" style={{ animationDelay: `${0.25 + j * 0.1}s` }}><StarSVG size={14} color={GOLD} /></span>)}</div>
-                <p style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: 15, lineHeight: 1.8, color: TEXT, margin: "0 0 24px", fontStyle: "italic", flex: 1 }}>{r.text}</p>
-                <div style={{ height: 1, background: "rgba(255,255,255,0.06)", marginBottom: 18 }} />
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: "50%", overflow: "hidden", flexShrink: 0 }}>{AVATARS[i + 1]}</div>
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: 14, color: TEXT }}>{r.name}</div>
-                    <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>{r.role}</div>
-                  </div>
-                </div>
+          {/* Three promise cards */}
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: 20, marginBottom: 20 }}>
+            {[
+              { t: "Written from scratch", d: "Every book is authored around your child’s name, age, and the adventure you choose. No templates — no two alike." },
+              { t: "Their real face, every page", d: "Not a cartoon stand-in. Our AI weaves your child’s actual likeness into all six cinematic illustrations." },
+              { t: "Nothing to lose", d: "See two full pages free before you pay a penny — and every book is backed by our 30-day promise." },
+            ].map((c, i) => (
+              <div key={i} className="card-tilt reveal" onMouseMove={tiltCard} onMouseLeave={untiltCard} style={{ background: SURFACE, backdropFilter: "blur(16px)", border: `1px solid ${SURF_BDR}`, borderRadius: 24, padding: "32px 28px", display: "flex", flexDirection: "column", gap: 12, boxShadow: "0 8px 32px rgba(0,0,0,0.2)", animationDelay: `${i * 0.12}s` }}>
+                <span style={{ width: 44, height: 44, borderRadius: 13, background: "rgba(232,192,122,0.1)", border: "1px solid rgba(232,192,122,0.24)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 4 }}><SparkSVG size={22} color={GOLD} glow /></span>
+                <h3 style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: 19, fontWeight: 600, color: TEXT, margin: 0, lineHeight: 1.3 }}>{c.t}</h3>
+                <p style={{ color: MUTED, fontSize: 14, lineHeight: 1.75, margin: 0 }}>{c.d}</p>
               </div>
             ))}
+          </div>
+
+          {/* Guarantee band */}
+          <div className="reveal" style={{ display: "flex", alignItems: "center", gap: 14, justifyContent: "center", textAlign: isMobile ? "left" : "center", flexWrap: "wrap", background: "rgba(232,192,122,0.05)", border: "1px solid rgba(232,192,122,0.18)", borderRadius: 20, padding: isMobile ? "22px 20px" : "26px 32px" }}>
+            <span style={{ flexShrink: 0 }}><TrustShieldSVG /></span>
+            <p style={{ color: TEXT, fontSize: isMobile ? 14 : 15, margin: 0, lineHeight: 1.6, maxWidth: 620 }}>
+              <strong style={{ color: GOLD }}>Our 30-day happiness promise.</strong>{" "}
+              If your book doesn’t bring a smile, email us within 30 days for a full refund — and keep the keepsake.
+            </p>
           </div>
         </div>
       </section>

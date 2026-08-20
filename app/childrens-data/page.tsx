@@ -11,7 +11,7 @@ export default function ChildrensDataPage() {
           Children's Data
         </h1>
         <p style={{ fontSize: 15, color: "rgba(245,240,224,0.6)", marginBottom: 56, lineHeight: 1.6 }}>
-          A plain-English guide for parents: exactly what we collect, how we use it, and your rights under UK GDPR.
+          A plain-English guide for parents: exactly what we collect, how we use it, and your rights as a parent.
         </p>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 44 }}>
@@ -22,11 +22,11 @@ export default function ChildrensDataPage() {
             },
             {
               title: "How Photos Are Processed",
-              body: "Your photos are sent from your device to our secure UK/EU servers over an encrypted HTTPS connection. Before processing, we automatically strip all EXIF metadata from the image (including any GPS location data your phone may have embedded).\n\nThe photo is then sent to fal.ai — an AI image service operating under EU Standard Contractual Clauses — to train a personalised character model. fal.ai processes the image in a secure, isolated environment and does not use it for any other purpose.",
+              body: "Your photos are sent from your device to our secure servers over an encrypted HTTPS connection. Before processing, we automatically strip all EXIF metadata from the image (including any GPS location data your phone may have embedded).\n\nThe photo is then sent to fal.ai — an AI image service operating under EU Standard Contractual Clauses — where your child's likeness is read directly from the photo at the moment each illustration is generated. No separate 'model' or copy of your child is trained or created; the photo is used only as a live reference for the pictures in your book.",
             },
             {
               title: "How Long Photos Are Kept",
-              body: "Your photos are automatically deleted from all systems — including fal.ai's infrastructure — within approximately 30 minutes of your storybook generation completing. We do not retain any copy of your child's photo after this point.\n\nThe personalised character model (which is a mathematical representation, not a recoverable photo) is deleted at the same time. It is not used for any subsequent generation.",
+              body: "We never store your child's photo on our own servers. It is passed to fal.ai purely as a live reference while your book's illustrations are generated, and fal.ai automatically and permanently deletes it within 48 hours of upload — most books are finished within minutes.\n\nBecause no per-child model is ever created, there is nothing trained or saved from which a likeness could be recovered later.",
             },
             {
               title: "Who Has Access",
@@ -34,19 +34,19 @@ export default function ChildrensDataPage() {
             },
             {
               title: "Photos Are Never Used to Train AI Models",
-              body: "Your child's photos are never used to train, fine-tune, or improve any AI model — ours or anyone else's. The personalised model created during generation is used only for your book and is deleted immediately after. We have confirmed this policy with fal.ai contractually.",
+              body: "Your child's photos are never used to train, fine-tune, or improve any AI model — ours or anyone else's. The photo serves only as a live reference while your book's illustrations are generated, and is not retained by us afterwards. We have confirmed this policy with fal.ai contractually.",
             },
             {
               title: "AI Provider Data Retention",
-              body: "• fal.ai (image generation): input images and outputs are deleted within 30 minutes of generation. fal.ai does not retain data for model training. Full policy: fal.ai/privacy\n• Anthropic Claude (story text): story prompts are processed in real time and are not stored by Anthropic for training per their API data usage policy (no-training opt-out applies to all API customers by default). Full policy: anthropic.com/privacy\n• Stripe (payments): card and payment data is handled entirely by Stripe and never touches our servers. Full policy: stripe.com/privacy",
+              body: "• fal.ai (image generation): reference photos are set to auto-delete from fal.ai within 48 hours of upload, and outputs are not used for model training. Full policy: fal.ai/privacy\n• Anthropic Claude (story text): story prompts are processed in real time and are not stored by Anthropic for training per their API data usage policy (no-training applies to all API customers by default). Full policy: anthropic.com/privacy\n• Stripe (payments): card and payment data is handled entirely by Stripe and never touches our servers. Full policy: stripe.com/privacy",
             },
             {
-              title: "Your GDPR Rights",
-              body: "As a parent or guardian, you have the following rights under UK GDPR:\n\n• Right of access — request a copy of any data we hold about you or your child\n• Right to erasure — ask us to delete all data associated with your account or order\n• Right to rectification — ask us to correct inaccurate data\n• Right to restrict processing — ask us to pause processing while a dispute is resolved\n• Right to object — object to processing based on legitimate interests\n• Right to portability — receive your data in a machine-readable format\n\nTo exercise any of these rights, email hello@mytinytales.studio with the subject line: Data Request. We will respond within 30 days.",
+              title: "Your Rights as a Parent",
+              body: "As a parent or guardian, you can:\n\n• Review the personal information we have collected about your child\n• Request that we delete it\n• Refuse to allow any further use or collection of your child's information\n• Ask us to correct inaccurate information\n\nThese rights are provided under the U.S. Children's Online Privacy Protection Act (COPPA) and, depending on your state, laws such as the California Consumer Privacy Act (CCPA/CPRA).\n\nTo exercise any of these rights, email hello@mytinytales.studio with the subject line: Privacy Request. We will verify your request and respond within 45 days.",
             },
             {
               title: "Contact & Complaints",
-              body: "Data controller: My Tiny Tales Ltd · hello@mytinytales.studio\n\nIf you are unhappy with how we handle your data, you have the right to lodge a complaint with the Information Commissioner's Office (ICO) at ico.org.uk or by phone on 0303 123 1113.\n\nLast updated: April 2026.",
+              body: "My Tiny Tales · hello@mytinytales.studio\n\nIf you have a concern about how we handle your child's data, please contact us first so we can put it right. You may also contact the U.S. Federal Trade Commission (ftc.gov), which enforces COPPA, or your state Attorney General.\n\nLast updated: August 2026.",
             },
           ].map((s, i) => (
             <div key={i}>

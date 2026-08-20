@@ -3,7 +3,7 @@ import Link from "next/link";
 const sections = [
   {
     title: "1. Who We Are",
-    body: "My Tiny Tales is operated by My Tiny Tales Ltd, a company registered in England and Wales. You can contact us at hello@mytinytales.studio. References to \u2018we\u2019, \u2018us\u2019, and \u2018our\u2019 refer to My Tiny Tales Ltd.",
+    body: "My Tiny Tales (the \u2018Company\u2019, \u2018we\u2019, \u2018us\u2019, \u2018our\u2019) is a personalised storybook service based in the United States. You can reach us at hello@mytinytales.studio.",
   },
   {
     title: "2. What We Offer",
@@ -15,7 +15,7 @@ const sections = [
   },
   {
     title: "4. Orders and Payment",
-    body: "All prices are shown in GBP and include VAT where applicable. Payment is processed securely by Stripe — we never see or store your card details. Your order is confirmed when you receive an email confirmation. We reserve the right to cancel any order at our discretion and will issue a full refund in that event.",
+    body: "All prices are shown in US dollars (USD) and are exclusive of any sales tax, which is added at checkout where applicable. Payment is processed securely by Stripe — we never see or store your card details. Your order is confirmed when you receive an email confirmation. We reserve the right to cancel any order at our discretion and will issue a full refund in that event.",
   },
   {
     title: "5. Digital Downloads",
@@ -39,7 +39,7 @@ const sections = [
   },
   {
     title: "10. Photo Data & Children's Privacy",
-    body: "Photos you upload are used solely to generate your personalised storybook. Your photos are never used to train AI models, sold to third parties, or retained after your book is generated. Images are processed through fal.ai's secure EU infrastructure and permanently deleted within minutes of generation completing. See our Children's Data page for full details.",
+    body: "Photos you upload are used solely to generate your personalised storybook. Your photos are never used to train AI models, sold, or shared for advertising. We do not store your photos on our own servers; they are sent to our AI provider (fal.ai) purely as a live reference and are automatically deleted from fal.ai within 48 hours of upload. See our Children's Data page for full details.",
   },
   {
     title: "11. Limitation of Liability",
@@ -47,11 +47,11 @@ const sections = [
   },
   {
     title: "12. Governing Law",
-    body: "These terms are governed by the laws of England and Wales. Any disputes shall be subject to the exclusive jurisdiction of the courts of England and Wales. If you are a consumer in the EU, you may also be entitled to bring proceedings in your local courts.",
+    body: "These terms are governed by the laws of the United States and the State of [YOUR STATE OF INCORPORATION], without regard to conflict-of-laws principles, and any disputes shall be brought in the state or federal courts located there. Nothing in these terms limits any non-waivable rights you may have under the consumer-protection laws of your state of residence.",
   },
   {
     title: "13. Changes to These Terms",
-    body: "We may update these terms from time to time. We will notify you of material changes by email or by posting a notice on our website. Continued use of the service after changes take effect constitutes acceptance of the new terms. Last updated: April 2026.",
+    body: "We may update these terms from time to time. We will notify you of material changes by email or by posting a notice on our website. Continued use of the service after changes take effect constitutes acceptance of the new terms. Last updated: August 2026.",
   },
 ];
 

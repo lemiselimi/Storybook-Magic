@@ -47,8 +47,8 @@ export async function POST(request) {
       const bookData = await kv.get(`book:${ref}`);
       if (!bookData) throw new Error(`Book data not found for ref ${ref}`);
 
-      const { loraUrl, coverPrompt, scenePrompts, seed, story, childName } = bookData;
-      if (!loraUrl)       throw new Error("No loraUrl in book data — training may not have completed");
+      const { referenceUrl, coverPrompt, scenePrompts, seed, story, childName } = bookData;
+      if (!referenceUrl)  throw new Error("No reference image in book data — photo upload may have failed");
       if (!coverPrompt || !scenePrompts?.length) throw new Error("No precomputed prompts in book data");
 
       const siteUrl    = process.env.NEXT_PUBLIC_SITE_URL ?? "https://mytinytales.studio";
@@ -82,7 +82,7 @@ export async function POST(request) {
         const res = await fetch(`${siteUrl}/api/generate-scene`, {
           method:  "POST",
           headers: { "Content-Type": "application/json" },
-          body:    JSON.stringify({ loraUrl, prompt, seed, webhookUrl }),
+          body:    JSON.stringify({ referenceImageUrl: referenceUrl, prompt, seed, webhookUrl }),
         }).then(r => r.json());
 
         if (!res.jobId) {

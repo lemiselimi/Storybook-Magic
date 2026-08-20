@@ -24,11 +24,11 @@ To claim: email hello@mytinytales.studio with your order number and a brief desc
             },
             {
               title: "Digital Downloads",
-              body: "Under UK consumer law, you lose your right of withdrawal for digital content once download has begun — however, our 30-Day Happiness Promise overrides this and gives you a full refund right regardless. If your PDF is corrupted, fails to download, or is clearly different from the approved preview pages, we will always issue a refund or replacement.",
+              body: "Because digital downloads are delivered instantly, they are generally non-refundable once downloaded — however, our 30-Day Happiness Promise overrides this and gives you a full refund right regardless. If your PDF is corrupted, fails to download, or is clearly different from the approved preview pages, we will always issue a refund or replacement.",
             },
             {
               title: "Print Orders",
-              body: "Print-and-ship orders are produced on-demand. We cannot accept returns for change-of-mind on personalised physical items. However:\n\n• Damaged in transit — send us a photo within 14 days and we will reprint and reship free of charge.\n• Significant quality defect (e.g. pages missing, printing error) — we will reprint or refund in full.\n• Lost in post — if Royal Mail tracking shows no delivery after 21 days (UK) or 35 days (international), we will reprint or refund.",
+              body: "Print-and-ship orders are produced on-demand. We cannot accept returns for change-of-mind on personalised physical items. However:\n\n• Damaged in transit — send us a photo within 14 days and we will reprint and reship free of charge.\n• Significant quality defect (e.g. pages missing, printing error) — we will reprint or refund in full.\n• Lost in transit — if carrier tracking shows no delivery after 21 days (domestic) or 35 days (international), we will reprint or refund.",
             },
             {
               title: "Refund Timescales",
@@ -36,7 +36,7 @@ To claim: email hello@mytinytales.studio with your order number and a brief desc
             },
             {
               title: "Contact",
-              body: "Email hello@mytinytales.studio — include your order number for fastest service. Last updated: April 2026.",
+              body: "Email hello@mytinytales.studio — include your order number for fastest service. Last updated: August 2026.",
             },
           ].map((s, i) => (
             <div key={i}>

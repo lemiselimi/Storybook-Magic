@@ -8,8 +8,12 @@ export async function POST(request) {
     const { jobId, model } = await request.json();
     if (!jobId) return Response.json({ error: "jobId required" }, { status: 400 });
 
-    // Poll the queue that produced this job — PuLID or the legacy LoRA model.
-    const endpoint = model === "pulid" ? "fal-ai/flux-pulid" : "fal-ai/flux-lora";
+    // Poll the queue that produced this job. Must match the endpoint that
+    // generate-scene submitted to, per the returned `model` tag.
+    const endpoint =
+      model === "flux2" ? "fal-ai/flux-2-pro/edit" :
+      model === "pulid" ? "fal-ai/flux-pulid" :
+      "fal-ai/flux-lora";
 
     const statusResult = await fal.queue.status(endpoint, {
       requestId: jobId,

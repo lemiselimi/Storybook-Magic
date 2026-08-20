@@ -28,6 +28,39 @@ export async function POST(request) {
     // inference time, so scenes start in seconds instead of waiting 3-5 min for
     // a trained LoRA. id_weight 0.7 was chosen via the likeness test.
     if (referenceImageUrl) {
+      // Default engine: FLUX.2 [pro] edit. Identity is read from the reference
+      // photo at inference (no per-child training). Set IMAGE_MODEL=pulid in the
+      // environment to fall back to the previous FLUX.1 PuLID pipeline (kept
+      // intact below) — no code change or redeploy needed to revert.
+      const IMAGE_MODEL = (process.env.IMAGE_MODEL || "flux2").toLowerCase();
+
+      if (IMAGE_MODEL !== "pulid") {
+        // Scene prompts are authored around the LoRA trigger "a photo of TOK,".
+        // Swap it for an instruction that ties the scene to the uploaded child
+        // and holds the stylized-illustration look.
+        const IDENTITY_LEAD =
+          "A Pixar-Disney 3D animated storybook illustration of the same child shown in the reference image, keeping their face and likeness,";
+        const flux2Prompt = /a photo of TOK,/i.test(prompt)
+          ? prompt.replace(/a photo of TOK,/gi, IDENTITY_LEAD)
+          : `${IDENTITY_LEAD} ${prompt}`;
+
+        console.log("Submitting FLUX.2 scene job:", flux2Prompt.substring(0, 80));
+
+        const { request_id } = await fal.queue.submit("fal-ai/flux-2-pro/edit", {
+          input: {
+            prompt: flux2Prompt,
+            image_urls: [referenceImageUrl],
+            image_size: { width: 1024, height: 1024 },
+            ...(seed != null ? { seed } : {}),
+          },
+          ...(webhookUrl ? { webhookUrl } : {}),
+        });
+
+        console.log("FLUX.2 scene job submitted, request_id:", request_id);
+        return Response.json({ jobId: request_id, model: "flux2" });
+      }
+
+      // ── PuLID fallback (active when IMAGE_MODEL=pulid) ────────────────────────
       // Prompts are authored around the LoRA trigger "a photo of TOK," — that
       // token is meaningless to PuLID and "a photo of" pushes toward realism,
       // so swap it for an explicit stylized-illustration lead-in.

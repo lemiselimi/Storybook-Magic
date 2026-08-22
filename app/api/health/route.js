@@ -91,5 +91,19 @@ export async function GET(request) {
     }
   }
 
+  // Fetch the Gelato product spec + prices to discover valid page counts (?gelatoinfo=1)
+  if (searchParams.get("gelatoinfo") === "1") {
+    const uid = process.env.GELATO_PRODUCT_UID;
+    const h = { "X-API-KEY": process.env.GELATO_API_KEY };
+    try {
+      const pr = await fetch(`https://product.gelatoapis.com/v3/products/${uid}/prices`, { headers: h });
+      const txt = await pr.text();
+      // Pull out the distinct pageCount values the price list exposes
+      const counts = [...new Set([...txt.matchAll(/"pageCount":\s*(\d+)/g)].map(m => Number(m[1])))].sort((a, b) => a - b);
+      out.gelatoPageCounts = counts;
+      out.pricesStatus = pr.status;
+    } catch (e) { out.gelatoInfoError = e?.message || String(e); }
+  }
+
   return Response.json(out);
 }

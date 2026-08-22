@@ -11,6 +11,7 @@ export async function POST(request) {
     // Poll the queue that produced this job. Must match the endpoint that
     // generate-scene submitted to, per the returned `model` tag.
     const endpoint =
+      model === "nano"  ? "fal-ai/nano-banana-pro/edit" :
       model === "flux2" ? "fal-ai/flux-2-pro/edit" :
       model === "pulid" ? "fal-ai/flux-pulid" :
       "fal-ai/flux-lora";

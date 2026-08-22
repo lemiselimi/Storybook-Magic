@@ -23,16 +23,14 @@ export async function POST(request) {
 
     if (!prompt) return Response.json({ error: "prompt required" }, { status: 400 });
 
-    // ── PuLID path (no per-child training) ───────────────────────────────────
-    // Used when a reference photo URL is supplied. Identity is injected at
-    // inference time, so scenes start in seconds instead of waiting 3-5 min for
-    // a trained LoRA. id_weight 0.7 was chosen via the likeness test.
+    // ── Reference-photo identity path (no per-child training) ────────────────
+    // Identity is read from the uploaded photo at inference time.
     if (referenceImageUrl) {
-      // Default engine: FLUX.2 [pro] edit. Identity is read from the reference
-      // photo at inference (no per-child training). Set IMAGE_MODEL=pulid in the
-      // environment to fall back to the previous FLUX.1 PuLID pipeline (kept
-      // intact below) — no code change or redeploy needed to revert.
-      const IMAGE_MODEL = (process.env.IMAGE_MODEL || "flux2").toLowerCase();
+      // Engine selection (override in the environment, no redeploy needed):
+      //   nano  (default) — Nano Banana Pro edit; best child likeness (bake-off winner)
+      //   flux2           — FLUX.2 [pro] edit; richer scenes, weaker face
+      //   pulid           — legacy FLUX.1 PuLID pipeline (kept intact below)
+      const IMAGE_MODEL = (process.env.IMAGE_MODEL || "nano").toLowerCase();
 
       if (IMAGE_MODEL !== "pulid") {
         // Scene prompts are authored around the LoRA trigger "a photo of TOK,".
@@ -40,24 +38,39 @@ export async function POST(request) {
         // and holds the stylized-illustration look.
         const IDENTITY_LEAD =
           "A soft Pixar-Disney style 3D animated storybook illustration of the exact same child from the reference photo, faithfully preserving their face shape, eye colour and shape, eyebrows, nose, mouth, skin tone and hairstyle so the character stays clearly recognisable as this specific child while rendered in the animated style,";
-        const flux2Prompt = /a photo of TOK,/i.test(prompt)
+        const identityPrompt = /a photo of TOK,/i.test(prompt)
           ? prompt.replace(/a photo of TOK,/gi, IDENTITY_LEAD)
           : `${IDENTITY_LEAD} ${prompt}`;
 
-        console.log("Submitting FLUX.2 scene job:", flux2Prompt.substring(0, 80));
+        if (IMAGE_MODEL === "flux2") {
+          console.log("Submitting FLUX.2 scene job:", identityPrompt.substring(0, 80));
+          const { request_id } = await fal.queue.submit("fal-ai/flux-2-pro/edit", {
+            input: {
+              prompt: identityPrompt,
+              image_urls: [referenceImageUrl],
+              image_size: { width: 1024, height: 1024 },
+              ...(seed != null ? { seed } : {}),
+            },
+            ...(webhookUrl ? { webhookUrl } : {}),
+          });
+          console.log("FLUX.2 scene job submitted, request_id:", request_id);
+          return Response.json({ jobId: request_id, model: "flux2" });
+        }
 
-        const { request_id } = await fal.queue.submit("fal-ai/flux-2-pro/edit", {
+        // Default: Nano Banana Pro edit — strongest face likeness.
+        console.log("Submitting Nano Banana scene job:", identityPrompt.substring(0, 80));
+        const { request_id } = await fal.queue.submit("fal-ai/nano-banana-pro/edit", {
           input: {
-            prompt: flux2Prompt,
+            prompt: identityPrompt,
             image_urls: [referenceImageUrl],
-            image_size: { width: 1024, height: 1024 },
-            ...(seed != null ? { seed } : {}),
+            aspect_ratio: "1:1",
+            num_images: 1,
+            output_format: "jpeg",
           },
           ...(webhookUrl ? { webhookUrl } : {}),
         });
-
-        console.log("FLUX.2 scene job submitted, request_id:", request_id);
-        return Response.json({ jobId: request_id, model: "flux2" });
+        console.log("Nano Banana scene job submitted, request_id:", request_id);
+        return Response.json({ jobId: request_id, model: "nano" });
       }
 
       // ── PuLID fallback (active when IMAGE_MODEL=pulid) ────────────────────────

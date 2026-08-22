@@ -173,6 +173,15 @@ UNIVERSAL RULES (every age band):
 - No commentary, no preamble — return ONLY the JSON.
 - Page text must NOT include the chapter number or "Page X" — only the story text itself.
 
+WRITING QUALITY (this is what separates a treasured keepsake from generic AI filler — take it seriously):
+- Show, don't tell. Never flatly state an emotion ("Leo was brave", "she felt happy"). Dramatize it through a specific action, a physical sensation, or a small telling detail.
+- Give every page ONE concrete, sensory image the reader can actually see, hear, or feel — a real thing, not vague "wonder" or "magic".
+- BANNED phrases and clichés — never use any of these or anything like them: "little did they know", "adventure of a lifetime", "heart full of courage/hope", "magical journey", "from that day on", "more than they ever imagined", "eyes lit up", "big smile", "took a deep breath", "with all their might", "the adventure was just beginning", "happily ever after".
+- Strong concrete nouns and vivid verbs beat piles of adjectives and adverbs. Cut every word that is not pulling weight.
+- Vary the sentence rhythm — mix short punchy lines with longer flowing ones. It must read aloud with music; a parent will read this at bedtime.
+- Give the child one small, specific, human touch — a habit, an object they love, a line of real-sounding dialogue — so this feels like a story about THIS child, not any child.
+- Earn the ending. The final warmth should land because of what actually happened in the story, not because you asserted a moral.
+
 AGE BAND VOICE GUIDE:
 If age_band = "1-3" (Toddler): 1-2 short sentences per page. Vocabulary a 2-year-old recognizes. Heavy sound words: whoosh!, boom!, yay!, zoom! Lots of repetition and rhythm. Total ~40-80 words.
 If age_band = "4-6" (Pre-K): 3-5 sentences per page. Simple emotions named directly: brave, nervous, proud, happy. Short dialogue and sound words welcome. Active verbs. Total ~200-300 words.

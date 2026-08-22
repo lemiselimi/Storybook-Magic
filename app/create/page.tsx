@@ -167,12 +167,16 @@ function buildGenderedPrompt(prompt: string, gender: string, age: number, hairCo
   const hairHint = hairColor ? `${hairColor.replace(/-/g, " ")} hair, ` : "";
   const eyeHint  = eyeColor  ? `${eyeColor.replace(/-/g, " ")} eyes, `  : "";
 
+  // ONE fixed, detailed outfit worn identically on every page + cover. This is
+  // the main lever for character consistency across the book: Nano Banana has no
+  // seed to lock, so a specific wardrobe stops it re-inventing clothes per page.
+  const wear = "wearing a rust-orange hooded jacket over a cream long-sleeved shirt, forest-green trousers, and worn brown lace-up boots";
   const hint =
     gender === "boy"
-      ? `${age}-year-old boy, ${sizeHint}short hair, masculine features, ${hairHint}${eyeHint}fully dressed in long-sleeved adventure top and full-length trousers and boots, `
+      ? `${age}-year-old boy, ${sizeHint}short hair, masculine features, ${hairHint}${eyeHint}${wear}, `
       : gender === "girl"
-      ? `${age}-year-old girl, ${sizeHint}feminine features, long hair, ${hairHint}${eyeHint}fully dressed in long-sleeved adventure top and full-length skirt or trousers and boots, `
-      : `${age}-year-old child, ${sizeHint}${hairHint}${eyeHint}fully dressed in long-sleeved adventure outfit and full-length trousers and boots, `;
+      ? `${age}-year-old girl, ${sizeHint}feminine features, long hair, ${hairHint}${eyeHint}${wear}, `
+      : `${age}-year-old child, ${sizeHint}${hairHint}${eyeHint}${wear}, `;
   // Prepend style anchor immediately after TOK trigger for maximum influence
   return prompt.replace("a photo of TOK,", `a photo of TOK, ${STYLE_ANCHOR}${hint}`);
 }

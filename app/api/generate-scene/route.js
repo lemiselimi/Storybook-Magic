@@ -39,7 +39,7 @@ export async function POST(request) {
         // Swap it for an instruction that ties the scene to the uploaded child
         // and holds the stylized-illustration look.
         const IDENTITY_LEAD =
-          "A Pixar-Disney 3D animated storybook illustration of the same child shown in the reference image, keeping their face and likeness,";
+          "A soft Pixar-Disney style 3D animated storybook illustration of the exact same child from the reference photo, faithfully preserving their face shape, eye colour and shape, eyebrows, nose, mouth, skin tone and hairstyle so the character stays clearly recognisable as this specific child while rendered in the animated style,";
         const flux2Prompt = /a photo of TOK,/i.test(prompt)
           ? prompt.replace(/a photo of TOK,/gi, IDENTITY_LEAD)
           : `${IDENTITY_LEAD} ${prompt}`;

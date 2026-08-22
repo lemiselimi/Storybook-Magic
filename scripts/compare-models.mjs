@@ -34,8 +34,9 @@ const STYLE = "cinematic Pixar-Disney 3D animated storybook illustration, soft w
 
 // PuLID prompt mirrors generate-scene's transformation of "a photo of TOK,"
 const pulidPrompt = `A Pixar-Disney 3D animated storybook illustration of a child, ${SCENE}. ${STYLE}`;
-// FLUX.2 uses natural language + reads identity from the input image
-const flux2Prompt = `A Pixar-Disney 3D animated storybook illustration of the same child shown in the reference image, faithfully keeping their face and likeness. Scene: ${SCENE}. ${STYLE}`;
+// FLUX.2 uses natural language + reads identity from the input image (mirrors
+// the IDENTITY_LEAD used in app/api/generate-scene/route.js)
+const flux2Prompt = `A soft Pixar-Disney style 3D animated storybook illustration of the exact same child from the reference photo, faithfully preserving their face shape, eye colour and shape, eyebrows, nose, mouth, skin tone and hairstyle so the character stays clearly recognisable as this specific child. Scene: ${SCENE}. ${STYLE}`;
 
 async function timed(label, fn) {
   const t = Date.now();

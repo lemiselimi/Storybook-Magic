@@ -1,4 +1,4 @@
-import { kv } from "@vercel/kv";
+import { kv } from "@/lib/kv";
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);

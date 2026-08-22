@@ -1,4 +1,4 @@
-import { kv } from "@vercel/kv";
+import { kv } from "@/lib/kv";
 
 export const maxDuration = 60;
 export const dynamic = "force-dynamic";

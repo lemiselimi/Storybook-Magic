@@ -1,4 +1,4 @@
-import { kv } from "@vercel/kv";
+import { kv } from "@/lib/kv";
 import { submitPrintFromKV, sendPrintFailureAlert } from "@/lib/gelato";
 
 export const maxDuration = 60;

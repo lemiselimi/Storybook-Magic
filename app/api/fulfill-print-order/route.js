@@ -1,5 +1,5 @@
 import Stripe from "stripe";
-import { kv } from "@vercel/kv";
+import { kv } from "@/lib/kv";
 
 export const maxDuration = 60;
 

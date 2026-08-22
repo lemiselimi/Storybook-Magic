@@ -236,7 +236,11 @@ export async function POST(request) {
     p16.drawText(closingText, { x: (PS - closeW) / 2, y: PS * 0.38, size: 11, font: iFont, color: WHITE, opacity: 0.55 });
     p16.drawText("My Tiny Tales", { x: PS / 2 - 34, y: PS * 0.16, size: 8, font: bFont, color: GOLD, opacity: 0.28 });
 
-    // Pages 17–20: blank back matter (total = 20 pages for perfect-bound minimum)
+    // Pages 17–20: blank back matter — FOUR blanks so the interior is exactly
+    // 20 pages, matching the pageCount sent to Gelato (was 3 → 19 pages, which
+    // Gelato rejected as "Page count is invalid"). Start blank(1)+title(1)+
+    // dedication(1)+6 spreads(12)+The End(1)+4 blanks(4) = 20.
+    addBlank(CREAM);
     addBlank(CREAM);
     addBlank(CREAM);
     addBlank(CREAM);

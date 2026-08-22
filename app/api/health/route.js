@@ -79,15 +79,39 @@ export async function GET(request) {
     out.orderError = e?.message || String(e);
   }
 
-  // Optional: actually attempt the Gelato submission to surface the FULL error
-  // body (?tryprint=1). A 400 creates no order, so this is safe to run.
-  if (searchParams.get("tryprint") === "1") {
+  // Regenerate a stuck order's PDF with the corrected page count (?regenpdf=1)
+  if (searchParams.get("regenpdf") === "1") {
     const ref = searchParams.get("ref") || (out.pendingPrints && out.pendingPrints[0]);
     try {
-      const r = await submitPrintFromKV(ref);
-      out.tryprint = { ok: true, ref, ...r };
+      const res = await kv.get(`result:${ref}`);
+      if (!res) throw new Error("order not found");
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://mytinytales.studio";
+      const pageUrls = [0, 1, 2, 3, 4, 5].map(i => res.images?.[i] ?? null);
+      const pdfRes = await fetch(`${siteUrl}/api/generate-book-pdf`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ coverFalUrl: res.images?.cover, pageFalUrls: pageUrls, story: res.story, childName: res.childName }),
+      });
+      const pj = await pdfRes.json();
+      if (!pj.interiorPdfUrl) throw new Error(pj.error || "pdf gen failed");
+      await kv.set(`result:${ref}`, { ...res, coverPdfUrl: pj.coverPdfUrl, interiorPdfUrl: pj.interiorPdfUrl });
+      const bytes = new Uint8Array(await (await fetch(pj.interiorPdfUrl)).arrayBuffer());
+      const { PDFDocument } = await import("pdf-lib");
+      out.regenpdf = { ok: true, ref, interiorPages: (await PDFDocument.load(bytes)).getPageCount() };
     } catch (e) {
-      out.tryprint = { ok: false, ref, error: e?.message || String(e) };
+      out.regenpdf = { ok: false, error: e?.message || String(e) };
+    }
+  }
+
+  // Attempt the Gelato submission (?tryprint=1). Add &dry=1 to validate as a
+  // free Gelato draft (no production, no charge) instead of a real order.
+  if (searchParams.get("tryprint") === "1") {
+    const ref = searchParams.get("ref") || (out.pendingPrints && out.pendingPrints[0]);
+    const dryRun = searchParams.get("dry") === "1";
+    try {
+      const r = await submitPrintFromKV(ref, { dryRun });
+      out.tryprint = { ok: true, ref, dryRun, ...r };
+    } catch (e) {
+      out.tryprint = { ok: false, ref, dryRun, error: e?.message || String(e) };
     }
   }
 

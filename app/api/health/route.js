@@ -1,4 +1,4 @@
-import { kv } from "@/lib/kv";
+import { kv, KV_REST_URL } from "@/lib/kv";
 import Stripe from "stripe";
 
 export const dynamic = "force-dynamic";
@@ -21,7 +21,7 @@ export async function GET(request) {
     STRIPE_SECRET_KEY:     !!process.env.STRIPE_SECRET_KEY,
     STRIPE_WEBHOOK_SECRET: !!process.env.STRIPE_WEBHOOK_SECRET,
     // host only (never the token) — helps spot a dead/decommissioned endpoint
-    KV_HOST: (() => { try { return new URL(process.env.KV_REST_API_URL).host; } catch { return null; } })(),
+    KV_HOST: (() => { try { return new URL(KV_REST_URL).host; } catch { return null; } })(),
     STRIPE_KEY_MODE: process.env.STRIPE_SECRET_KEY?.startsWith("sk_live") ? "live"
                    : process.env.STRIPE_SECRET_KEY?.startsWith("sk_test") ? "test" : "unknown",
   };

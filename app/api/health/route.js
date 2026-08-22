@@ -118,15 +118,25 @@ export async function GET(request) {
   // Fetch the Gelato product spec + prices to discover valid page counts (?gelatoinfo=1)
   if (searchParams.get("gelatoinfo") === "1") {
     const uid = process.env.GELATO_PRODUCT_UID;
-    const h = { "X-API-KEY": process.env.GELATO_API_KEY };
+    const apiKey = process.env.GELATO_API_KEY;
+    // Product spec (may list page-count constraints)
     try {
-      const pr = await fetch(`https://product.gelatoapis.com/v3/products/${uid}/prices`, { headers: h });
-      const txt = await pr.text();
-      // Pull out the distinct pageCount values the price list exposes
-      const counts = [...new Set([...txt.matchAll(/"pageCount":\s*(\d+)/g)].map(m => Number(m[1])))].sort((a, b) => a - b);
-      out.gelatoPageCounts = counts;
-      out.pricesStatus = pr.status;
-    } catch (e) { out.gelatoInfoError = e?.message || String(e); }
+      const p = await fetch(`https://product.gelatoapis.com/v3/products/${uid}`, { headers: { "X-API-KEY": apiKey } });
+      out.product = { status: p.status, body: (await p.text()).slice(0, 1800) };
+    } catch (e) { out.product = { error: e?.message || String(e) }; }
+    // Probe which page counts Gelato accepts via the cover-dimensions endpoint
+    const probe = async (pc) => {
+      try {
+        const r = await fetch(`https://product.gelatoapis.com/v3/products/${uid}/cover-dimensions`, {
+          method: "POST",
+          headers: { "X-API-KEY": apiKey, "Content-Type": "application/json" },
+          body: JSON.stringify({ pageCount: pc }),
+        });
+        return r.ok ? pc : null;
+      } catch { return null; }
+    };
+    const candidates = [20, 22, 24, 26, 28, 30, 32, 34, 36, 40, 44, 48];
+    out.validPageCounts = (await Promise.all(candidates.map(probe))).filter(Boolean);
   }
 
   return Response.json(out);

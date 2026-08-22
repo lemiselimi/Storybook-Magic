@@ -1,4 +1,5 @@
 import { kv, KV_REST_URL } from "@/lib/kv";
+import { submitPrintFromKV } from "@/lib/gelato";
 import Stripe from "stripe";
 
 export const dynamic = "force-dynamic";
@@ -76,6 +77,18 @@ export async function GET(request) {
     }
   } catch (e) {
     out.orderError = e?.message || String(e);
+  }
+
+  // Optional: actually attempt the Gelato submission to surface the FULL error
+  // body (?tryprint=1). A 400 creates no order, so this is safe to run.
+  if (searchParams.get("tryprint") === "1") {
+    const ref = searchParams.get("ref") || (out.pendingPrints && out.pendingPrints[0]);
+    try {
+      const r = await submitPrintFromKV(ref);
+      out.tryprint = { ok: true, ref, ...r };
+    } catch (e) {
+      out.tryprint = { ok: false, ref, error: e?.message || String(e) };
+    }
   }
 
   return Response.json(out);

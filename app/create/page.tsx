@@ -1167,21 +1167,39 @@ export default function StorybookCreator() {
         return buildGenderedPrompt(base, childGender, childAge, hairColor, eyeColor);
       });
 
+      // The paid book is generated server-side from the fal-hosted reference
+      // photo + precomputed prompts. Without the reference the webhook cannot
+      // generate anything, so don't take payment for a book we can't build.
+      const refUrl = referenceUrl ?? referenceUrlRef.current;
+      if (!refUrl) {
+        setCheckoutLoading(null);
+        alert("Your photo is still uploading — give it a second and tap again.");
+        return;
+      }
+
+      // NOTE: photosBase64 is deliberately NOT persisted to KV — it is large
+      // (can exceed the KV value-size limit and silently fail the save) and is
+      // unused server-side. The webhook only needs referenceUrl + prompts.
       const bookData = {
         childName, childAge, childGender, theme, hairColor, eyeColor,
         story:        previewStory,
-        photosBase64: photosBase64,
-        referenceUrl: referenceUrl,
+        referenceUrl: refUrl,
         plan,
         coverPrompt:  buildGenderedPrompt(COVER_PROMPTS_BY_THEME[theme] ?? COVER_PROMPT, childGender, childAge, hairColor, eyeColor),
         scenePrompts,
         seed:         computedSeed,
       };
 
-      await fetch("/api/save-book-ref", {
+      // Verify the book data actually persisted BEFORE charging — otherwise the
+      // webhook finds nothing and the customer is stuck on a blank loading screen.
+      const saveRes = await fetch("/api/save-book-ref", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ref, ...bookData }),
       });
+      if (!saveRes.ok) {
+        const e = await saveRes.json().catch(() => ({}));
+        throw new Error(e.error || "Could not save your book details. Please try again.");
+      }
 
       const res = await fetch("/api/checkout", {
         method: "POST", headers: { "Content-Type": "application/json" },

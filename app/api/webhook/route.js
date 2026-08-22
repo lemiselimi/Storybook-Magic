@@ -99,6 +99,17 @@ export async function POST(request) {
 
     } catch (err) {
       console.error("Webhook: background generation failed to start:", err.message);
+
+      // Persist a failed status so the customer sees the "something went wrong"
+      // screen instead of an endless blank spinner, and so the failure is
+      // queryable via book-status rather than only via the admin email.
+      await kv.set(`result:${ref}`, {
+        status:    "failed",
+        plan,
+        error:     err.message,
+        createdAt: new Date().toISOString(),
+      }, { ex: 2_592_000 }).catch(() => {});
+
       // Alert admin
       if (process.env.RESEND_API_KEY) {
         fetch("https://api.resend.com/emails", {

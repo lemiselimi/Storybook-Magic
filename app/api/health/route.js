@@ -24,6 +24,9 @@ export async function GET(request) {
     KV_HOST: (() => { try { return new URL(KV_REST_URL).host; } catch { return null; } })(),
     STRIPE_KEY_MODE: process.env.STRIPE_SECRET_KEY?.startsWith("sk_live") ? "live"
                    : process.env.STRIPE_SECRET_KEY?.startsWith("sk_test") ? "test" : "unknown",
+    GELATO_API_KEY:     !!process.env.GELATO_API_KEY,
+    GELATO_PRODUCT_UID: process.env.GELATO_PRODUCT_UID || null, // product id, not a secret
+    RESEND_API_KEY:     !!process.env.RESEND_API_KEY,
   };
 
   // KV round-trip
@@ -44,6 +47,35 @@ export async function GET(request) {
     out.stripe = { ok: true, livemode: bal.livemode };
   } catch (e) {
     out.stripe = { ok: false, error: e?.message || String(e) };
+  }
+
+  // Gelato reachability (validates the API key against the product catalog)
+  try {
+    if (!process.env.GELATO_API_KEY) throw new Error("no GELATO_API_KEY");
+    const r = await fetch("https://product.gelatoapis.com/v3/catalogs", {
+      headers: { "X-API-KEY": process.env.GELATO_API_KEY },
+    });
+    out.gelato = { ok: r.ok, status: r.status };
+    if (!r.ok) out.gelato.body = (await r.text()).slice(0, 200);
+  } catch (e) {
+    out.gelato = { ok: false, error: e?.message || String(e) };
+  }
+
+  // Inspect a specific print order's readiness (?ref=…, else the first pending)
+  try {
+    const pending = (await kv.smembers("pending-prints").catch(() => [])) || [];
+    out.pendingPrints = pending;
+    const ref = searchParams.get("ref") || pending[0];
+    if (ref) {
+      const res = await kv.get(`result:${ref}`);
+      out.order = res ? {
+        ref, plan: res.plan, status: res.status, printApproval: res.printApproval,
+        hasCoverPdf: !!res.coverPdfUrl, hasInteriorPdf: !!res.interiorPdfUrl,
+        hasSession: !!res.sessionId,
+      } : { ref, notFound: true };
+    }
+  } catch (e) {
+    out.orderError = e?.message || String(e);
   }
 
   return Response.json(out);

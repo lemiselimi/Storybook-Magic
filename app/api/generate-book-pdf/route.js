@@ -75,6 +75,22 @@ function wrapText(text, maxChars = 60) {
   return lines;
 }
 
+// Fade an illustration into a dark bottom panel without a hard seam. pdf-lib
+// has no native gradients, so approximate one with thin horizontal bands: a
+// solid base where text sits (y 0 → solidTop), then opacity easing smoothly to
+// zero from solidTop up to fadeTop — the scene dissolves into the panel like dusk.
+function fadeIntoPanel(page, x, w, solidTop, fadeTop, color, maxOpacity = 0.9) {
+  page.drawRectangle({ x, y: 0, width: w, height: solidTop, color, opacity: maxOpacity });
+  const bands = 64;
+  const bh = (fadeTop - solidTop) / bands;
+  for (let i = 0; i < bands; i++) {
+    const t = (i + 0.5) / bands;                  // 0 just above the solid base, 1 at fadeTop
+    const opacity = maxOpacity * Math.pow(1 - t, 1.6);
+    if (opacity < 0.004) continue;
+    page.drawRectangle({ x, y: solidTop + i * bh, width: w, height: bh + 0.8, color, opacity });
+  }
+}
+
 export async function POST(request) {
   fal.config({ credentials: process.env.FAL_API_KEY });
 
@@ -111,7 +127,8 @@ export async function POST(request) {
     const coverImg = await embedImg(coverDoc, coverBytes);
     if (coverImg) {
       coverPage.drawImage(coverImg, { x: frontX, y: 0, width: PS, height: CH });
-      coverPage.drawRectangle({ x: frontX, y: 0, width: PS, height: CH * 0.45, color: DARK, opacity: 0.88 });
+      // Smooth dusk-like fade into the title panel instead of a hard rectangle.
+      fadeIntoPanel(coverPage, frontX, PS, CH * 0.42, CH * 0.64, DARK, 0.9);
     }
 
     // Front cover text
@@ -161,7 +178,8 @@ export async function POST(request) {
     const fc = doc.addPage([PS, PS]);
     if (coverImgInt) {
       fc.drawImage(coverImgInt, { x: 0, y: 0, width: PS, height: PS });
-      fc.drawRectangle({ x: 0, y: 0, width: PS, height: PS * 0.42, color: DARK, opacity: 0.85 });
+      // Smooth fade into the title panel instead of a hard-edged rectangle.
+      fadeIntoPanel(fc, 0, PS, PS * 0.32, PS * 0.56, DARK, 0.88);
     } else {
       fc.drawRectangle({ x: 0, y: 0, width: PS, height: PS, color: DARK });
     }

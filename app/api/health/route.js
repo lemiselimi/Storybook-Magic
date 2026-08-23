@@ -95,7 +95,7 @@ export async function GET(request) {
       const pj = await pdfRes.json();
       if (!pj.interiorPdfUrl) throw new Error(pj.error || "pdf gen failed");
       await kv.set(`result:${ref}`, { ...res, coverPdfUrl: pj.coverPdfUrl, interiorPdfUrl: pj.interiorPdfUrl, interiorPageCount: pj.interiorPageCount });
-      out.regenpdf = { ok: true, ref, interiorPages: pj.interiorPageCount };
+      out.regenpdf = { ok: true, ref, interiorPages: pj.interiorPageCount, coverPdfUrl: pj.coverPdfUrl, interiorPdfUrl: pj.interiorPdfUrl };
     } catch (e) {
       out.regenpdf = { ok: false, error: e?.message || String(e) };
     }

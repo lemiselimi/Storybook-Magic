@@ -239,7 +239,7 @@ export async function POST(request) {
     // Pad the back matter with blanks until the interior reaches the target
     // page count. Gelato requires the declared pageCount to match the PDF
     // EXACTLY and to meet the product's minimum, so padTo is configurable.
-    const padTo = Math.max(Number(body.padTo) || 20, doc.getPageCount());
+    const padTo = Math.max(Number(body.padTo) || 28, doc.getPageCount());
     while (doc.getPageCount() < padTo) addBlank(CREAM);
     const interiorPageCount = doc.getPageCount();
 

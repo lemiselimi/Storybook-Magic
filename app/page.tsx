@@ -85,8 +85,8 @@ const DIGITAL_FEATURES = [
 ];
 const PRINT_FEATURES = [
   "Everything in Digital",
-  "Premium hardcover book",
-  "Lay-flat binding",
+  "Premium softcover, 8×8 inch",
+  "Matte-laminated cover, 28 pages",
   "Ships within 5-7 days",
 ];
 

@@ -199,9 +199,11 @@ export async function POST(request) {
     // Pages 4–15: 6 story spreads — left page = text, right page = full-bleed illustration
     const pages = story?.pages || [];
     const CHAPTER_NAMES = ["One", "Two", "Three", "Four", "Five", "Six"];
+    // Embed each scene image once — reused in the spreads and the back gallery.
+    const sceneImgs = await Promise.all((pageBytes || []).map(b => embedImg(doc, b)));
     for (let i = 0; i < 6; i++) {
       const storyPage = pages[i];
-      const sceneImg  = await embedImg(doc, pageBytes[i]);
+      const sceneImg  = sceneImgs[i];
 
       // LEFT page — cream, text only
       const textPg = doc.addPage([PS, PS]);
@@ -249,7 +251,31 @@ export async function POST(request) {
     p16.drawText(closingText, { x: (PS - closeW) / 2, y: PS * 0.38, size: 11, font: iFont, color: WHITE, opacity: 0.55 });
     p16.drawText("My Tiny Tales", { x: PS / 2 - 34, y: PS * 0.16, size: 8, font: bFont, color: GOLD, opacity: 0.28 });
 
-    // Back cover — branded closing page instead of a blank.
+    // ── Back matter: keepsake page + full-page illustration gallery, then the
+    // back cover last. Fills the 28-page product minimum with real content
+    // (art + keepsake) instead of blank pages.
+    const belongs = doc.addPage([PS, PS]);
+    belongs.drawRectangle({ x: 0, y: 0, width: PS, height: PS, color: DARK });
+    belongs.drawText("This book belongs to", { x: PS / 2 - 82, y: PS * 0.60, size: 13, font: iFont, color: GOLD, opacity: 0.6 });
+    const belongsW = hFont.widthOfTextAtSize(capName, 40);
+    belongs.drawText(capName, { x: (PS - belongsW) / 2, y: PS * 0.46, size: 40, font: hFont, color: WHITE });
+    belongs.drawRectangle({ x: PS / 2 - 30, y: PS * 0.42, width: 60, height: 1.5, color: GOLD, opacity: 0.4 });
+
+    // Full-page illustration gallery — reuse the scene art (zero extra AI cost)
+    // to fill toward the product's page minimum with pictures, not blanks. The
+    // final page is reserved for the back cover.
+    const gallery = sceneImgs.filter(Boolean);
+    const padTo = Math.max(Number(body.padTo) || 28, doc.getPageCount() + 1);
+    let gi = 0;
+    while (doc.getPageCount() < padTo - 1) {
+      const g = doc.addPage([PS, PS]);
+      const img = gallery.length ? gallery[gi % gallery.length] : null;
+      if (img) g.drawImage(img, { x: 0, y: 0, width: PS, height: PS });
+      else     g.drawRectangle({ x: 0, y: 0, width: PS, height: PS, color: CREAM });
+      gi++;
+    }
+
+    // Back cover — final page.
     const bc = doc.addPage([PS, PS]);
     bc.drawRectangle({ x: 0, y: 0, width: PS, height: PS, color: DARK });
     bc.drawText("My Tiny Tales", { x: PS / 2 - 42, y: PS * 0.56, size: 14, font: hFont, color: GOLD, opacity: 0.75 });
@@ -257,11 +283,6 @@ export async function POST(request) {
     bc.drawText("A personalised storybook, made with love.", { x: PS / 2 - 120, y: PS * 0.45, size: 10, font: iFont, color: WHITE, opacity: 0.5 });
     bc.drawText("mytinytales.studio", { x: PS / 2 - 44, y: PS * 0.12, size: 9, font: bFont, color: GOLD, opacity: 0.4 });
 
-    // Pad the back matter with blanks until the interior reaches the target
-    // page count. Gelato requires the declared pageCount to match the PDF
-    // EXACTLY and to meet the product's minimum, so padTo is configurable.
-    const padTo = Math.max(Number(body.padTo) || 28, doc.getPageCount());
-    while (doc.getPageCount() < padTo) addBlank(CREAM);
     const interiorPageCount = doc.getPageCount();
 
     const interiorPdfBytes = await doc.save();

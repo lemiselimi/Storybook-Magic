@@ -2489,7 +2489,7 @@ export default function StorybookCreator() {
             );
           })()}
 
-          {/* Page 11: Blank inside back cover (print/hardcover only) */}
+          {/* Page 11: Blank inside back cover (print/softcover only) */}
           <div className="print-page" style={{ background: "#07090F" }} />
 
         </div>,

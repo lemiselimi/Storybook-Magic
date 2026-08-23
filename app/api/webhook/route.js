@@ -47,20 +47,34 @@ export async function POST(request) {
       const bookData = await kv.get(`book:${ref}`);
       if (!bookData) throw new Error(`Book data not found for ref ${ref}`);
 
-      const { referenceUrl, coverPrompt, scenePrompts, seed, story, childName } = bookData;
+      const { referenceUrl, coverPrompt, scenePrompts, seed, story, childName, previewImages } = bookData;
       if (!referenceUrl)  throw new Error("No reference image in book data — photo upload may have failed");
       if (!coverPrompt || !scenePrompts?.length) throw new Error("No precomputed prompts in book data");
 
       const siteUrl    = process.env.NEXT_PUBLIC_SITE_URL ?? "https://mytinytales.studio";
       const webhookUrl = `${siteUrl}/api/fal-webhook`;
 
-      // Slots: "cover" + 0..5 for the 6 story pages
-      const jobs = [
+      // All image slots: "cover" + 0..5 for the 6 story pages.
+      const allJobs = [
         { slot: "cover", prompt: coverPrompt },
         ...scenePrompts.map((p, i) => ({ slot: i, prompt: p })),
       ];
 
-      // Init result record before submitting jobs (fal can be very fast)
+      // Reuse the cover + free preview pages already generated for the preview,
+      // so we only generate the pages the customer hasn't seen yet.
+      const preset = {};
+      if (previewImages?.cover) preset.cover = previewImages.cover;
+      for (let i = 0; i < scenePrompts.length; i++) {
+        if (previewImages?.[i]) preset[i] = previewImages[i];
+      }
+      // Guard: never end up with zero jobs (would leave the book stuck), so if
+      // somehow everything is preset, regenerate the cover.
+      let jobs = allJobs.filter(j => preset[j.slot] === undefined);
+      if (jobs.length === 0) { delete preset.cover; jobs = [{ slot: "cover", prompt: coverPrompt }]; }
+
+      // Init result record. `images` is pre-filled with reused preview images;
+      // `totalJobs` is the TOTAL image count (reused + new) so fal-webhook knows
+      // when the whole set of 7 is complete.
       await kv.set(`result:${ref}`, {
         status:        "generating",
         sessionId:     session.id,
@@ -69,8 +83,8 @@ export async function POST(request) {
         story,
         contactEmail,
         customerName,
-        images:        {},
-        totalJobs:     jobs.length,
+        images:        preset,
+        totalJobs:     allJobs.length,
         createdAt:     new Date().toISOString(),
         completedAt:   null,
         coverPdfUrl:   null,

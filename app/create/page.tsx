@@ -884,7 +884,8 @@ export default function StorybookCreator() {
 
       if (referenceImageUrl && storyData.pages) {
         let done = 0;
-        const total = 7;
+        const PREVIEW_PAGES = 2;          // free pages shown before the paywall
+        const total = 1 + PREVIEW_PAGES;  // cover + preview pages (rest generated after purchase)
         const themePrompts = SCENE_PROMPTS_BY_THEME[theme] ?? SCENE_PROMPTS_BY_THEME.adventure;
         // Stable seed shared with full book — same LoRA + same seed + same prompts = consistent character
         if (!bookSeedRef.current) bookSeedRef.current = Math.floor(Math.random() * 2_147_483_647);
@@ -951,9 +952,13 @@ export default function StorybookCreator() {
         console.log("[PROMPTS] cover:", builtCoverPrompt.substring(0, 120));
         storyScenePrompts.forEach((p: string, i: number) => console.log(`[PROMPTS] page ${i + 1}:`, p.substring(0, 120)));
 
+        // Only illustrate the cover + free preview pages now. Pages beyond the
+        // paywall stay locked/blurred as placeholders and are generated after
+        // purchase (see webhook) — so we never pay to render pages a non-buyer
+        // won't see. This is the biggest image-cost lever (most previews don't convert).
         await runCapped([
           () => handleScene(builtCoverPrompt, -1),
-          ...storyScenePrompts.map((p: string, idx: number) => () => handleScene(p, idx)),
+          ...storyScenePrompts.slice(0, PREVIEW_PAGES).map((p: string, idx: number) => () => handleScene(p, idx)),
         ], sceneConcurrency);
       }
     } catch (err: any) {
@@ -1184,14 +1189,25 @@ export default function StorybookCreator() {
       // NOTE: photosBase64 is deliberately NOT persisted to KV — it is large
       // (can exceed the KV value-size limit and silently fail the save) and is
       // unused server-side. The webhook only needs referenceUrl + prompts.
+      // Reuse the cover + free preview pages we already generated, so the paid
+      // book only generates the remaining pages. Stored as raw fal URLs (the
+      // webhook writes them straight into the result's image slots).
+      const reusedPreview: Record<string, string> = {};
+      if (previewCoverUrl) reusedPreview.cover = rawFalUrl(previewCoverUrl);
+      [0, 1].forEach(i => {
+        const u = previewImages[i];
+        if (u && u !== "__failed__") reusedPreview[i] = rawFalUrl(u);
+      });
+
       const bookData = {
         childName, childAge, childGender, theme, hairColor, eyeColor,
-        story:        previewStory,
-        referenceUrl: refUrl,
+        story:         previewStory,
+        referenceUrl:  refUrl,
+        previewImages: reusedPreview,
         plan,
-        coverPrompt:  buildGenderedPrompt(COVER_PROMPTS_BY_THEME[theme] ?? COVER_PROMPT, childGender, childAge, hairColor, eyeColor),
+        coverPrompt:   buildGenderedPrompt(COVER_PROMPTS_BY_THEME[theme] ?? COVER_PROMPT, childGender, childAge, hairColor, eyeColor),
         scenePrompts,
-        seed:         computedSeed,
+        seed:          computedSeed,
       };
 
       // Verify the book data actually persisted BEFORE charging — otherwise the

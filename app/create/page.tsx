@@ -5,10 +5,12 @@ import { createPortal } from "react-dom";
 const THEMES = [
   { id: "adventure",  emoji: "🌋", title: "The Big Adventure",  subtitle: "Quest & Exploration",     desc: "Your child discovers a hidden world and must be brave to save the day", popular: true },
   { id: "dragon",     emoji: "🐉", title: "Dragon Tamer",       subtitle: "Fantasy & Magic",          desc: "A magical creature needs help and only your child has what it takes" },
+  { id: "dino",       emoji: "🦕", title: "Dinosaur Kingdom",   subtitle: "Dinosaurs & Discovery",    desc: "Your child travels to a lost prehistoric world and helps a baby dinosaur find its way home" },
   { id: "space",      emoji: "🚀", title: "To The Stars",       subtitle: "Space & Science",          desc: "Your child blasts off into the cosmos on a mission to save the universe" },
   { id: "ocean",      emoji: "🌊", title: "Deep Blue",           subtitle: "Ocean & Nature",           desc: "An underwater mystery only your child can solve" },
   { id: "jungle",     emoji: "🦁", title: "Jungle Crown",        subtitle: "Animals & Wildlife",       desc: "Your child becomes ruler of the animal kingdom for a day" },
   { id: "superpower", emoji: "🏆", title: "My Superpower",       subtitle: "Real Life Heroes",         desc: "Your child discovers their unique gift and uses it to help their community" },
+  { id: "dreamland",  emoji: "🌙", title: "Off to Dreamland",   subtitle: "Bedtime & Dreams",         desc: "A gentle dream adventure carries your child across a soft, starlit world at bedtime" },
 ];
 
 const CHAPTER_NAMES = ["One", "Two", "Three", "Four", "Five", "Six"];
@@ -20,6 +22,8 @@ const THEME_CLOSING: Record<string, (name: string) => string> = {
   ocean:      (n) => `The ocean is deep and full of mystery, but so is your courage, ${n}. Never stop diving deeper into the wonder of the world.`,
   jungle:     (n) => `You are the ruler of your own kingdom, ${n}. Lead with kindness, speak with courage, and the world will always follow.`,
   superpower: (n) => `Your superpower is real, ${n}. It lives inside you every single day. The world is a brighter, better place because you are in it.`,
+  dino:       (n) => `The dinosaurs will never forget you, ${n}. Wherever you go, stay brave and kind — a good friend is the greatest treasure of all.`,
+  dreamland:  (n) => `Sleep tight, ${n}. Whenever you close your eyes, a whole world of dreams is waiting just for you. Sweet dreams, little one.`,
 };
 
 const HAIR_COLORS = [
@@ -199,6 +203,18 @@ const COVER_PROMPTS_BY_THEME: Record<string, string> =  {
     "WIDE HEROIC CENTERED COMPOSITION, golden sky at the very top of the frame for title text overlay, " +
     "low angle looking slightly up, cinematic poster style. " + STYLE_TOKEN + " " + SAFETY,
 
+  dino:
+    "a photo of TOK, standing centered on a grassy prehistoric ridge with arms spread wide, " +
+    "a giant friendly long-necked dinosaur rising majestically behind them, more dinosaurs grazing in a lush green valley below, " +
+    "distant misty volcano and warm golden sky, WIDE HEROIC CENTERED COMPOSITION, glowing golden sky at the very top of the frame for title text overlay, " +
+    "low angle looking slightly up, cinematic adventure poster style. " + STYLE_TOKEN + " " + SAFETY,
+
+  dreamland:
+    "a photo of TOK, floating gently centered among soft glowing clouds with arms open in wonder, " +
+    "a big friendly crescent moon and drifting golden stars all around them, a calm starlit dreamland stretching softly below, " +
+    "warm amber and soft gold light, WIDE HEROIC CENTERED COMPOSITION, deep starry sky at the very top of the frame for title text overlay, " +
+    "low angle looking slightly up, dreamy cinematic bedtime poster style. " + STYLE_TOKEN + " " + SAFETY,
+
   space:
     "a photo of TOK, floating centered in deep space in a spacesuit, arms spread wide, " +
     "a blazing galaxy and thousands of stars filling the background, Earth glowing blue far below, " +
@@ -225,6 +241,46 @@ const COVER_PROMPTS_BY_THEME: Record<string, string> =  {
 };
 
 const SCENE_PROMPTS_BY_THEME: Record<string, string[]> = {
+  dino: [
+    "a photo of TOK, stepping through a softly glowing portal onto a grassy prehistoric ridge, eyes wide with wonder, " +
+    "a lush green valley full of gentle dinosaurs stretching out ahead, warm morning light. " + STYLE_TOKEN + " " + SAFETY,
+
+    "a photo of TOK, kneeling gently beside a small frightened baby dinosaur in a fern clearing, reaching out a reassuring hand, " +
+    "dappled golden light filtering through giant prehistoric leaves. " + STYLE_TOKEN + " " + SAFETY,
+
+    "a photo of TOK, standing protectively in front of the baby dinosaur as a rumbling rockslide blocks the valley path, " +
+    "dust rising, a distant volcano glowing warm on the horizon. " + STYLE_TOKEN + " " + SAFETY,
+
+    "a photo of TOK, pausing thoughtfully at the edge of a wide prehistoric river with a hand on their chin working out a plan, " +
+    "the baby dinosaur waiting close by, warm golden late-afternoon light. " + STYLE_TOKEN + " " + SAFETY,
+
+    "a photo of TOK, leading the baby dinosaur across a fallen-log bridge toward a waiting herd of gentle giant dinosaurs, " +
+    "arms outstretched guiding the way, warm triumphant light over the valley. " + STYLE_TOKEN + " " + SAFETY,
+
+    "a photo of TOK, standing among a celebrating herd of friendly dinosaurs with arms raised in joy, " +
+    "the reunited baby dinosaur nuzzling close, golden sunset glowing over the lush valley. " + STYLE_TOKEN + " " + SAFETY,
+  ],
+
+  dreamland: [
+    "a photo of TOK, snuggled cozily in bed as a soft silver moonbeam streams through the window inviting them onward, " +
+    "warm nightlight glow, a gentle starry sky visible outside. " + STYLE_TOKEN + " " + SAFETY,
+
+    "a photo of TOK, drifting gently upward through soft glowing clouds into a calm dreamland, arms floating, " +
+    "warm golden stars twinkling softly all around. " + STYLE_TOKEN + " " + SAFETY,
+
+    "a photo of TOK, meeting a soft fluffy cloud-creature friend on a floating island of clouds, both smiling gently, " +
+    "a scattering of dim lost stars around them, warm amber moonlight. " + STYLE_TOKEN + " " + SAFETY,
+
+    "a photo of TOK, floating alongside the cloud-creature gently gathering glowing golden stars into cupped hands, " +
+    "drifting past soft rolling dream-hills, calm warm light. " + STYLE_TOKEN + " " + SAFETY,
+
+    "a photo of TOK, reaching up to hang the last glowing star in the sky as the whole dreamland lights up in a soft golden hush, " +
+    "peaceful and warm all around. " + STYLE_TOKEN + " " + SAFETY,
+
+    "a photo of TOK, carried gently home on a silver moonbeam back to a cozy bed with eyes softly closing, " +
+    "a warm golden glow filling the peaceful bedroom. " + STYLE_TOKEN + " " + SAFETY,
+  ],
+
   adventure: [
     "a photo of TOK, leaning excitedly forward with one arm outstretched and fingers spread, " +
     "reaching toward a swirling magical stone archway portal glowing with golden sparkles, " +

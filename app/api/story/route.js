@@ -47,6 +47,18 @@ const THEME_DATA = {
       "The danger is gone; dragon and child share a moment of pure joy, and the child knows this friendship will last forever.",
     ],
   },
+  dino: {
+    title: "Dinosaur Kingdom",
+    category: "Dinosaurs & Discovery",
+    arc: [
+      "Child steps through a mysterious glowing portal and arrives in a lush prehistoric valley for the very first time — wide-eyed at the towering, gentle dinosaurs all around.",
+      "Child meets a small baby dinosaur who has lost its herd and is scared and all alone, and gently promises to help it find its way home.",
+      "A sudden rumble — a rockslide (or the far-off volcano) blocks the valley path, cutting the pair off from the herd, and the baby dinosaur is frightened.",
+      "Child tries the easy, obvious route across the valley and it doesn't work; they realize they'll need to be brave and clever to find another way.",
+      "Child uses courage and quick thinking to lead the baby dinosaur safely across the valley, reuniting it with its overjoyed herd just in time.",
+      "The grateful dinosaurs celebrate together; the child says a warm goodbye and returns home carrying one small keepsake, forever a friend of the dinosaurs.",
+    ],
+  },
   space: {
     title: "To The Stars",
     category: "Space & Science",
@@ -93,6 +105,18 @@ const THEME_DATA = {
       "A neighbour, teacher, or friend gently points out something the child does naturally, without thinking, that nobody else can.",
       "Child uses that exact quality — empathy, creativity, stubborn persistence, or boundless imagination — to solve the problem completely.",
       "The community comes together in celebration, and child realises: the superpower was always theirs — they just needed to find it.",
+    ],
+  },
+  dreamland: {
+    title: "Off to Dreamland",
+    category: "Bedtime & Dreams",
+    arc: [
+      "As the stars come out and the house grows quiet, the child snuggles into bed and a soft silver moonbeam gently invites them on a dream journey.",
+      "Child floats up through drifting, glowing clouds into a calm, warm dreamland where everything is soft, hushed, and gently sparkling.",
+      "Child meets a sleepy, cloud-soft dream creature who is sad because some of the little stars that light the night have drifted away and gone dim.",
+      "Together they drift gently from place to place, and the child helps gather the lost stars one by one, the dreamland growing warmer and calmer with each one.",
+      "Child reaches up to hang the very last star, and the whole dreamland glows with a soft golden hush as everyone grows peacefully sleepy.",
+      "The moonbeam carries the child gently home to their cozy bed, and they close their eyes — safe, warm, and loved — and drift softly off to sleep.",
     ],
   },
 };

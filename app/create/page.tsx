@@ -3,9 +3,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 
 const THEMES = [
-  { id: "july4",      emoji: "🎆", title: "Fireworks Night",    subtitle: "A Fourth of July Story", desc: "Your child saves the town's Fourth of July celebration: from parade leader to the big fireworks finale", seasonal: true, popular: true },
-  { id: "worldcup",   emoji: "⚽", title: "World Cup Hero",      subtitle: "USA World Cup 2026",      desc: "Your child is the star striker for the USA at the World Cup final: from tunnel walk to trophy lift", seasonal: true },
-  { id: "adventure",  emoji: "🌋", title: "The Big Adventure",  subtitle: "Quest & Exploration",     desc: "Your child discovers a hidden world and must be brave to save the day" },
+  { id: "adventure",  emoji: "🌋", title: "The Big Adventure",  subtitle: "Quest & Exploration",     desc: "Your child discovers a hidden world and must be brave to save the day", popular: true },
   { id: "dragon",     emoji: "🐉", title: "Dragon Tamer",       subtitle: "Fantasy & Magic",          desc: "A magical creature needs help and only your child has what it takes" },
   { id: "space",      emoji: "🚀", title: "To The Stars",       subtitle: "Space & Science",          desc: "Your child blasts off into the cosmos on a mission to save the universe" },
   { id: "ocean",      emoji: "🌊", title: "Deep Blue",           subtitle: "Ocean & Nature",           desc: "An underwater mystery only your child can solve" },
@@ -22,7 +20,6 @@ const THEME_CLOSING: Record<string, (name: string) => string> = {
   ocean:      (n) => `The ocean is deep and full of mystery, but so is your courage, ${n}. Never stop diving deeper into the wonder of the world.`,
   jungle:     (n) => `You are the ruler of your own kingdom, ${n}. Lead with kindness, speak with courage, and the world will always follow.`,
   superpower: (n) => `Your superpower is real, ${n}. It lives inside you every single day. The world is a brighter, better place because you are in it.`,
-  worldcup:   (n) => `You proved it, ${n}: champions are made of heart, not just skill. Keep chasing your dreams. The world is watching, and it is cheering for you.`,
 };
 
 const HAIR_COLORS = [
@@ -190,20 +187,6 @@ const COVER_PROMPT =
 
 // Per-theme cover prompts — wide establishing/poster shot so title text can overlay cleanly at top
 const COVER_PROMPTS_BY_THEME: Record<string, string> =  {
-  july4:
-    "a photo of TOK, standing centered on a festive Main Street with arms spread wide and face tilted upward joyfully, " +
-    "dressed in a red white and blue patriotic outfit, enormous cheering crowd lining both sides of the street, " +
-    "giant American flags and red white and blue bunting filling the frame, brilliant sunshine, " +
-    "WIDE HEROIC CENTERED COMPOSITION, clear blue sky at the very top of the frame for title text overlay, " +
-    "low angle looking slightly up, cinematic parade poster style. " + STYLE_TOKEN + " " + SAFETY,
-
-  worldcup:
-    "a photo of TOK, standing centered at the World Cup final pitch centre circle, arms spread wide facing the camera, " +
-    "fully dressed in a white USA soccer jersey with red and blue trim, long white socks and cleats, " +
-    "80,000 cheering fans filling the stadium stands in every direction behind them, floodlights blazing, " +
-    "WIDE HEROIC CENTERED COMPOSITION, stadium roof and clear sky at the very top for title text overlay, " +
-    "low angle looking slightly up, cinematic stadium poster style. " + STYLE_TOKEN + " " + SAFETY,
-
   adventure:
     "a photo of TOK, standing centered before a towering glowing magical portal archway, arms spread wide, " +
     "adventure outfit, golden sparkles and magical light swirling everywhere, enchanted forest stretching deep behind, " +
@@ -403,87 +386,6 @@ const SCENE_PROMPTS_BY_THEME: Record<string, string[]> = {
     "a warm sunny street celebration with banners and balloons in every direction. " + STYLE_TOKEN + " " + SAFETY,
   ],
 
-  worldcup: [
-    // Scene 1 — tunnel walk-out
-    "a photo of TOK, standing at the mouth of the players tunnel staring out at an enormous floodlit World Cup stadium, " +
-    "fully dressed in a white USA soccer jersey with red and blue trim, long white socks shin guards and cleats, " +
-    "one hand resting on the tunnel wall, eyes wide with wonder and excitement at the roaring crowd and glowing green pitch ahead, " +
-    "American flags filling every stand, red white and blue bunting everywhere. " + STYLE_TOKEN + " " + SAFETY,
-
-    // Scene 2 — first sprint, leaving defenders behind
-    "a photo of TOK, sprinting at full pace down the left wing of a World Cup final pitch, " +
-    "fully dressed in a white USA soccer jersey with red and blue trim, long white socks shin guards and cleats, " +
-    "ball at their feet, one arm pumping hard, kit and hair streaming in the wind, " +
-    "two defenders left stumbling behind, fifty thousand fans on their feet waving American flags in the packed stands. " + STYLE_TOKEN + " " + SAFETY,
-
-    // Scene 3 — USA trail, pressure on child
-    "a photo of TOK, standing alone in the centre circle of a World Cup stadium, head bowed slightly, " +
-    "fully dressed in a white USA soccer jersey with red and blue trim, long white socks shin guards and cleats, " +
-    "hands on hips, brow furrowed with fierce determination, scoreboard visible behind showing USA behind by one goal, " +
-    "teammates gathering around with encouraging hands on shoulders, stadium tense and hushed. " + STYLE_TOKEN + " " + SAFETY,
-
-    // Scene 4 — penalty spot, staring down the goalkeeper
-    "a photo of TOK, standing over the penalty spot twelve yards from goal, " +
-    "fully dressed in a white USA soccer jersey with red and blue trim, long white socks shin guards and cleats, " +
-    "ball placed perfectly on the spot, eyes locked on the goalkeeper in intense concentration, " +
-    "stadium completely silent with anticipation, referee stepping back, American flags held still in the crowd. " + STYLE_TOKEN + " " + SAFETY,
-
-    // Scene 5 — penalty hits the net, USA win
-    "a photo of TOK, frozen mid-kick with one leg fully extended and boot striking the ball, " +
-    "fully dressed in a white USA soccer jersey with red and blue trim, long white socks shin guards and cleats, " +
-    "the ball rocketing into the top corner of the goal as the goalkeeper dives the wrong way completely beaten, " +
-    "the net bulging and the entire stadium erupting in a blaze of American flags and red white and blue confetti. " + STYLE_TOKEN + " " + SAFETY,
-
-    // Scene 6 — trophy lift
-    "a photo of TOK, standing on the winner's podium at the centre of a World Cup final stadium, " +
-    "both arms stretched high above their head holding an enormous gleaming gold World Cup trophy, " +
-    "fully dressed in a white USA soccer jersey with red and blue trim long socks and cleats, " +
-    "red white and blue confetti and ticker tape exploding in every direction, teammates in USA kits cheering and hugging, " +
-    "the sky above the stadium blazing with fireworks and American flags filling every stand. " + STYLE_TOKEN + " " + SAFETY,
-  ],
-
-  july4: [
-    // Page 1 — MEDIUM PORTRAIT | FRONT DOORWAY | MORNING | Parent in background
-    "a photo of TOK, standing in a sunlit front doorway framed by patriotic bunting, " +
-    "dressed in a crisp red white and blue patriotic outfit, holding a small American flag proudly in both hands, " +
-    "face beaming with excitement at the day ahead, warm morning sunlight streaming in from behind, " +
-    "a parent's hand giving a proud pat on the shoulder at the edge of frame, bunting and star decorations on the walls, " +
-    "MEDIUM PORTRAIT FRAMING, eye-level shot, clear space above. " + STYLE_TOKEN + " " + SAFETY,
-
-    // Page 2 — WIDE ESTABLISHING SHOT | MAIN STREET | MIDDAY SUNSHINE | Crowd on both sides
-    "a photo of TOK, marching at the very front of a large Fourth of July parade, " +
-    "dressed in a red white and blue patriotic outfit, large American flag held high overhead in both arms, " +
-    "WIDE ESTABLISHING SHOT from street level, Main Street stretching deep into the distance behind them, " +
-    "enormous cheering crowds waving flags packed on both sides of the street, a full marching band visible behind, " +
-    "brilliant midday sunshine, red white and blue confetti raining down from above. " + STYLE_TOKEN + " " + SAFETY,
-
-    // Page 3 — MEDIUM ACTION CLOSE-UP | NEAR PARADE FLOAT | LATE AFTERNOON | Worried crowd around them
-    "a photo of TOK, kneeling over a large darkened parade float generator with a focused worried expression, " +
-    "dressed in a red white and blue patriotic outfit, both hands examining an open panel, tools scattered nearby, " +
-    "concerned townspeople crowded in a ring around the background, flat golden late-afternoon light casting long shadows, " +
-    "MEDIUM ACTION SHOT at slight overhead angle looking down. " + STYLE_TOKEN + " " + SAFETY,
-
-    // Page 4 — LOW DRAMATIC ANGLE | KERBSIDE | GOLDEN HOUR | Alone with a few friends nearby
-    "a photo of TOK, sitting alone on a kerbside with knees pulled up and chin resting in cupped hands, " +
-    "dressed in a red white and blue patriotic outfit, expression deeply thoughtful and quietly determined, " +
-    "long golden-hour shadows stretching across the pavement, a few concerned friends sitting a short distance away, " +
-    "warm glowing paper lanterns hanging in the dusk air behind, " +
-    "LOW DRAMATIC ANGLE looking slightly upward, ground-level shot. " + STYLE_TOKEN + " " + SAFETY,
-
-    // Page 5 — WIDE ACTION SHOT | ON TOP OF THE FLOAT | TWILIGHT | Everyone rallying below
-    "a photo of TOK, standing on top of a parade float with both arms raised rallying the crowd, " +
-    "dressed in a red white and blue patriotic outfit, face lit with joy and determined energy, " +
-    "townspeople and kids working together excitedly all around the float below them, " +
-    "fairy lights and decorations blazing back to life around the float, deep blue twilight sky with first stars appearing, " +
-    "WIDE ACTION SHOT showing the full float and crowd below, dynamic slightly low angle. " + STYLE_TOKEN + " " + SAFETY,
-
-    // Page 6 — WIDE SPECTACULAR | PARK STAGE | NIGHT | Whole town celebrating below
-    "a photo of TOK, standing alone on an outdoor stage with both arms stretched wide in triumph, " +
-    "dressed in a red white and blue patriotic outfit lit by brilliant fireworks bursting directly overhead, " +
-    "spectacular red white and blue fireworks exploding in enormous bursts filling the entire night sky, " +
-    "the whole cheering town visible below waving flags and celebrating, golden sparks raining down, " +
-    "WIDE SPECTACULAR SHOT, night sky of fireworks above, crowd below. " + STYLE_TOKEN + " " + SAFETY,
-  ],
 };
 
 const PAYMENTS_ENABLED = !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
@@ -937,7 +839,7 @@ export default function StorybookCreator() {
 
         // Costume-critical themes keep fixed prompts so kit/outfit stays correct;
         // all others use the per-page illustration so the image matches the text.
-        const USE_FIXED_PROMPTS = new Set(["worldcup", "july4"]);
+        const USE_FIXED_PROMPTS = new Set<string>();
         const storyScenePrompts = (storyData.pages || []).map((pg: any, idx: number) =>
           USE_FIXED_PROMPTS.has(theme)
             ? (themePrompts[idx] ?? themePrompts[0])
@@ -1113,7 +1015,7 @@ export default function StorybookCreator() {
         const fullThemePrompts = SCENE_PROMPTS_BY_THEME[_theme] ?? SCENE_PROMPTS_BY_THEME.adventure;
         // Themes with costume/kit requirements use hardcoded prompts so the gear is always correct.
         // For all other themes, use the AI illustration description for per-page accuracy.
-        const USE_FIXED_PROMPTS = new Set(["worldcup", "july4"]);
+        const USE_FIXED_PROMPTS = new Set<string>();
         const fullStoryPrompts = (storyData?.pages || []).map((pg: any, i: number) =>
           USE_FIXED_PROMPTS.has(_theme)
             ? (fullThemePrompts[i] ?? fullThemePrompts[0])
@@ -1163,7 +1065,7 @@ export default function StorybookCreator() {
       // Pre-compute all 7 image prompts so the server-side webhook can generate
       // images without needing access to client-side prompt logic.
       const fullThemePrompts = SCENE_PROMPTS_BY_THEME[theme] ?? SCENE_PROMPTS_BY_THEME.adventure;
-      const USE_FIXED_PROMPTS = new Set(["worldcup", "july4"]);
+      const USE_FIXED_PROMPTS = new Set<string>();
       const computedSeed = bookSeedRef.current ?? Math.floor(Math.random() * 2_147_483_647);
       if (!bookSeedRef.current) bookSeedRef.current = computedSeed;
 
@@ -1864,7 +1766,6 @@ export default function StorybookCreator() {
                   {THEMES.map((t) => (
                     <div key={t.id} className="theme-card" onClick={() => setTheme(t.id)} style={{ position: "relative", padding: "22px 18px 18px", borderRadius: 20, cursor: "pointer", border: `2px solid ${theme === t.id ? "#E8C07A" : "rgba(255,255,255,0.1)"}`, background: theme === t.id ? "rgba(232,192,122,0.08)" : "rgba(255,255,255,0.04)", boxShadow: theme === t.id ? "0 0 24px rgba(232,192,122,0.18)" : "0 2px 8px rgba(0,0,0,0.2)" }}>
                       {t.popular && <div style={{ position: "absolute", top: -10, right: 12, background: "linear-gradient(135deg, #ff6b6b, #ee5a24)", color: "white", fontSize: 9, fontWeight: 800, padding: "3px 10px", borderRadius: 20, letterSpacing: "0.06em" }}>MOST POPULAR</div>}
-                      {!t.popular && t.seasonal && <div style={{ position: "absolute", top: -10, right: 12, background: "linear-gradient(135deg, #00b894, #00cec9)", color: "white", fontSize: 9, fontWeight: 800, padding: "3px 10px", borderRadius: 20, letterSpacing: "0.06em" }}>🌍 LIVE NOW</div>}
                       <div style={{ fontSize: 44, marginBottom: 11 }}>{t.emoji}</div>
                       <div style={{ color: theme === t.id ? "#E8C07A" : "white", fontWeight: 700, fontSize: 16, marginBottom: 3 }}>{t.title}</div>
                       <div style={{ color: theme === t.id ? "rgba(232,192,122,0.65)" : "rgba(255,255,255,0.35)", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 9 }}>{t.subtitle}</div>

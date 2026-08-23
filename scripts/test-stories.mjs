@@ -8,7 +8,7 @@ async function generate(ageBand) {
       childName: "Lily",
       childAge: ageBand === "1-3" ? "2" : ageBand === "4-6" ? "5" : ageBand === "7-9" ? "8" : "11",
       gender: "girl",
-      themeId: "worldcup",
+      themeId: "adventure",
     }),
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);

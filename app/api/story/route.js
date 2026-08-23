@@ -23,18 +23,6 @@ function checkRateLimit(ip) {
 
 
 const THEME_DATA = {
-  july4: {
-    title: "Fireworks Night",
-    category: "A Fourth of July Story",
-    arc: [
-      "MORNING AT HOME: Child wakes up on the Fourth of July, gets dressed in their red, white, and blue outfit, and stands at the front door bursting with pride — they have been chosen to lead the whole town's parade today.",
-      "MIDDAY ON MAIN STREET: Child marches at the very front of the parade, flag held high, the packed crowd on both sides of the street cheering and waving as the band plays behind them.",
-      "LATE AFTERNOON NEAR THE FLOAT: The parade float's generator suddenly fails and goes dark — with no power, the grand fireworks finale is in danger of being cancelled. The child kneels over the broken equipment, determined not to let the town down.",
-      "GOLDEN HOUR ON THE KERB: Child sits alone for a quiet moment, elbows on knees, thinking hard. It feels impossible. But giving up is not an option.",
-      "TWILIGHT ON THE FLOAT: Child has an idea — rallies every person nearby, and together the whole town pitches in. The float blazes back to life, lights exploding on, the crowd erupting in cheers.",
-      "NIGHT ON THE STAGE: The child stands on the stage with arms raised as spectacular red, white, and blue fireworks burst overhead, the whole town below cheering their name into the night sky.",
-    ],
-  },
   adventure: {
     title: "The Big Adventure",
     category: "Quest & Exploration",
@@ -107,18 +95,6 @@ const THEME_DATA = {
       "The community comes together in celebration, and child realises: the superpower was always theirs — they just needed to find it.",
     ],
   },
-  worldcup: {
-    title: "World Cup Hero",
-    category: "Football & Glory",
-    arc: [
-      "Child walks out of the tunnel onto the World Cup final pitch as the roar of the crowd shakes the ground beneath their boots.",
-      "Child sprints with the ball deep into opposition territory, leaving two defenders stumbling, the crowd rising to their feet.",
-      "USA fall behind — the clock is ticking, and all eyes on the pitch turn to the child as the weight of the nation lands on their shoulders.",
-      "Child wins a crucial penalty in the dying minutes and steps up alone to the spot, the whole world holding its breath.",
-      "Child blasts the ball into the top corner — the net explodes, the crowd erupts, teammates pile on — USA have won the World Cup.",
-      "Child lifts the golden trophy high above their head as fireworks light up the night sky and every fan chants their name.",
-    ],
-  },
 };
 
 function getAgeBand(ageNum) {
@@ -160,7 +136,7 @@ export async function POST(request) {
 
 YOUR TASK:
 Write exactly 6 pages of story. Each page is ONE story beat from the story_arc, adapted to the child's age band. For EACH page also write a matching "illustration" — a concrete visual description of that exact story moment, so the picture on the page shows what the words on the page describe. Return ONLY valid JSON in this structure:
-{"title":"string — a custom book title using the child's name (e.g. 'Lily's World Cup Magic')","dedication":"string — one warm line dedicated to the child, e.g. 'For Aria, the bravest explorer in the cosmos'","pages":[{"pageNum":1,"text":"...","illustration":"..."},{"pageNum":2,"text":"...","illustration":"..."},{"pageNum":3,"text":"...","illustration":"..."},{"pageNum":4,"text":"...","illustration":"..."},{"pageNum":5,"text":"...","illustration":"..."},{"pageNum":6,"text":"...","illustration":"..."}]}
+{"title":"string — a custom book title using the child's name (e.g. 'Lily's Deep Blue Magic')","dedication":"string — one warm line dedicated to the child, e.g. 'For Aria, the bravest explorer in the cosmos'","pages":[{"pageNum":1,"text":"...","illustration":"..."},{"pageNum":2,"text":"...","illustration":"..."},{"pageNum":3,"text":"...","illustration":"..."},{"pageNum":4,"text":"...","illustration":"..."},{"pageNum":5,"text":"...","illustration":"..."},{"pageNum":6,"text":"...","illustration":"..."}]}
 
 UNIVERSAL RULES (every age band):
 - The CHILD is the hero. Always center them in the action. Never let a sidekick or parent steal the moment.
@@ -203,7 +179,7 @@ TITLE RULE:
 
 SUBTITLE RULE:
 - 3-6 words evoking the category emotion.
-- Examples: "A World Cup Story", "A Fairy-Tale Friendship", "An Ocean Adventure"
+- Examples: "A Dragon's Tale", "A Fairy-Tale Friendship", "An Ocean Adventure"
 - Put this in the "dedication" field as a companion to the warm dedication line — format: "For [Name], [warm line]. [Subtitle]."
 
 ILLUSTRATION RULE (this is what makes the picture match the words):

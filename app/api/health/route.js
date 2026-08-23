@@ -87,7 +87,7 @@ export async function GET(request) {
       if (!res) throw new Error("order not found");
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://mytinytales.studio";
       const pageUrls = [0, 1, 2, 3, 4, 5].map(i => res.images?.[i] ?? null);
-      const padTo = Number(searchParams.get("pages")) || 20;
+      const padTo = Number(searchParams.get("pages")) || 28;
       const pdfRes = await fetch(`${siteUrl}/api/generate-book-pdf`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ coverFalUrl: res.images?.cover, pageFalUrls: pageUrls, story: res.story, childName: res.childName, padTo }),

@@ -155,8 +155,21 @@ export async function POST(request) {
       p.drawRectangle({ x: 0, y: 0, width: PS, height: PS, color: bg });
     };
 
-    // Page 1: Blank (inside front cover)
-    addBlank(CREAM);
+    // Page 1: Front cover — full-bleed illustration + title, so the digital
+    // download opens on the cover instead of a blank page.
+    const coverImgInt = await embedImg(doc, coverBytes);
+    const fc = doc.addPage([PS, PS]);
+    if (coverImgInt) {
+      fc.drawImage(coverImgInt, { x: 0, y: 0, width: PS, height: PS });
+      fc.drawRectangle({ x: 0, y: 0, width: PS, height: PS * 0.42, color: DARK, opacity: 0.85 });
+    } else {
+      fc.drawRectangle({ x: 0, y: 0, width: PS, height: PS, color: DARK });
+    }
+    fc.drawText("My Tiny Tales", { x: M, y: PS * 0.30, size: 11, font: hFont, color: GOLD, opacity: 0.8 });
+    wrapText(story?.title || "My Story", 22).forEach((line, i) =>
+      fc.drawText(line, { x: M, y: PS * 0.22 - i * 26, size: 24, font: hFont, color: WHITE }));
+    fc.drawText(toWinAnsi(story?.dedication || `A story starring ${capName}`).substring(0, 50),
+      { x: M, y: PS * 0.08, size: 10, font: iFont, color: GOLD, opacity: 0.7 });
 
     // Page 2: Title page
     const p2 = doc.addPage([PS, PS]);
@@ -235,6 +248,14 @@ export async function POST(request) {
     const closeW = iFont.widthOfTextAtSize(closingText, 11);
     p16.drawText(closingText, { x: (PS - closeW) / 2, y: PS * 0.38, size: 11, font: iFont, color: WHITE, opacity: 0.55 });
     p16.drawText("My Tiny Tales", { x: PS / 2 - 34, y: PS * 0.16, size: 8, font: bFont, color: GOLD, opacity: 0.28 });
+
+    // Back cover — branded closing page instead of a blank.
+    const bc = doc.addPage([PS, PS]);
+    bc.drawRectangle({ x: 0, y: 0, width: PS, height: PS, color: DARK });
+    bc.drawText("My Tiny Tales", { x: PS / 2 - 42, y: PS * 0.56, size: 14, font: hFont, color: GOLD, opacity: 0.75 });
+    bc.drawRectangle({ x: PS / 2 - 30, y: PS * 0.52, width: 60, height: 1.5, color: GOLD, opacity: 0.4 });
+    bc.drawText("A personalised storybook, made with love.", { x: PS / 2 - 120, y: PS * 0.45, size: 10, font: iFont, color: WHITE, opacity: 0.5 });
+    bc.drawText("mytinytales.studio", { x: PS / 2 - 44, y: PS * 0.12, size: 9, font: bFont, color: GOLD, opacity: 0.4 });
 
     // Pad the back matter with blanks until the interior reaches the target
     // page count. Gelato requires the declared pageCount to match the PDF

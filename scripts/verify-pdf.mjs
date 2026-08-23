@@ -17,12 +17,12 @@ const imgs = await Promise.all(["example-1.jfif", "example-2.jfif", "example-3.j
 const story = {
   title: "Loli's Deep Blue Splash",
   dedication: "For Loli, our little wave who lights up the sea.",
-  pages: [1, 2, 3, 4, 5, 6].map((n) => ({ pageNum: n, text: "A test page of story text to check the spread layout renders correctly and reads well.", illustration: "" })),
+  pages: [1, 2, 3, 4, 5, 6, 7, 8].map((n) => ({ pageNum: n, text: "A test page of story text to check the spread layout renders correctly and reads well.", illustration: "" })),
 };
 
 const res = await fetch("https://mytinytales.studio/api/generate-book-pdf", {
   method: "POST", headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ coverFalUrl: imgs[0], pageFalUrls: [imgs[0], imgs[1], imgs[2], imgs[3], imgs[0], imgs[1]], story, childName: "Loli" }),
+  body: JSON.stringify({ coverFalUrl: imgs[0], pageFalUrls: [imgs[0], imgs[1], imgs[2], imgs[3], imgs[0], imgs[1], imgs[2], imgs[3]], story, childName: "Loli" }),
 });
 const j = await res.json();
 console.log("route reported interiorPageCount:", j.interiorPageCount);

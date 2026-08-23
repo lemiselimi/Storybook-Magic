@@ -50,7 +50,9 @@ export async function POST(request) {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://mytinytales.studio";
 
   try {
-    const pageUrls = [0, 1, 2, 3, 4, 5].map(i => updatedImages[i] ?? null);
+    // Scene slots are 0..(totalJobs-2) — every job except the "cover" slot.
+    const sceneCount = Math.max((result.totalJobs || 1) - 1, 0);
+    const pageUrls = Array.from({ length: sceneCount }, (_, i) => updatedImages[i] ?? null);
 
     // Generate print-ready PDFs
     const pdfRes = await fetch(`${siteUrl}/api/generate-book-pdf`, {

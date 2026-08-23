@@ -13,7 +13,7 @@ const THEMES = [
   { id: "dreamland",  emoji: "🌙", title: "Off to Dreamland",   subtitle: "Bedtime & Dreams",         desc: "A gentle dream adventure carries your child across a soft, starlit world at bedtime" },
 ];
 
-const CHAPTER_NAMES = ["One", "Two", "Three", "Four", "Five", "Six"];
+const CHAPTER_NAMES = ["One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight"];
 
 const THEME_CLOSING: Record<string, (name: string) => string> = {
   adventure:  (n) => `Remember, ${n}: every great adventure begins with one brave step. The world is full of magic, and you have everything it takes to find it.`,
@@ -57,7 +57,7 @@ const PAGE_BACKGROUNDS = [
 const TOTAL_STEPS     = 5;
 
 // LoRA uses trigger word TOK — all prompts must start with "a photo of TOK"
-const CLOTHING = " Fully dressed at all times in age-appropriate adventure clothing: long-sleeved top, full-length trousers or skirt, shoes or boots. No bare skin visible below the neckline or above the wrist. No logos, no brand names, no text, no character prints, no emblems on clothing.";
+const CLOTHING = " Fully dressed at all times in an age-appropriate outfit: long-sleeved top, full-length trousers or skirt, shoes or boots. No bare skin visible below the neckline or above the wrist. No logos, no brand names, no text, no character prints, no emblems on clothing.";
 
 // Reusable style token — prepended to every page prompt for visual consistency across all 6 pages
 // Prepended to every scene prompt — style anchor must stay identical across all 6 pages
@@ -76,7 +76,7 @@ const STYLE_TOKEN =
   "STYLE: Pixar-Disney 3D animated film frame — stylized character design, slightly exaggerated expressive features, smooth soft rendering, no realistic skin pores or photographic texture. Humans AND animals rendered in the same Pixar animation aesthetic. Consistent character stylization across every page. Child as hero of their world. " +
   "No text, no words, no logos, no branded clothing.";
 
-const SAFETY = "The child is completely and fully clothed in an age-appropriate adventure outfit at all times — long-sleeved top, full-length trousers or skirt, shoes. Absolutely no bare chest, no bare torso, no shirtless, no sleeveless, no exposed midriff, no bare arms or legs. Background contains only nature, animals, and magical storybook elements. Safe for young children.";
+const SAFETY = "The child is completely and fully clothed in the age-appropriate outfit described above at all times — long-sleeved top, full-length trousers or skirt, shoes. Absolutely no bare chest, no bare torso, no shirtless, no sleeveless, no exposed midriff, no bare arms or legs. Background contains only story-world scenery, animals, and magical storybook elements. Safe for young children.";
 
 // ── Waiting-screen motion helpers ─────────────────────────────────────────────
 const phaseOf = (m: string) => {
@@ -155,9 +155,27 @@ function GoldBurst() {
   );
 }
 
-// Injects gender, age, and explicit clothing description into every prompt at generation time.
-// This is the primary guard against wrong gender features and any exposed skin.
-function buildGenderedPrompt(prompt: string, gender: string, age: number, hairColor?: string, eyeColor?: string): string {
+// Per-theme wardrobe. One fixed outfit per theme, worn identically on every page
+// and the cover of a given book — keeping it fixed per book is the main character-
+// consistency lever (Nano Banana has no seed to lock), while varying it by theme
+// makes the hero feel native to each story world. Every outfit is fully covering
+// (long sleeves, full-length legs, shoes) to satisfy SAFETY.
+const THEME_OUTFITS: Record<string, string> = {
+  adventure:  "wearing a rust-orange hooded jacket over a cream long-sleeved shirt, forest-green trousers, and worn brown lace-up boots",
+  dragon:     "wearing a hooded forest-green adventurer's tunic over a long-sleeved cream shirt, brown trousers, and sturdy knee-high leather boots",
+  dino:       "wearing a khaki explorer's jacket over a long-sleeved olive shirt, cargo trousers, and rugged brown hiking boots",
+  space:      "wearing a sleek white and orange astronaut spacesuit with long sleeves and full-length legs, sealed gloves, and white moon boots",
+  ocean:      "wearing a long-sleeved blue and teal full-body diving wetsuit that fully covers the arms and legs, with matching neoprene water boots",
+  jungle:     "wearing a khaki safari shirt with long sleeves, matching full-length trousers, a wide-brimmed explorer hat, and brown boots",
+  superpower: "wearing a bright long-sleeved superhero costume with a flowing cape, full-length leggings, and colourful boots",
+  dreamland:  "wearing cozy full-length long-sleeved star-patterned pyjamas and soft slippers",
+};
+const DEFAULT_OUTFIT = THEME_OUTFITS.adventure;
+
+// Injects gender, age, theme-appropriate clothing, and explicit coverage into
+// every prompt at generation time. This is the primary guard against wrong
+// gender features and any exposed skin.
+function buildGenderedPrompt(prompt: string, gender: string, age: number, hairColor?: string, eyeColor?: string, theme?: string): string {
   // Age-based body size descriptor — kept simple so it reinforces scale without fighting scene content
   const sizeHint =
     age <= 1  ? "very small baby body, " :
@@ -171,7 +189,8 @@ function buildGenderedPrompt(prompt: string, gender: string, age: number, hairCo
   // ONE fixed, detailed outfit worn identically on every page + cover. This is
   // the main lever for character consistency across the book: Nano Banana has no
   // seed to lock, so a specific wardrobe stops it re-inventing clothes per page.
-  const wear = "wearing a rust-orange hooded jacket over a cream long-sleeved shirt, forest-green trousers, and worn brown lace-up boots";
+  // The outfit is chosen per theme so it fits the story world.
+  const wear = (theme && THEME_OUTFITS[theme]) || DEFAULT_OUTFIT;
   const hint =
     gender === "boy"
       ? `${age}-year-old boy, ${sizeHint}short hair, masculine features, ${hairHint}${eyeHint}${wear}, `
@@ -539,7 +558,7 @@ export default function StorybookCreator() {
 
   // ── Preview (step 5) ─────────────────────────────────────────────────────────
   const [previewStory,   setPreviewStory]   = useState<any>(null);
-  const [previewImages,  setPreviewImages]  = useState<(string | null)[]>(Array(6).fill(null));
+  const [previewImages,  setPreviewImages]  = useState<(string | null)[]>(Array(8).fill(null));
   const [previewCoverUrl, setPreviewCoverUrl] = useState<string | null>(null);
   const [previewStatus,  setPreviewStatus]  = useState<"idle" | "loading" | "done">("idle");
   const [previewMsg,     setPreviewMsg]     = useState("Writing your story...");
@@ -555,7 +574,7 @@ export default function StorybookCreator() {
   // ── Full book ─────────────────────────────────────────────────────────────────
   const [story,           setStory]           = useState<any>(null);
   const [coverImageUrl,   setCoverImageUrl]   = useState<string | null>(null);
-  const [pageImages,      setPageImages]      = useState<(string | null)[]>(Array(6).fill(null));
+  const [pageImages,      setPageImages]      = useState<(string | null)[]>(Array(8).fill(null));
   const [scenesCompleted, setScenesCompleted] = useState(0);
   const [currentPage,     setCurrentPage]     = useState(-2);
   const [navDir,          setNavDir]          = useState<"fwd" | "back">("fwd");
@@ -772,8 +791,10 @@ export default function StorybookCreator() {
       { pageNum: 2, text: `${name || "Our hero"} packed a backpack and set off into the forest. "I'm ready!" they cheered.`, illustration: `A child in explorer gear at the edge of a glowing enchanted forest at golden hour` },
       { pageNum: 3, text: `The path led through an enchanted forest full of friendly butterflies and glowing flowers.`, illustration: `Inside a magical glowing forest, the child walking along a winding path with giant luminous mushrooms` },
       { pageNum: 4, text: `Deep in the forest they found a tiny dragon who had lost his fire.`, illustration: `A clearing in the enchanted forest, the child kneeling beside a small sad blue dragon` },
-      { pageNum: 5, text: `${name || "Our hero"} told a joke and WHOOOOSH bright flames burst out! "You fixed me!" the dragon cried.`, illustration: `The child and a small dragon, the dragon joyfully breathing a spectacular rainbow flame into the sky` },
-      { pageNum: 6, text: `The dragon flew them home under the stars. "Best day ever," they whispered.`, illustration: `A child riding on the back of a friendly glowing dragon soaring through a star-filled night sky` },
+      { pageNum: 5, text: `The little dragon was too sad to fly, and ${name || "our hero"} did not know how to help.`, illustration: `The child sitting beside the small droopy dragon under a big tree, both looking worried in the dim forest light` },
+      { pageNum: 6, text: `Then ${name || "our hero"} had an idea. "Let's find something to laugh about together!"`, illustration: `The child jumping up with a bright idea, one finger raised, the little dragon starting to perk up beside them` },
+      { pageNum: 7, text: `${name || "Our hero"} told a joke and WHOOOOSH bright flames burst out! "You fixed me!" the dragon cried.`, illustration: `The child and a small dragon, the dragon joyfully breathing a spectacular rainbow flame into the sky` },
+      { pageNum: 8, text: `The dragon flew them home under the stars. "Best day ever," they whispered.`, illustration: `A child riding on the back of a friendly glowing dragon soaring through a star-filled night sky` },
     ],
   });
 
@@ -781,7 +802,7 @@ export default function StorybookCreator() {
     setPreviewStatus("loading");
     setPreviewMsg("Writing your story...");
     setPreviewDone(0);
-    setPreviewImages(Array(6).fill(null));
+    setPreviewImages(Array(8).fill(null));
     setGenerationError(null);
     acquireWakeLock();
     setPreviewCoverUrl(null);
@@ -852,7 +873,7 @@ export default function StorybookCreator() {
         const callScene = async (prompt: string): Promise<string | null> => {
           const submitRes = await fetchWithTimeout("/api/generate-scene", {
             method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ referenceImageUrl, prompt: buildGenderedPrompt(prompt, childGender, childAge, hairColor, eyeColor), seed: bookSeed }),
+            body: JSON.stringify({ referenceImageUrl, prompt: buildGenderedPrompt(prompt, childGender, childAge, hairColor, eyeColor, theme), seed: bookSeed }),
           }, 30_000).then(r => r.json());
           if (!submitRes.jobId) return null;
           const model = submitRes.model;
@@ -906,7 +927,7 @@ export default function StorybookCreator() {
 
         // Cap concurrency: 2 on mobile (avoids connection saturation), 4 on desktop
         const coverPromptBase = COVER_PROMPTS_BY_THEME[theme] ?? COVER_PROMPT;
-        const builtCoverPrompt = buildGenderedPrompt(coverPromptBase, childGender, childAge, hairColor, eyeColor);
+        const builtCoverPrompt = buildGenderedPrompt(coverPromptBase, childGender, childAge, hairColor, eyeColor, theme);
         console.log("[PROMPTS] cover:", builtCoverPrompt.substring(0, 120));
         storyScenePrompts.forEach((p: string, i: number) => console.log(`[PROMPTS] page ${i + 1}:`, p.substring(0, 120)));
 
@@ -949,7 +970,7 @@ export default function StorybookCreator() {
       try {
         const sub = await fetchWithTimeout("/api/generate-scene", {
           method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ referenceImageUrl: referenceUrl, prompt: buildGenderedPrompt(themePrompts[idx], childGender, childAge, hairColor, eyeColor), seed: bookSeedRef.current ?? undefined }),
+          body: JSON.stringify({ referenceImageUrl: referenceUrl, prompt: buildGenderedPrompt(themePrompts[idx], childGender, childAge, hairColor, eyeColor, theme), seed: bookSeedRef.current ?? undefined }),
         }, 30_000).then(r => r.json());
         if (sub.jobId) {
           for (let a = 0; a < 40; a++) {
@@ -988,14 +1009,14 @@ export default function StorybookCreator() {
     if (_savedCoverUrl) setCoverImageUrl(`/api/proxy?url=${encodeURIComponent(_savedCoverUrl)}`);
 
     // Fast path: all scenes + cover already generated in preview
-    if (_savedStory && _savedFalUrls && _savedFalUrls.filter(Boolean).length === 6) {
+    if (_savedStory && _savedFalUrls && _savedFalUrls.filter(Boolean).length === 8) {
       setStory(_savedStory);
       setPageImages(_savedFalUrls.map(u => u ? `/api/proxy?url=${encodeURIComponent(u)}` : null));
       setCurrentPage(-2); setDisplayedPage(-2); setMainStep("book"); return;
     }
 
     // If preview images exist in state, reuse them (including cover)
-    const existingImages = previewImages.filter(Boolean).length === 6 ? previewImages : null;
+    const existingImages = previewImages.filter(Boolean).length === 8 ? previewImages : null;
     if (_savedStory && existingImages) {
       setStory(_savedStory); setPageImages(existingImages);
       if (previewCoverUrl) setCoverImageUrl(previewCoverUrl);
@@ -1004,7 +1025,7 @@ export default function StorybookCreator() {
 
     // Full generation from scratch
     setMainStep("generating"); setFalError(null); setGenerationError(null);
-    setPageImages(Array(6).fill(null)); setCoverImageUrl(null); setScenesCompleted(0); setIsSharedView(false);
+    setPageImages(Array(8).fill(null)); setCoverImageUrl(null); setScenesCompleted(0); setIsSharedView(false);
 
     const sceneConcurrency = window.innerWidth < 680 ? 3 : 4;
 
@@ -1045,7 +1066,7 @@ export default function StorybookCreator() {
         const callScene2 = async (prompt: string): Promise<string | null> => {
           const submitRes = await fetchWithTimeout("/api/generate-scene", {
             method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ referenceImageUrl: activeRef, prompt: buildGenderedPrompt(prompt, _gender, _age, _hair, _eye), seed: bookSeed2 }),
+            body: JSON.stringify({ referenceImageUrl: activeRef, prompt: buildGenderedPrompt(prompt, _gender, _age, _hair, _eye, _theme), seed: bookSeed2 }),
           }, 30_000).then(r => r.json());
           if (!submitRes.jobId) return null;
           const model2 = submitRes.model;
@@ -1131,7 +1152,7 @@ export default function StorybookCreator() {
           : pg.illustration
             ? `a photo of TOK, ${pg.illustration} Scene context: ${(pg.text || "").substring(0, 120)} ${STYLE_TOKEN} ${SAFETY}`
             : (fullThemePrompts[i] ?? fullThemePrompts[0]);
-        return buildGenderedPrompt(base, childGender, childAge, hairColor, eyeColor);
+        return buildGenderedPrompt(base, childGender, childAge, hairColor, eyeColor, theme);
       });
 
       // The paid book is generated server-side from the fal-hosted reference
@@ -1163,7 +1184,7 @@ export default function StorybookCreator() {
         referenceUrl:  refUrl,
         previewImages: reusedPreview,
         plan,
-        coverPrompt:   buildGenderedPrompt(COVER_PROMPTS_BY_THEME[theme] ?? COVER_PROMPT, childGender, childAge, hairColor, eyeColor),
+        coverPrompt:   buildGenderedPrompt(COVER_PROMPTS_BY_THEME[theme] ?? COVER_PROMPT, childGender, childAge, hairColor, eyeColor, theme),
         scenePrompts,
         seed:          computedSeed,
       };
@@ -1236,7 +1257,7 @@ export default function StorybookCreator() {
       const basePrompt = illustrationDesc
         ? `a photo of TOK, ${illustrationDesc} Scene context: ${storyText.substring(0, 120)} ${STYLE_TOKEN} ${SAFETY}`
         : (SCENE_PROMPTS_BY_THEME[theme] ?? SCENE_PROMPTS_BY_THEME.adventure)[pageIdx];
-      const prompt = buildGenderedPrompt(basePrompt, childGender, childAge, hairColor, eyeColor);
+      const prompt = buildGenderedPrompt(basePrompt, childGender, childAge, hairColor, eyeColor, theme);
       const seed = Math.floor(Math.random() * 2_147_483_647);
       const sub = await fetchWithTimeout("/api/generate-scene", {
         method: "POST", headers: { "Content-Type": "application/json" },
@@ -1318,10 +1339,10 @@ export default function StorybookCreator() {
     setMainStep("onboarding"); setOnboardingStep(1); setStepDir("fwd");
     setPhotos([]); setPhotosBase64([]); setLoraUrl(null); setReferenceUrl(null); referenceUrlRef.current = null;
     setHairColor("brown"); setEyeColor("brown");
-    setStory(null); setPreviewStory(null); setPreviewImages(Array(6).fill(null));
+    setStory(null); setPreviewStory(null); setPreviewImages(Array(8).fill(null));
     setPreviewCoverUrl(null); setCoverImageUrl(null);
     setPreviewStatus("idle"); setPreviewDone(0); previewStarted.current = false;
-    setPageImages(Array(6).fill(null)); setScenesCompleted(0);
+    setPageImages(Array(8).fill(null)); setScenesCompleted(0);
     setChildGender("boy"); setChildName(""); setChildAge(5); setTheme("adventure");
     setIsSharedView(false); setRegeneratingPage(null); setFalError(null); setIsDemo(false); setShowNewBookConfirm(false);
     setDisplayedPage(-2); setFlipBack(null); setIsFlipping(false); setGenerationError(null);

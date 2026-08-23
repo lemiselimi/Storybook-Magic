@@ -9,10 +9,15 @@ export const maxDuration = 60;
 // 206mm × (72pt / 25.4mm) = 583.9pt → 584pt
 const PS = 584; // interior page: square 584×584 pt
 
-// Perfect-bound cover wrap: back (584pt) + spine + front (584pt)
-// Spine = 20 interior pages × 170 GSM coated silk (~0.097mm/page) + 2 cover sheets
-// ≈ 2.4mm → 7pt.  Adjust SPINE if Gelato's spine calculator gives a different value.
-const SPINE = 7;
+// Interior is padded to this many pages (Gelato product minimum). Overridable
+// via env so the minimum can be tuned without a code change.
+const INTERIOR_PAGES = Number(process.env.GELATO_INTERIOR_PAGES) || 31;
+
+// Perfect-bound cover wrap: back (584pt) + spine + front (584pt).
+// Spine scales with interior thickness: ~0.097mm/page (170 GSM coated silk),
+// converted to points (72pt / 25.4mm). ≈ 9pt at 31 interior pages. Adjust if
+// Gelato's spine calculator gives a different value.
+const SPINE = Math.round(INTERIOR_PAGES * 0.097 * 72 / 25.4);
 const CW = PS * 2 + SPINE; // 1175pt wide
 const CH = PS;              // 584pt tall
 
@@ -160,8 +165,9 @@ export async function POST(request) {
     const coverPdfBytes = await coverDoc.save();
     console.log("PDF: cover built");
 
-    // ── INTERIOR PDF — 20 pages ───────────────────────────────────────────────
-    // 1 blank + title + dedication + 6×2 story spreads + The End + 3 blanks = 20
+    // ── INTERIOR PDF ──────────────────────────────────────────────────────────
+    // front cover + title + dedication + 8×2 story spreads + The End + keepsake +
+    // illustration gallery + back cover, padded to the product's page minimum.
     const doc   = await PDFDocument.create();
     doc.registerFontkit(fontkit);
     const hFont = await doc.embedFont(BOLD_BYTES,    { subset: true });
@@ -215,12 +221,12 @@ export async function POST(request) {
     p3.drawText("how loved, brave, and magical you are.\"", { x: PS / 2 - 112, y: PS * 0.27, size: 11, font: iFont, color: WHITE, opacity: 0.6 });
     p3.drawText("My Tiny Tales", { x: PS / 2 - 36, y: PS * 0.13, size: 8, font: bFont, color: GOLD, opacity: 0.3 });
 
-    // Pages 4–15: 6 story spreads — left page = text, right page = full-bleed illustration
+    // 8 story spreads — left page = text, right page = full-bleed illustration
     const pages = story?.pages || [];
-    const CHAPTER_NAMES = ["One", "Two", "Three", "Four", "Five", "Six"];
+    const CHAPTER_NAMES = ["One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight"];
     // Embed each scene image once — reused in the spreads and the back gallery.
     const sceneImgs = await Promise.all((pageBytes || []).map(b => embedImg(doc, b)));
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 8; i++) {
       const storyPage = pages[i];
       const sceneImg  = sceneImgs[i];
 
@@ -284,7 +290,7 @@ export async function POST(request) {
     // to fill toward the product's page minimum with pictures, not blanks. The
     // final page is reserved for the back cover.
     const gallery = sceneImgs.filter(Boolean);
-    const padTo = Math.max(Number(body.padTo) || 28, doc.getPageCount() + 1);
+    const padTo = Math.max(Number(body.padTo) || INTERIOR_PAGES, doc.getPageCount() + 1);
     let gi = 0;
     while (doc.getPageCount() < padTo - 1) {
       const g = doc.addPage([PS, PS]);

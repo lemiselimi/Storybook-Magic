@@ -29,8 +29,10 @@ const THEME_DATA = {
     arc: [
       "Child steps through a hidden door and enters a magical world for the very first time — wide-eyed, heart pounding.",
       "Child explores and discovers something wondrous: a glowing map, a talking creature, or a voice calling their name.",
+      "Following the discovery, child journeys deeper into the magical world, marvelling at its wonders and feeling brave and free.",
       "Child faces their first real obstacle — a crumbling bridge, a locked gate, a creature blocking the path — and tries something that doesn't quite work.",
-      "A friendly guide or magical creature appears and gives a cryptic clue, but the child must act on their own.",
+      "The plan fails and things look worse than before; for a moment the child feels small and unsure they can do this.",
+      "A friendly guide or magical creature appears and gives a cryptic clue, but the child must find the courage to act on their own.",
       "Child uses their unique quality — bravery, kindness, or cleverness — to overcome the final challenge in a satisfying, specific way.",
       "Child returns home changed, carrying a small piece of the magical world, knowing the adventure will always be part of them.",
     ],
@@ -41,8 +43,10 @@ const THEME_DATA = {
     arc: [
       "Child discovers a small, frightened dragon hiding in an unexpected place — injured, alone, and desperate for help.",
       "Child earns the dragon's trust slowly, with patience and gentleness, and the dragon reveals it has a secret.",
+      "The two become fast friends, and the dragon shows the child the hidden wonders of its world.",
       "A storm or threat arrives; the scared dragon accidentally causes chaos, and the child must stay calm.",
-      "Child and dragon find a way to truly understand each other, and the dragon reveals the real danger they must face together.",
+      "In the confusion the dragon flees in fear, and the child is left alone, worried they have lost their new friend.",
+      "Child finds the dragon and the two finally understand each other, and the dragon reveals the real danger they must face together.",
       "Child and dragon act as one — dragon flies, child guides — and together they solve the problem no one else could.",
       "The danger is gone; dragon and child share a moment of pure joy, and the child knows this friendship will last forever.",
     ],
@@ -53,8 +57,10 @@ const THEME_DATA = {
     arc: [
       "Child steps through a mysterious glowing portal and arrives in a lush prehistoric valley for the very first time — wide-eyed at the towering, gentle dinosaurs all around.",
       "Child meets a small baby dinosaur who has lost its herd and is scared and all alone, and gently promises to help it find its way home.",
+      "The two set off together across the valley, and the child marvels at the amazing dinosaurs they pass along the way.",
       "A sudden rumble — a rockslide (or the far-off volcano) blocks the valley path, cutting the pair off from the herd, and the baby dinosaur is frightened.",
-      "Child tries the easy, obvious route across the valley and it doesn't work; they realize they'll need to be brave and clever to find another way.",
+      "Child tries the easy, obvious route across the valley and it doesn't work, and for a moment it feels like they might be stuck for good.",
+      "Child takes a deep breath and comes up with a braver, cleverer plan, gently encouraging the baby dinosaur to trust them.",
       "Child uses courage and quick thinking to lead the baby dinosaur safely across the valley, reuniting it with its overjoyed herd just in time.",
       "The grateful dinosaurs celebrate together; the child says a warm goodbye and returns home carrying one small keepsake, forever a friend of the dinosaurs.",
     ],
@@ -66,7 +72,9 @@ const THEME_DATA = {
       "Child receives an urgent signal from deep space — a distant planet is in trouble and only one person can help.",
       "Child launches into the cosmos, rocketing past moons and stars, filled with wonder and just a little fear.",
       "Child arrives to find the planet dark and its creatures frightened — the sun is dimming and no one knows why.",
-      "Child discovers the cause of the problem and realizes the solution is something small they brought from home.",
+      "Child sets out to explore the strange planet, searching everywhere for what could have gone wrong.",
+      "Child's first attempt to help goes wrong and the darkness deepens, leaving them wondering if they came all this way for nothing.",
+      "Child discovers the real cause of the problem and realizes the solution is something small and simple they brought from home.",
       "Child activates the solution — light floods back across the planet, creatures cheer, stars burst into colour.",
       "Child returns to Earth as a hero, gazes up at the night sky, and smiles knowing a distant world shines because of them.",
     ],
@@ -76,9 +84,11 @@ const THEME_DATA = {
     category: "Ocean & Nature",
     arc: [
       "Child dives beneath the waves and discovers a dazzling underwater kingdom full of colour, light, and wonder.",
-      "A sea creature swims up in a panic — the coral is going dark and the ocean is getting cold.",
-      "Child explores to find the source of the problem and hits an obstacle: a tangled net, a blocked current, a sealed cave.",
-      "A wise old turtle offers a riddle-clue, but only the child is small or clever enough to act on it.",
+      "A sea creature swims up in a panic — the coral is going dark and the whole ocean is getting cold.",
+      "Child swims deeper into the kingdom to help, meeting playful fish and exploring glittering caves along the way.",
+      "Child hits an obstacle — a tangled net, a blocked current, or a sealed cave — that stands between them and the problem.",
+      "The first attempt to get through fails, the water grows colder and darker, and the little sea creatures huddle close in fear.",
+      "A wise old turtle offers a riddle-clue, but only the child is small enough — or clever enough — to act on it.",
       "Child solves the puzzle — coral blazes back to life in every colour, fish cheer, the whole ocean glows.",
       "Child surfaces home carrying a single shell, and every night holds it to their ear to hear the ocean say thank you.",
     ],
@@ -89,9 +99,11 @@ const THEME_DATA = {
     arc: [
       "Child arrives in the jungle and is greeted by a parade of animals who crown them ruler for the day.",
       "Child explores the kingdom — every creature has a job, a name, and something to show their new leader.",
-      "Two animals are in a fierce argument and the whole jungle is taking sides — only the child can settle it fairly.",
-      "Child listens carefully to both sides and comes up with a creative, unexpected solution no animal had thought of.",
-      "Peace is restored — the jungle erupts in celebration, animals dancing, birds singing, the canopy exploding with colour.",
+      "Child is welcomed with a joyful feast, feeling proud and happy to be trusted by the whole jungle.",
+      "Two animals fall into a fierce argument and the whole jungle begins taking sides — only the child can settle it fairly.",
+      "Child's first idea to make peace backfires, the quarrel grows louder, and it seems the jungle may never agree.",
+      "Child stops to listen carefully to both sides, and slowly a fair, unexpected solution begins to take shape.",
+      "Child shares a creative solution no animal had thought of — peace is restored and the jungle erupts in celebration, dancing and singing, the canopy exploding with colour.",
       "The crown is returned at sunset, but as child leaves, every animal calls out: 'You'll always be our queen/king.'",
     ],
   },
@@ -101,7 +113,9 @@ const THEME_DATA = {
     arc: [
       "Child feels ordinary — everyone else seems to have a special talent, and they're still searching for theirs.",
       "Something goes wrong in the community — a problem no adult or expert can fix, and people are starting to give up.",
-      "Child tries to help but stumbles badly — it doesn't work the first time, and real doubt creeps in.",
+      "Child decides to try and help, even though they're not sure what they can possibly do.",
+      "Child's first attempt stumbles badly — it doesn't work, people are disappointed, and real doubt creeps in.",
+      "Feeling defeated, the child almost gives up and wonders if they have anything special to offer at all.",
       "A neighbour, teacher, or friend gently points out something the child does naturally, without thinking, that nobody else can.",
       "Child uses that exact quality — empathy, creativity, stubborn persistence, or boundless imagination — to solve the problem completely.",
       "The community comes together in celebration, and child realises: the superpower was always theirs — they just needed to find it.",
@@ -114,7 +128,9 @@ const THEME_DATA = {
       "As the stars come out and the house grows quiet, the child snuggles into bed and a soft silver moonbeam gently invites them on a dream journey.",
       "Child floats up through drifting, glowing clouds into a calm, warm dreamland where everything is soft, hushed, and gently sparkling.",
       "Child meets a sleepy, cloud-soft dream creature who is sad because some of the little stars that light the night have drifted away and gone dim.",
-      "Together they drift gently from place to place, and the child helps gather the lost stars one by one, the dreamland growing warmer and calmer with each one.",
+      "Together they set off across the dreamland, floating over pillow-soft hills and quiet moonlit pools in search of the lost stars.",
+      "One by one the child gathers the little stars, cupping each warm glow in their hands as the dreamland grows cosier and calmer.",
+      "One last star has drifted high and far, and the sleepy child must gently and patiently coax it back down.",
       "Child reaches up to hang the very last star, and the whole dreamland glows with a soft golden hush as everyone grows peacefully sleepy.",
       "The moonbeam carries the child gently home to their cozy bed, and they close their eyes — safe, warm, and loved — and drift softly off to sleep.",
     ],
@@ -159,8 +175,8 @@ export async function POST(request) {
       system: `You are a children's book author writing personalized illustrated storybooks for "My Tiny Tales." Each book is 6 pages, one short story moment per page. The book is being made as a keepsake — emotional, beautiful, and treasured.
 
 YOUR TASK:
-Write exactly 6 pages of story. Each page is ONE story beat from the story_arc, adapted to the child's age band. For EACH page also write a matching "illustration" — a concrete visual description of that exact story moment, so the picture on the page shows what the words on the page describe. Return ONLY valid JSON in this structure:
-{"title":"string — a custom book title using the child's name (e.g. 'Lily's Deep Blue Magic')","dedication":"string — one warm line dedicated to the child, e.g. 'For Aria, the bravest explorer in the cosmos'","pages":[{"pageNum":1,"text":"...","illustration":"..."},{"pageNum":2,"text":"...","illustration":"..."},{"pageNum":3,"text":"...","illustration":"..."},{"pageNum":4,"text":"...","illustration":"..."},{"pageNum":5,"text":"...","illustration":"..."},{"pageNum":6,"text":"...","illustration":"..."}]}
+Write exactly 8 pages of story. Each page is ONE story beat from the story_arc, adapted to the child's age band. For EACH page also write a matching "illustration" — a concrete visual description of that exact story moment, so the picture on the page shows what the words on the page describe. Return ONLY valid JSON in this structure:
+{"title":"string — a custom book title using the child's name (e.g. 'Lily's Deep Blue Magic')","dedication":"string — one warm line dedicated to the child, e.g. 'For Aria, the bravest explorer in the cosmos'","pages":[{"pageNum":1,"text":"...","illustration":"..."},{"pageNum":2,"text":"...","illustration":"..."},{"pageNum":3,"text":"...","illustration":"..."},{"pageNum":4,"text":"...","illustration":"..."},{"pageNum":5,"text":"...","illustration":"..."},{"pageNum":6,"text":"...","illustration":"..."},{"pageNum":7,"text":"...","illustration":"..."},{"pageNum":8,"text":"...","illustration":"..."}]}
 
 UNIVERSAL RULES (every age band):
 - The CHILD is the hero. Always center them in the action. Never let a sidekick or parent steal the moment.
@@ -188,13 +204,15 @@ If age_band = "4-6" (Pre-K): 3-5 sentences per page. Simple emotions named direc
 If age_band = "7-9" (Early Reader): 5-6 sentences per page. Varied sentence structure. Light internal thoughts. More nuanced emotions: doubt, determination, hope, relief. Light sensory detail. Total ~300-400 words.
 If age_band = "10-12" (Middle Grade): 6-8 sentences per page. Richer interior life. Light metaphor and sensory writing. Subtle foreshadowing, payoff later. Emotional complexity welcome. Total ~500-650 words.
 
-STRUCTURE OF THE SIX PAGES (universal):
+STRUCTURE OF THE EIGHT PAGES (universal):
 - Page 1: Opening — introduce the child in the world of the adventure. Establish the dream/goal.
 - Page 2: The journey begins. First action, first taste of the adventure.
-- Page 3: A challenge appears. Stakes rise.
-- Page 4: The low moment. Doubt, difficulty, or the biggest obstacle.
-- Page 5: The breakthrough. The child overcomes through their own courage/kindness/cleverness.
-- Page 6: Triumph and warmth. The reward, the celebration, and a quiet emotional beat for the keepsake.
+- Page 3: Discovery and wonder — the child explores deeper and the world opens up.
+- Page 4: A challenge appears. Stakes rise.
+- Page 5: The low moment. Doubt, difficulty, or the biggest obstacle.
+- Page 6: Regroup — the child gathers their courage and finds a fresh idea or new resolve.
+- Page 7: The breakthrough. The child overcomes through their own courage/kindness/cleverness.
+- Page 8: Triumph and warmth. The reward, the celebration, and a quiet emotional beat for the keepsake.
 
 TITLE RULE:
 - The book title should include the child's name and feel like a real picture book title.

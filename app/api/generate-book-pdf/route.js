@@ -81,13 +81,14 @@ function wrapText(text, maxChars = 60) {
 // zero from solidTop up to fadeTop — the scene dissolves into the panel like dusk.
 function fadeIntoPanel(page, x, w, solidTop, fadeTop, color, maxOpacity = 0.9) {
   page.drawRectangle({ x, y: 0, width: w, height: solidTop, color, opacity: maxOpacity });
-  const bands = 64;
+  // Exactly-tiled bands (no overlap) so seams don't double-darken into lines.
+  const bands = 110;
   const bh = (fadeTop - solidTop) / bands;
   for (let i = 0; i < bands; i++) {
     const t = (i + 0.5) / bands;                  // 0 just above the solid base, 1 at fadeTop
     const opacity = maxOpacity * Math.pow(1 - t, 1.6);
-    if (opacity < 0.004) continue;
-    page.drawRectangle({ x, y: solidTop + i * bh, width: w, height: bh + 0.8, color, opacity });
+    if (opacity < 0.003) continue;
+    page.drawRectangle({ x, y: solidTop + i * bh, width: w, height: bh, color, opacity });
   }
 }
 

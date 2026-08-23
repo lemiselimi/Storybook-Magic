@@ -87,16 +87,15 @@ export async function GET(request) {
       if (!res) throw new Error("order not found");
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://mytinytales.studio";
       const pageUrls = [0, 1, 2, 3, 4, 5].map(i => res.images?.[i] ?? null);
+      const padTo = Number(searchParams.get("pages")) || 20;
       const pdfRes = await fetch(`${siteUrl}/api/generate-book-pdf`, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ coverFalUrl: res.images?.cover, pageFalUrls: pageUrls, story: res.story, childName: res.childName }),
+        body: JSON.stringify({ coverFalUrl: res.images?.cover, pageFalUrls: pageUrls, story: res.story, childName: res.childName, padTo }),
       });
       const pj = await pdfRes.json();
       if (!pj.interiorPdfUrl) throw new Error(pj.error || "pdf gen failed");
-      await kv.set(`result:${ref}`, { ...res, coverPdfUrl: pj.coverPdfUrl, interiorPdfUrl: pj.interiorPdfUrl });
-      const bytes = new Uint8Array(await (await fetch(pj.interiorPdfUrl)).arrayBuffer());
-      const { PDFDocument } = await import("pdf-lib");
-      out.regenpdf = { ok: true, ref, interiorPages: (await PDFDocument.load(bytes)).getPageCount() };
+      await kv.set(`result:${ref}`, { ...res, coverPdfUrl: pj.coverPdfUrl, interiorPdfUrl: pj.interiorPdfUrl, interiorPageCount: pj.interiorPageCount });
+      out.regenpdf = { ok: true, ref, interiorPages: pj.interiorPageCount };
     } catch (e) {
       out.regenpdf = { ok: false, error: e?.message || String(e) };
     }

@@ -236,17 +236,15 @@ export async function POST(request) {
     p16.drawText(closingText, { x: (PS - closeW) / 2, y: PS * 0.38, size: 11, font: iFont, color: WHITE, opacity: 0.55 });
     p16.drawText("My Tiny Tales", { x: PS / 2 - 34, y: PS * 0.16, size: 8, font: bFont, color: GOLD, opacity: 0.28 });
 
-    // Pages 17–20: blank back matter — FOUR blanks so the interior is exactly
-    // 20 pages, matching the pageCount sent to Gelato (was 3 → 19 pages, which
-    // Gelato rejected as "Page count is invalid"). Start blank(1)+title(1)+
-    // dedication(1)+6 spreads(12)+The End(1)+4 blanks(4) = 20.
-    addBlank(CREAM);
-    addBlank(CREAM);
-    addBlank(CREAM);
-    addBlank(CREAM);
+    // Pad the back matter with blanks until the interior reaches the target
+    // page count. Gelato requires the declared pageCount to match the PDF
+    // EXACTLY and to meet the product's minimum, so padTo is configurable.
+    const padTo = Math.max(Number(body.padTo) || 20, doc.getPageCount());
+    while (doc.getPageCount() < padTo) addBlank(CREAM);
+    const interiorPageCount = doc.getPageCount();
 
     const interiorPdfBytes = await doc.save();
-    console.log("PDF: interior built (20 pages), uploading...");
+    console.log(`PDF: interior built (${interiorPageCount} pages), uploading...`);
 
     const [coverPdfUrl, interiorPdfUrl] = await Promise.all([
       fal.storage.upload(new File([coverPdfBytes],    "cover.pdf",    { type: "application/pdf" })),
@@ -254,7 +252,7 @@ export async function POST(request) {
     ]);
 
     console.log("PDF: done. cover:", coverPdfUrl, "interior:", interiorPdfUrl);
-    return Response.json({ coverPdfUrl, interiorPdfUrl });
+    return Response.json({ coverPdfUrl, interiorPdfUrl, interiorPageCount });
 
   } catch (err) {
     console.error("generate-book-pdf error:", err.message, err.stack);

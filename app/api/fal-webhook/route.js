@@ -69,7 +69,7 @@ export async function POST(request) {
       throw new Error(`PDF generation failed: ${err.error || pdfRes.status}`);
     }
 
-    const { coverPdfUrl, interiorPdfUrl } = await pdfRes.json();
+    const { coverPdfUrl, interiorPdfUrl, interiorPageCount } = await pdfRes.json();
 
     // Mark book as ready. Print orders are held for customer approval on
     // /book/[ref]; a daily cron auto-submits anything unapproved after 3 days.
@@ -80,6 +80,7 @@ export async function POST(request) {
       status:         "ready",
       coverPdfUrl,
       interiorPdfUrl,
+      interiorPageCount,
       completedAt:    new Date().toISOString(),
       ...(isPrint ? { printApproval: "pending", printReadyAt: new Date().toISOString() } : {}),
     }, { ex: 2_592_000 });

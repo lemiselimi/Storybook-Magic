@@ -5,7 +5,7 @@ export const maxDuration = 60;
 
 const GELATO_API_URL = "https://order.gelatoapis.com/v4/orders";
 
-async function createGelatoOrder(apiKey, { coverPdfUrl, interiorPdfUrl, shippingAddress, contactEmail, title, externalId }) {
+async function createGelatoOrder(apiKey, { coverPdfUrl, interiorPdfUrl, pageCount, shippingAddress, contactEmail, title, externalId }) {
   const nameParts = (shippingAddress.name || "").trim().split(/\s+/);
   const firstName  = nameParts[0] || "Guest";
   const lastName   = nameParts.length > 1 ? nameParts.slice(1).join(" ") : firstName;
@@ -23,7 +23,7 @@ async function createGelatoOrder(apiKey, { coverPdfUrl, interiorPdfUrl, shipping
         { type: "default", url: interiorPdfUrl },
       ],
       quantity: 1,
-      pageCount: 20,
+      pageCount: pageCount || Number(process.env.GELATO_INTERIOR_PAGES) || 32,
       title,
     }],
     shipmentMethodUid: "normal",
@@ -116,7 +116,7 @@ export async function POST(request) {
       throw new Error(`PDF generation failed: ${err.error || pdfRes.status}`);
     }
 
-    const { coverPdfUrl, interiorPdfUrl } = await pdfRes.json();
+    const { coverPdfUrl, interiorPdfUrl, interiorPageCount } = await pdfRes.json();
 
     // ── 3. Submit print order to Gelato ───────────────────────────────────────
     const capName = childName
@@ -126,6 +126,7 @@ export async function POST(request) {
     const gelatoOrder = await createGelatoOrder(gelatoKey, {
       coverPdfUrl,
       interiorPdfUrl,
+      pageCount: interiorPageCount,
       shippingAddress,
       contactEmail,
       title:      `My Tiny Tales — ${capName}'s Story`,

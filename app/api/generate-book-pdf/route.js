@@ -9,13 +9,16 @@ export const maxDuration = 60;
 // 206mm × (72pt / 25.4mm) = 583.9pt → 584pt
 const PS = 584; // interior page: square 584×584 pt
 
-// Interior is padded to this many pages (Gelato product minimum). Overridable
-// via env so the minimum can be tuned without a code change.
-const INTERIOR_PAGES = Number(process.env.GELATO_INTERIOR_PAGES) || 31;
+// Interior is padded to this many pages. Gelato's perfect-bound photobooks
+// require an EVEN interior page count (pages print two-up on each sheet) at or
+// above the product minimum — 28/30/32 validate, odd counts do not. So we round
+// the target up to the next even number. Overridable via env.
+const toEven = (n) => (n % 2 === 0 ? n : n + 1);
+const INTERIOR_PAGES = toEven(Number(process.env.GELATO_INTERIOR_PAGES) || 32);
 
 // Perfect-bound cover wrap: back (584pt) + spine + front (584pt).
 // Spine scales with interior thickness: ~0.097mm/page (170 GSM coated silk),
-// converted to points (72pt / 25.4mm). ≈ 9pt at 31 interior pages. Adjust if
+// converted to points (72pt / 25.4mm). ≈ 9pt at 32 interior pages. Adjust if
 // Gelato's spine calculator gives a different value.
 const SPINE = Math.round(INTERIOR_PAGES * 0.097 * 72 / 25.4);
 const CW = PS * 2 + SPINE; // 1175pt wide
@@ -290,7 +293,8 @@ export async function POST(request) {
     // to fill toward the product's page minimum with pictures, not blanks. The
     // final page is reserved for the back cover.
     const gallery = sceneImgs.filter(Boolean);
-    const padTo = Math.max(Number(body.padTo) || INTERIOR_PAGES, doc.getPageCount() + 1);
+    // Keep the final interior an even page count (Gelato requirement).
+    const padTo = toEven(Math.max(Number(body.padTo) || INTERIOR_PAGES, doc.getPageCount() + 1));
     let gi = 0;
     while (doc.getPageCount() < padTo - 1) {
       const g = doc.addPage([PS, PS]);

@@ -1,13 +1,16 @@
-import Stripe from "stripe";
 import { kv } from "@/lib/kv";
+import { submitPrintFromKV } from "@/lib/gelato";
 
 export const maxDuration = 60;
 export const dynamic = "force-dynamic";
 
-const GELATO_API_URL = "https://order.gelatoapis.com/v4/orders";
-
 // Admin-only: re-submit a failed print order using data already stored in KV.
-// Usage: GET /api/retry-print?ref=<bookRef>&key=<ADMIN_RETRY_KEY>[&force=1]
+// Usage: GET /api/retry-print?ref=<bookRef>&key=<ADMIN_RETRY_KEY>[&rebuild=1][&force=1]
+//   rebuild=1 — regenerate the interior/cover PDFs from the already-generated
+//               images (free, no new AI cost) so they pick up the current
+//               page-count settings before submitting. Use this after a
+//               page-count fix so an existing book doesn't need regenerating.
+//   force=1   — resubmit even if an order was already marked fulfilled.
 export async function GET(request) {
   const adminKey = process.env.ADMIN_RETRY_KEY;
   if (!adminKey) {
@@ -19,17 +22,10 @@ export async function GET(request) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const ref   = searchParams.get("ref");
-  const force = searchParams.get("force") === "1";
+  const ref     = searchParams.get("ref");
+  const force   = searchParams.get("force") === "1";
+  const rebuild = searchParams.get("rebuild") === "1";
   if (!ref) return Response.json({ error: "ref required" }, { status: 400 });
-
-  const gelatoKey = process.env.GELATO_API_KEY;
-  if (!gelatoKey || !process.env.GELATO_PRODUCT_UID) {
-    return Response.json({ error: "Gelato credentials not configured" }, { status: 503 });
-  }
-  if (!process.env.STRIPE_SECRET_KEY) {
-    return Response.json({ error: "Stripe not configured" }, { status: 503 });
-  }
 
   try {
     const result = await kv.get(`result:${ref}`);
@@ -38,7 +34,7 @@ export async function GET(request) {
       return Response.json({ error: "Book has no Stripe session attached" }, { status: 400 });
     }
 
-    // Refuse double-submission unless forced
+    // Refuse double-submission unless forced.
     const existingOrder = await kv.get(`order:${result.sessionId}`);
     if (existingOrder?.status === "fulfilled" && !force) {
       return Response.json({
@@ -49,20 +45,27 @@ export async function GET(request) {
       }, { status: 409 });
     }
 
-    // Reuse stored PDFs; regenerate from stored images only if they're missing
-    let { coverPdfUrl, interiorPdfUrl } = result;
-    if (!coverPdfUrl || !interiorPdfUrl) {
+    // Rebuild the PDFs from the stored images when asked, or when they're
+    // missing. This reuses the already-generated illustrations (no new AI cost)
+    // and picks up the current page-count / layout settings.
+    if (rebuild || !result.coverPdfUrl || !result.interiorPdfUrl) {
       const images = result.images || {};
       if (!images["cover"]) {
-        return Response.json({ error: "No PDFs and no images stored — cannot retry" }, { status: 400 });
+        return Response.json({ error: "No images stored — cannot rebuild PDFs" }, { status: 400 });
       }
+      // Scene slots are 0..(totalJobs-2); fall back to whatever numeric slots exist.
+      const sceneCount = result.totalJobs
+        ? Math.max(result.totalJobs - 1, 0)
+        : Object.keys(images).filter(k => /^\d+$/.test(k)).length;
+      const pageFalUrls = Array.from({ length: sceneCount }, (_, i) => images[i] ?? null);
+
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://mytinytales.studio";
       const pdfRes = await fetch(`${siteUrl}/api/generate-book-pdf`, {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({
           coverFalUrl: images["cover"],
-          pageFalUrls: [0, 1, 2, 3, 4, 5].map(i => images[i] ?? null),
+          pageFalUrls,
           story:       result.story,
           childName:   result.childName,
         }),
@@ -71,80 +74,18 @@ export async function GET(request) {
         const err = await pdfRes.json().catch(() => ({}));
         throw new Error(`PDF generation failed: ${err.error || pdfRes.status}`);
       }
-      ({ coverPdfUrl, interiorPdfUrl } = await pdfRes.json());
+      const { coverPdfUrl, interiorPdfUrl, interiorPageCount } = await pdfRes.json();
 
       await kv.set(`result:${ref}`, {
-        ...result, coverPdfUrl, interiorPdfUrl, status: "ready",
+        ...result, coverPdfUrl, interiorPdfUrl, interiorPageCount, status: "ready",
       }, { ex: 2_592_000 }).catch(() => {});
     }
 
-    // Shipping address from the original Stripe checkout session
-    const stripe  = new Stripe(process.env.STRIPE_SECRET_KEY);
-    const session = await stripe.checkout.sessions.retrieve(result.sessionId);
-    if (session.payment_status !== "paid") {
-      return Response.json({ error: "Payment not completed on session" }, { status: 402 });
-    }
-    const shipping = session.shipping_details ?? null;
-    const address  = shipping?.address ?? session.customer_details?.address ?? null;
-    if (!address) {
-      return Response.json({ error: "No shipping address on Stripe session" }, { status: 400 });
-    }
-
-    const nameParts = (shipping?.name || session.customer_details?.name || "").trim().split(/\s+/);
-    const firstName = nameParts[0] || "Guest";
-    const lastName  = nameParts.length > 1 ? nameParts.slice(1).join(" ") : firstName;
-
-    const gelatoRes = await fetch(GELATO_API_URL, {
-      method:  "POST",
-      headers: { "X-API-KEY": gelatoKey, "Content-Type": "application/json" },
-      body:    JSON.stringify({
-        orderType:           "order",
-        orderReferenceId:    `${result.sessionId}-${Date.now()}`,
-        customerReferenceId: ref,
-        currency:            "USD",
-        items: [{
-          itemReferenceId: `${ref}-1`,
-          productUid:      process.env.GELATO_PRODUCT_UID,
-          files: [
-            { type: "cover",   url: coverPdfUrl    },
-            { type: "default", url: interiorPdfUrl },
-          ],
-          quantity: 1,
-          pageCount: 20,
-          title: result.story?.title || "My Tiny Tales",
-        }],
-        shipmentMethodUid: "normal",
-        shippingAddress: {
-          firstName,
-          lastName,
-          addressLine1: address.line1        || "",
-          addressLine2: address.line2        || undefined,
-          city:         address.city         || "",
-          state:        address.state        || undefined,
-          postCode:     address.postal_code  || "",
-          country:      address.country      || "US",
-          email:        session.customer_details?.email || "",
-          phone:        session.customer_details?.phone || undefined,
-        },
-      }),
-    });
-
-    if (!gelatoRes.ok) {
-      const text = await gelatoRes.text();
-      throw new Error(`Gelato order failed: ${gelatoRes.status} — ${text}`);
-    }
-
-    const gelatoOrder = await gelatoRes.json();
-    console.log("retry-print: Gelato order created:", gelatoOrder.id, "ref:", ref);
-
-    await kv.set(`order:${result.sessionId}`, {
-      ref, plan: "print", status: "fulfilled",
-      gelatoOrderId: gelatoOrder.id,
-      fulfilledAt:   new Date().toISOString(),
-      retried:       true,
-    }, { ex: 2_592_000 }).catch(() => {});
-
-    return Response.json({ ok: true, gelatoOrderId: gelatoOrder.id, ref });
+    // Single source of truth for the Gelato submission (uses the stored
+    // interiorPageCount, correct address, and idempotency).
+    const { gelatoOrderId, alreadyFulfilled } = await submitPrintFromKV(ref);
+    console.log("retry-print: ref", ref, "order", gelatoOrderId, alreadyFulfilled ? "(already fulfilled)" : "");
+    return Response.json({ ok: true, gelatoOrderId, ref, rebuilt: rebuild });
 
   } catch (err) {
     console.error("retry-print error:", err.message);

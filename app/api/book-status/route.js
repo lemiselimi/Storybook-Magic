@@ -18,7 +18,7 @@ export async function GET(request) {
       story:          result.story,
       plan:           result.plan,
       coverUrl:       proxied(result.images?.cover),
-      pageUrls:       [0,1,2,3,4,5].map(i => proxied(result.images?.[i])),
+      pageUrls:       (result.story?.pages || []).map((_, i) => proxied(result.images?.[i])),
       interiorPdfUrl: result.interiorPdfUrl ?? null,
       completedAt:    result.completedAt ?? null,
       printApproval:  result.printApproval ?? null,

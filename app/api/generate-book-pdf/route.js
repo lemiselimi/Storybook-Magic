@@ -9,12 +9,11 @@ export const maxDuration = 60;
 // 206mm × (72pt / 25.4mm) = 583.9pt → 584pt
 const PS = 584; // interior page: square 584×584 pt
 
-// Interior is padded to this many pages. Gelato's perfect-bound photobooks
-// require an EVEN interior page count (pages print two-up on each sheet) at or
-// above the product minimum — 28/30/32 validate, odd counts do not. So we round
-// the target up to the next even number. Overridable via env.
+// Interior is padded to this many pages (even; pages print two-up on each
+// sheet). Prodigi softcover minimum is 20 — the leanest, cheapest book that
+// still fits all 8 chapters. Overridable via env.
 const toEven = (n) => (n % 2 === 0 ? n : n + 1);
-const INTERIOR_PAGES = toEven(Number(process.env.GELATO_INTERIOR_PAGES) || 32);
+const INTERIOR_PAGES = toEven(Number(process.env.PRINT_MIN_PAGES) || Number(process.env.GELATO_INTERIOR_PAGES) || 20);
 
 // Perfect-bound cover wrap: back (584pt) + spine + front (584pt).
 // Spine scales with interior thickness: ~0.097mm/page (170 GSM coated silk),
@@ -213,17 +212,6 @@ export async function POST(request) {
     const subW = iFont.widthOfTextAtSize(subText2, 12);
     p2.drawText(subText2, { x: (PS - subW) / 2, y: PS * 0.35, size: 12, font: iFont, color: GOLD, opacity: 0.7 });
 
-    // Page 3: Dedication
-    const p3 = doc.addPage([PS, PS]);
-    p3.drawRectangle({ x: 0, y: 0, width: PS, height: PS, color: DARK });
-    p3.drawText("A story created for", { x: PS / 2 - 54, y: PS * 0.66, size: 10, font: iFont, color: GOLD, opacity: 0.5 });
-    const nameW = hFont.widthOfTextAtSize(capName, 44);
-    p3.drawText(capName, { x: (PS - nameW) / 2, y: PS * 0.50, size: 44, font: hFont, color: WHITE });
-    p3.drawRectangle({ x: PS / 2 - 26, y: PS * 0.45, width: 52, height: 2, color: GOLD, opacity: 0.4 });
-    p3.drawText("\"May every adventure remind you", { x: PS / 2 - 102, y: PS * 0.36, size: 11, font: iFont, color: WHITE, opacity: 0.6 });
-    p3.drawText("how loved, brave, and magical you are.\"", { x: PS / 2 - 112, y: PS * 0.27, size: 11, font: iFont, color: WHITE, opacity: 0.6 });
-    p3.drawText("My Tiny Tales", { x: PS / 2 - 36, y: PS * 0.13, size: 8, font: bFont, color: GOLD, opacity: 0.3 });
-
     // 8 story spreads — left page = text, right page = full-bleed illustration
     const pages = story?.pages || [];
     const CHAPTER_NAMES = ["One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight"];
@@ -279,21 +267,11 @@ export async function POST(request) {
     p16.drawText(closingText, { x: (PS - closeW) / 2, y: PS * 0.38, size: 11, font: iFont, color: WHITE, opacity: 0.55 });
     p16.drawText("My Tiny Tales", { x: PS / 2 - 34, y: PS * 0.16, size: 8, font: bFont, color: GOLD, opacity: 0.28 });
 
-    // ── Back matter: keepsake page + full-page illustration gallery, then the
-    // back cover last. Fills the 28-page product minimum with real content
-    // (art + keepsake) instead of blank pages.
-    const belongs = doc.addPage([PS, PS]);
-    belongs.drawRectangle({ x: 0, y: 0, width: PS, height: PS, color: DARK });
-    belongs.drawText("This book belongs to", { x: PS / 2 - 82, y: PS * 0.60, size: 13, font: iFont, color: GOLD, opacity: 0.6 });
-    const belongsW = hFont.widthOfTextAtSize(capName, 40);
-    belongs.drawText(capName, { x: (PS - belongsW) / 2, y: PS * 0.46, size: 40, font: hFont, color: WHITE });
-    belongs.drawRectangle({ x: PS / 2 - 30, y: PS * 0.42, width: 60, height: 1.5, color: GOLD, opacity: 0.4 });
-
-    // Full-page illustration gallery — reuse the scene art (zero extra AI cost)
-    // to fill toward the product's page minimum with pictures, not blanks. The
-    // final page is reserved for the back cover.
+    // Pad only if a short book falls under the product minimum — reuse the scene
+    // art (zero extra AI cost) so any filler is pictures, not blanks. A normal
+    // 8-chapter book already lands on the target, so this adds nothing. The final
+    // page is reserved for the back cover; keep the count even.
     const gallery = sceneImgs.filter(Boolean);
-    // Keep the final interior an even page count (Gelato requirement).
     const padTo = toEven(Math.max(Number(body.padTo) || INTERIOR_PAGES, doc.getPageCount() + 1));
     let gi = 0;
     while (doc.getPageCount() < padTo - 1) {

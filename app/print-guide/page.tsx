@@ -1,3 +1,9 @@
+export const metadata = {
+  title: "How to Print Your Storybook",
+  description: "A simple guide to printing your personalised My Tiny Tales storybook at home, or ordering a premium softcover keepsake.",
+  alternates: { canonical: "/print-guide" },
+};
+
 export default function PrintGuidePage() {
   const steps = [
     {

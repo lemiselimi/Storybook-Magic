@@ -1,5 +1,11 @@
 import Link from "next/link";
 
+export const metadata = {
+  title: "Terms of Service",
+  description: "The terms governing use of My Tiny Tales personalised storybooks.",
+  alternates: { canonical: "/terms" },
+};
+
 const sections = [
   {
     title: "1. Who We Are",

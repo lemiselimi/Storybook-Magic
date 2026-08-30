@@ -18,26 +18,63 @@ const outfit = Outfit({
   weight: ["400", "500", "600", "700"],
 });
 
+const SITE_DESC = "Turn a single photo into a personalised children's storybook starring your child as the hero — cinematic 3D illustrations and a custom story, previewed free in minutes.";
+
 export const metadata: Metadata = {
-  title: "My Tiny Tales — Your Child, The Hero of Their Own Story",
-  description: "AI-generated personalised storybooks starring your child. Beautiful cinematic 3D illustrations, delivered in minutes.",
-  icons: {
-    icon: "/favicon.svg",
+  metadataBase: new URL("https://mytinytales.studio"),
+  title: {
+    default: "My Tiny Tales — Your Child, The Hero of Their Own Story",
+    template: "%s · My Tiny Tales",
   },
+  description: SITE_DESC,
+  keywords: [
+    "personalised children's book", "personalized children's book", "custom storybook",
+    "AI children's book", "make your child the hero of a book", "personalised storybook gift",
+    "custom kids book", "photo storybook for kids", "personalised bedtime story",
+  ],
+  applicationName: "My Tiny Tales",
+  alternates: { canonical: "/" },
+  robots: { index: true, follow: true },
+  icons: { icon: "/favicon.svg" },
   openGraph: {
     title: "My Tiny Tales — Your Child, The Hero of Their Own Story",
-    description: "AI-generated personalised storybooks starring your child. Beautiful cinematic 3D illustrations, delivered in minutes.",
+    description: SITE_DESC,
     url: "https://mytinytales.studio",
     siteName: "My Tiny Tales",
     images: [{ url: "https://mytinytales.studio/og-image.jpg", width: 1200, height: 630 }],
+    locale: "en_US",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "My Tiny Tales — Your Child, The Hero of Their Own Story",
-    description: "AI-generated personalised storybooks starring your child. Beautiful cinematic 3D illustrations, delivered in minutes.",
+    description: SITE_DESC,
     images: ["https://mytinytales.studio/og-image.jpg"],
   },
+};
+
+// Organization + WebSite structured data (brand knowledge panel + sitelinks search).
+const JSON_LD = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://mytinytales.studio/#organization",
+      name: "My Tiny Tales",
+      url: "https://mytinytales.studio",
+      logo: "https://mytinytales.studio/og-image.jpg",
+      email: "hello@mytinytales.studio",
+      description: SITE_DESC,
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://mytinytales.studio/#website",
+      url: "https://mytinytales.studio",
+      name: "My Tiny Tales",
+      description: SITE_DESC,
+      publisher: { "@id": "https://mytinytales.studio/#organization" },
+    },
+  ],
 };
 
 export default function RootLayout({
@@ -54,6 +91,10 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
       </head>
       <body className="min-h-full flex flex-col">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
+        />
         {children}
         <CookieBanner />
         <Analytics />

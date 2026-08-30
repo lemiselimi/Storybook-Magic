@@ -11,7 +11,7 @@ const SURF_BDR = "rgba(255,255,255,0.08)";
 const faqs = [
   {
     q: "How does it work?",
-    a: "Upload a photo of your child, tell us their name and age, and we'll create a personalised AI character that looks just like them. Within minutes you'll have a beautifully illustrated 6-scene storybook starring your little one.",
+    a: "Upload a photo of your child, tell us their name and age, and we'll create a personalised AI character that looks just like them. Within minutes you'll have a beautifully illustrated 8-scene storybook starring your little one.",
   },
   {
     q: "What photo should I use?",
@@ -47,7 +47,7 @@ const faqs = [
   },
   {
     q: "Do you offer refunds?",
-    a: "Yes — we back every book with a 30-day happiness promise. If you're not delighted for any reason, contact us within 30 days of purchase and we'll re-generate your book or issue a full refund. See our Refund Policy for details.",
+    a: "Yes — we back every book with a 30-day happiness promise. If something isn't right, contact us within 30 days and we'll re-create your book to make it right, or refund you if we can't. See our Refund Policy for details.",
   },
 ];
 
@@ -56,6 +56,18 @@ export default function FAQPage() {
 
   return (
     <main style={{ minHeight: "100vh", background: "linear-gradient(180deg, #07090F 0%, #0E1118 100%)", color: TEXT, fontFamily: "var(--font-inter, 'Inter', sans-serif)" }}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: faqs.map((f) => ({
+            "@type": "Question",
+            name: f.q,
+            acceptedAnswer: { "@type": "Answer", text: f.a },
+          })),
+        }) }}
+      />
       <div style={{ maxWidth: 760, margin: "0 auto", padding: "80px 24px 120px" }}>
         <Link href="/" style={{ color: GOLD, fontSize: 14, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 40, opacity: 0.85 }}>
           ← Back to home

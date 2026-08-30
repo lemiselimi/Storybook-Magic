@@ -1,5 +1,11 @@
 import Link from "next/link";
 
+export const metadata = {
+  title: "Privacy Policy",
+  description: "How My Tiny Tales collects, uses, and protects your family's data, including our COPPA and CCPA commitments. Photos auto-delete within 48 hours.",
+  alternates: { canonical: "/privacy" },
+};
+
 const sections = [
   {
     title: "1. What We Collect",

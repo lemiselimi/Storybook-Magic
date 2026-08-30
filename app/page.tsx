@@ -610,7 +610,7 @@ export default function LandingPage() {
             <span style={{ flexShrink: 0 }}><TrustShieldSVG /></span>
             <p style={{ color: TEXT, fontSize: isMobile ? 14 : 15, margin: 0, lineHeight: 1.6, maxWidth: 620 }}>
               <strong style={{ color: GOLD }}>Our 30-day happiness promise.</strong>{" "}
-              If your book doesn’t bring a smile, email us within 30 days for a full refund — and keep the keepsake.
+              If your book isn’t right, email us within 30 days and we’ll re-create it until you’re happy, or refund you if we can’t make it right.
             </p>
           </div>
         </div>

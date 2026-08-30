@@ -1,5 +1,11 @@
 import Link from "next/link";
 
+export const metadata = {
+  title: "Children's Data & COPPA",
+  description: "How My Tiny Tales handles children's photos and data under COPPA. Photos are never used to train AI and auto-delete within 48 hours.",
+  alternates: { canonical: "/childrens-data" },
+};
+
 export default function ChildrensDataPage() {
   return (
     <main style={{ minHeight: "100vh", background: "#0F0B1F", color: "#F5F0E0", fontFamily: "var(--font-inter, sans-serif)" }}>

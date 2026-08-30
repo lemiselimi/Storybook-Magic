@@ -1,5 +1,11 @@
 import Link from "next/link";
 
+export const metadata = {
+  title: "Refund Policy",
+  description: "Our 30-day happiness guarantee: we re-create or reprint your book to make it right, and refund you if we can't.",
+  alternates: { canonical: "/refunds" },
+};
+
 export default function RefundsPage() {
   return (
     <main style={{ minHeight: "100vh", background: "#0F0B1F", color: "#F5F0E0", fontFamily: "var(--font-inter, sans-serif)" }}>
@@ -18,13 +24,15 @@ export default function RefundsPage() {
           {[
             {
               title: "Our 30-Day Happiness Promise",
-              body: `If you are not delighted with your storybook for any reason, contact us within 30 days of purchase and we will either re-generate your book at no charge or issue a full refund — whichever you prefer. No awkward questions, no hoops.
+              body: `If something isn't right with your book, whether the likeness is off, there's a quality problem, or a print defect, contact us within 30 days of purchase and we'll re-create or reprint it free of charge until you're happy. If we genuinely can't make it right, we'll refund you.
+
+Because each book is personalised and made to order, this guarantee covers quality problems, not change-of-mind after you've downloaded or received your book. If we issue a refund, your licence to use the book ends, we ask that you delete the digital files, and we may disable the download and share links. One remedy per order.
 
 To claim: email hello@mytinytales.studio with your order number and a brief description of the issue. We aim to respond within 1 business day.`,
             },
             {
               title: "Digital Downloads",
-              body: "Because digital downloads are delivered instantly, they are generally non-refundable once downloaded — however, our 30-Day Happiness Promise overrides this and gives you a full refund right regardless. If your PDF is corrupted, fails to download, or is clearly different from the approved preview pages, we will always issue a refund or replacement.",
+              body: "Because digital downloads are delivered instantly and can't be returned, they are non-refundable for change-of-mind once downloaded. If there's a genuine problem, such as a corrupted PDF, a failed download, or a book clearly different from the pages you approved, we'll fix it, or refund you if we can't. A refund revokes your licence to use the files, which you agree to delete.",
             },
             {
               title: "Print Orders",

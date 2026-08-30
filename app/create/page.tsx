@@ -2172,7 +2172,7 @@ export default function StorybookCreator() {
           {printOrdered && (
             <div style={{ margin: "16px auto 0", maxWidth: 900, background: "rgba(40,200,100,0.08)", border: "1px solid rgba(40,200,100,0.3)", borderRadius: 14, padding: "16px 24px" }}>
               <p style={{ color: "rgba(180,255,200,0.95)", fontWeight: 700, fontSize: 15, margin: "0 0 4px" }}>Your printed book is on its way!</p>
-              <p style={{ color: "rgba(180,255,200,0.7)", fontSize: 13, margin: 0 }}>Your order has been sent to our print partner. You'll receive a shipping confirmation by email within 3–5 business days.</p>
+              <p style={{ color: "rgba(180,255,200,0.7)", fontSize: 13, margin: 0 }}>Your order has been sent to our print partner. You'll receive a shipping confirmation by email once it's printed and on its way.</p>
             </div>
           )}
 

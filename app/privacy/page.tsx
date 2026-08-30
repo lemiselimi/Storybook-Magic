@@ -39,7 +39,7 @@ const sections = [
   },
   {
     title: "10. Contact",
-    body: "My Tiny Tales · hello@mytinytales.studio\n\nFor any privacy question or request, email us with 'Privacy Request' in the subject line.\n\nThis policy was last updated August 2026.",
+    body: "My Tiny Tales is operated as a sole proprietorship by [OWNER LEGAL NAME] in Illinois, United States.\n\nEmail: hello@mytinytales.studio\nMail: [MAILING ADDRESS]\n\nFor any privacy question or request, email us with 'Privacy Request' in the subject line.\n\nThis policy was last updated August 2026.",
   },
 ];
 

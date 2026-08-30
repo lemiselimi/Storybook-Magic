@@ -274,7 +274,7 @@ export default function BookPage() {
             <div style={{ background: "linear-gradient(135deg, rgba(232,192,122,0.12), rgba(212,162,76,0.08))", border: "1px solid rgba(232,192,122,0.35)", borderRadius: 18, padding: isMobile ? "24px 20px" : "32px 36px", textAlign: "center" }}>
               <h2 style={{ color: "white", fontSize: isMobile ? 19 : 22, fontWeight: 700, margin: "0 0 8px" }}>Happy with every page?</h2>
               <p style={{ color: "rgba(245,240,224,0.7)", fontSize: 14, margin: "0 0 20px", lineHeight: 1.7 }}>
-                This is exactly how your softcover book will be printed. Press the button to send it to our print partner — it ships within 5–7 days.
+                This is exactly how your softcover book will be printed. Press the button to send it to our print partner. Most books arrive within about 1-2 weeks.
               </p>
               <button onClick={() => setShowPrintConfirm(true)} style={{ padding: "15px 36px", borderRadius: 50, border: "none", background: "linear-gradient(135deg, #E8C07A, #D4A24C)", color: DARK, fontSize: 16, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" }}>
                 Approve &amp; Send to Print →
@@ -293,7 +293,7 @@ export default function BookPage() {
           {plan === "print" && !printPending && !approving && (
             <div style={{ background: "rgba(40,200,100,0.08)", border: "1px solid rgba(40,200,100,0.3)", borderRadius: 16, padding: "20px 28px", textAlign: "center" }}>
               <p style={{ color: "rgba(180,255,200,0.95)", fontWeight: 700, fontSize: 16, margin: "0 0 6px" }}>Your printed book is on its way!</p>
-              <p style={{ color: "rgba(180,255,200,0.7)", fontSize: 13, margin: 0, lineHeight: 1.6 }}>Your order is with our print partner. It ships within 5–7 business days.</p>
+              <p style={{ color: "rgba(180,255,200,0.7)", fontSize: 13, margin: 0, lineHeight: 1.6 }}>Your order is with our print partner. Most books arrive within about 1-2 weeks.</p>
             </div>
           )}
 

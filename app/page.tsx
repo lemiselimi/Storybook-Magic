@@ -87,7 +87,7 @@ const PRINT_FEATURES = [
   "Everything in Digital",
   "Premium softcover, 8×8 inch",
   "Matte-laminated cover, 20 pages",
-  "Ships within 5-7 days",
+  "Ships in about 1-2 weeks",
 ];
 
 const FOOTER_LINKS = {
@@ -551,7 +551,7 @@ export default function LandingPage() {
                 <span style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: 52, fontWeight: 600, color: TEXT, lineHeight: 1 }}>37</span>
                 <span style={{ fontSize: 22, color: MUTED, marginTop: 14, fontWeight: 600 }}>.99</span>
               </div>
-              <p style={{ color: "rgba(245,240,224,0.38)", fontSize: 13, margin: "0 0 20px" }}>Delivered to your door in 5-7 days</p>
+              <p style={{ color: "rgba(245,240,224,0.38)", fontSize: 13, margin: "0 0 20px" }}>Delivered to your door in about 1-2 weeks</p>
 
               {/* 3D book mockup inside the card */}
               <div style={{ display: "flex", justifyContent: "center", marginBottom: 22 }}>

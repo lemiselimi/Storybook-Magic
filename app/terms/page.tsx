@@ -3,11 +3,11 @@ import Link from "next/link";
 const sections = [
   {
     title: "1. Who We Are",
-    body: "My Tiny Tales (the \u2018Company\u2019, \u2018we\u2019, \u2018us\u2019, \u2018our\u2019) is a personalised storybook service based in the United States. You can reach us at hello@mytinytales.studio.",
+    body: "My Tiny Tales (the \u2018Company\u2019, \u2018we\u2019, \u2018us\u2019, \u2018our\u2019) is a personalised storybook service operated as a sole proprietorship by [OWNER LEGAL NAME] in the State of Illinois, United States. You can reach us at hello@mytinytales.studio or by post at [MAILING ADDRESS].",
   },
   {
     title: "2. What We Offer",
-    body: "My Tiny Tales is an AI-powered personalised storybook service. You upload a photo of your child, provide their name and age, and choose an adventure theme. We use artificial intelligence to generate a bespoke illustrated storybook in which your child appears as the hero. You may preview 2 pages free of charge; full 6-page books require payment.",
+    body: "My Tiny Tales is an AI-powered personalised storybook service. You upload a photo of your child, provide their name and age, and choose an adventure theme. We use artificial intelligence to generate a bespoke illustrated storybook in which your child appears as the hero. You may preview 2 pages free of charge; full 8-page books require payment.",
   },
   {
     title: "3. Eligibility",
@@ -23,7 +23,7 @@ const sections = [
   },
   {
     title: "6. Print Orders",
-    body: "If you add a print-and-ship option, physical books are produced and fulfilled by our print partner and typically delivered within 5–10 business days. Delivery timescales are estimates only. Risk of loss passes to you on dispatch. See our Refunds Policy for damaged-in-transit claims.",
+    body: "If you add a print-and-ship option, physical books are produced and fulfilled by our print partner and typically arrive within about 1-2 weeks (production plus shipping). Delivery timescales are estimates only. Risk of loss passes to you on dispatch. See our Refunds Policy for damaged-in-transit claims.",
   },
   {
     title: "7. Intellectual Property",
@@ -47,7 +47,7 @@ const sections = [
   },
   {
     title: "12. Governing Law",
-    body: "These terms are governed by the laws of the United States and the State of [YOUR STATE OF INCORPORATION], without regard to conflict-of-laws principles, and any disputes shall be brought in the state or federal courts located there. Nothing in these terms limits any non-waivable rights you may have under the consumer-protection laws of your state of residence.",
+    body: "These terms are governed by the laws of the State of Illinois and applicable U.S. federal law, without regard to conflict-of-laws principles, and any disputes shall be brought in the state or federal courts located in Illinois. Nothing in these terms limits any non-waivable rights you may have under the consumer-protection laws of your state of residence.",
   },
   {
     title: "13. Changes to These Terms",

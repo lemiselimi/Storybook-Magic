@@ -1,5 +1,5 @@
 import { kv } from "@/lib/kv";
-import { submitPrintFromKV, sendPrintFailureAlert } from "@/lib/gelato";
+import { submitPrintFromKV, sendPrintFailureAlert } from "@/lib/print";
 
 export const maxDuration = 60;
 export const dynamic = "force-dynamic";
@@ -33,8 +33,8 @@ export async function GET(request) {
         continue;
       }
 
-      const { gelatoOrderId } = await submitPrintFromKV(ref);
-      console.log("auto-print: submitted ref", ref, "order", gelatoOrderId);
+      const { orderId } = await submitPrintFromKV(ref);
+      console.log("auto-print: submitted ref", ref, "order", orderId);
       out.submitted++;
 
     } catch (err) {

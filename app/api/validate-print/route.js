@@ -1,5 +1,5 @@
 import { kv } from "@/lib/kv";
-import { submitPrintFromKV } from "@/lib/gelato";
+import { submitPrintFromKV } from "@/lib/print";
 
 export const maxDuration = 60;
 export const dynamic = "force-dynamic";

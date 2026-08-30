@@ -1,5 +1,5 @@
 import { kv } from "@/lib/kv";
-import { submitPrintFromKV } from "@/lib/gelato";
+import { submitPrintFromKV } from "@/lib/print";
 
 export const maxDuration = 60;
 export const dynamic = "force-dynamic";
@@ -88,7 +88,7 @@ export async function GET(request) {
     // interiorPageCount, correct address, and idempotency). dryRun validates
     // the payload as a draft without placing a real order.
     const submitRes = await submitPrintFromKV(ref, { dryRun });
-    console.log("retry-print: ref", ref, dryRun ? "(dry-run validated)" : `order ${submitRes.gelatoOrderId}`);
+    console.log("retry-print: ref", ref, dryRun ? "(dry-run validated)" : `order ${submitRes.orderId}`);
     return Response.json({ ok: true, ...submitRes, ref, rebuilt: rebuild });
 
   } catch (err) {

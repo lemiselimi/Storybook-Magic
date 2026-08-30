@@ -1,5 +1,5 @@
 import { kv } from "@/lib/kv";
-import { submitPrintFromKV, sendPrintFailureAlert } from "@/lib/gelato";
+import { submitPrintFromKV, sendPrintFailureAlert } from "@/lib/print";
 
 export const maxDuration = 60;
 export const dynamic = "force-dynamic";
@@ -22,8 +22,8 @@ export async function POST(request) {
     if (!result) return Response.json({ error: "Book not found" }, { status: 404 });
     sessionId = result.sessionId ?? null;
 
-    const { gelatoOrderId, alreadyFulfilled } = await submitPrintFromKV(ref);
-    console.log("approve-print: ref", ref, "order", gelatoOrderId, alreadyFulfilled ? "(already fulfilled)" : "");
+    const { orderId, alreadyFulfilled } = await submitPrintFromKV(ref);
+    console.log("approve-print: ref", ref, "order", orderId, alreadyFulfilled ? "(already fulfilled)" : "");
     return Response.json({ ok: true });
 
   } catch (err) {

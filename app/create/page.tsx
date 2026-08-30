@@ -27,6 +27,7 @@ const THEME_CLOSING: Record<string, (name: string) => string> = {
 };
 
 const HAIR_COLORS = [
+  { id: "auto",        label: "Match photo", hex: "#4A5568" },
   { id: "blonde",      label: "Blonde",      hex: "#E8C76B" },
   { id: "brown",       label: "Brown",       hex: "#8B5E3C" },
   { id: "dark-brown",  label: "Dark Brown",  hex: "#3B1F0E" },
@@ -37,6 +38,7 @@ const HAIR_COLORS = [
 ];
 
 const EYE_COLORS = [
+  { id: "auto",        label: "Match photo", hex: "#4A5568" },
   { id: "brown",       label: "Brown",       hex: "#7B4A3A" },
   { id: "dark-brown",  label: "Dark Brown",  hex: "#3E2207" },
   { id: "blue",        label: "Blue",        hex: "#4A90D9" },
@@ -54,7 +56,7 @@ const PAGE_BACKGROUNDS = [
   "linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)",
 ];
 
-const TOTAL_STEPS     = 5;
+const TOTAL_STEPS     = 4;
 
 // LoRA uses trigger word TOK — all prompts must start with "a photo of TOK"
 const CLOTHING = " Fully dressed at all times in an age-appropriate outfit: long-sleeved top, full-length trousers or skirt, shoes or boots. No bare skin visible below the neckline or above the wrist. No logos, no brand names, no text, no character prints, no emblems on clothing.";
@@ -183,8 +185,10 @@ function buildGenderedPrompt(prompt: string, gender: string, age: number, hairCo
     age <= 6  ? "small child body, " :
     age <= 10 ? "child-sized body, " : "";
 
-  const hairHint = hairColor ? `${hairColor.replace(/-/g, " ")} hair, ` : "";
-  const eyeHint  = eyeColor  ? `${eyeColor.replace(/-/g, " ")} eyes, `  : "";
+  // "auto" (default) injects nothing so the child's real hair/eye colour is read
+  // from the reference photo. A specific pick overrides it.
+  const hairHint = hairColor && hairColor !== "auto" ? `${hairColor.replace(/-/g, " ")} hair, ` : "";
+  const eyeHint  = eyeColor  && eyeColor  !== "auto" ? `${eyeColor.replace(/-/g, " ")} eyes, `  : "";
 
   // ONE fixed, detailed outfit worn identically on every page + cover. This is
   // the main lever for character consistency across the book: Nano Banana has no
@@ -546,8 +550,8 @@ export default function StorybookCreator() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   // ── Appearance ───────────────────────────────────────────────────────────────
-  const [hairColor, setHairColor] = useState("brown");
-  const [eyeColor,  setEyeColor]  = useState("brown");
+  const [hairColor, setHairColor] = useState("auto");
+  const [eyeColor,  setEyeColor]  = useState("auto");
 
 
   // ── Form ─────────────────────────────────────────────────────────────────────
@@ -650,7 +654,7 @@ export default function StorybookCreator() {
   // ── Visibility change: warn user if they background during generation ────────
   useEffect(() => {
     const onVisibility = () => {
-      const isGenerating = previewStatus === "loading" || (mainStep === "book" && scenesCompleted < 6);
+      const isGenerating = previewStatus === "loading" || (mainStep === "book" && scenesCompleted < 9);
       if (document.hidden && isGenerating) setTabHidden(true);
       if (!document.hidden) setTabHidden(false);
       // Re-acquire wake lock when tab comes back (it auto-releases on hide)
@@ -953,7 +957,7 @@ export default function StorybookCreator() {
   }, [theme, childName, childAge, childGender, hairColor, eyeColor, photosBase64]);
 
   useEffect(() => {
-    if (onboardingStep === 5 && !previewStarted.current) {
+    if (onboardingStep === 4 && !previewStarted.current) {
       previewStarted.current = true;
       generatePreview();
     }
@@ -1338,7 +1342,7 @@ export default function StorybookCreator() {
   const resetAll = () => {
     setMainStep("onboarding"); setOnboardingStep(1); setStepDir("fwd");
     setPhotos([]); setPhotosBase64([]); setLoraUrl(null); setReferenceUrl(null); referenceUrlRef.current = null;
-    setHairColor("brown"); setEyeColor("brown");
+    setHairColor("auto"); setEyeColor("auto");
     setStory(null); setPreviewStory(null); setPreviewImages(Array(8).fill(null));
     setPreviewCoverUrl(null); setCoverImageUrl(null);
     setPreviewStatus("idle"); setPreviewDone(0); previewStarted.current = false;
@@ -1695,7 +1699,7 @@ export default function StorybookCreator() {
             );
           })()}
 
-          <div key={`step-${onboardingStep}`} style={{ width: "100%", maxWidth: onboardingStep === 4 ? 740 : 540, animation: `${stepDir === "fwd" ? "slideInFwd" : "slideInBack"} 0.3s ease both` }}>
+          <div key={`step-${onboardingStep}`} style={{ width: "100%", maxWidth: onboardingStep === 3 ? 740 : 540, animation: `${stepDir === "fwd" ? "slideInFwd" : "slideInBack"} 0.3s ease both` }}>
 
             {/* ── STEP 1: Upload ── */}
             {onboardingStep === 1 && (
@@ -1772,28 +1776,8 @@ export default function StorybookCreator() {
               </div>
             )}
 
-            {/* ── STEP 2: Appearance ── */}
+            {/* ── STEP 2: Customize (name / gender / age) ── */}
             {onboardingStep === 2 && (
-              <div>
-                <Mascot msg="Let's make sure we get every detail right! 🎨 Pick your child's hair and eye colour." />
-                <div style={{ background: "rgba(255,255,255,0.07)", backdropFilter: "blur(12px)", borderRadius: 22, padding: isMobile ? 18 : 28, border: "1px solid rgba(255,255,255,0.12)", boxShadow: "0 4px 24px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.08)", display: "flex", flexDirection: "column", gap: 28 }}>
-                  <ColorPicker label="Hair colour" colors={HAIR_COLORS} selected={hairColor} onSelect={setHairColor} />
-                  <ColorPicker label="Eye colour"  colors={EYE_COLORS}  selected={eyeColor}  onSelect={setEyeColor}  />
-                </div>
-                <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
-                  <button onClick={() => goToStep(1)} style={{ padding: "14px 20px", borderRadius: 14, border: "1px solid rgba(245,240,224,0.18)", background: "transparent", color: "rgba(245,240,224,0.45)", fontSize: 14, cursor: "pointer" }}>← Back</button>
-                  <button
-                    onClick={() => goToStep(3)}
-                    style={{ flex: 1, padding: "16px", borderRadius: 14, border: "none", background: "linear-gradient(135deg, #E8C07A, #D4A24C)", color: "#07090F", fontSize: 16, fontWeight: 700, cursor: "pointer" }}
-                  >
-                    Looks perfect! →
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* ── STEP 3: Customize (name / gender / age) ── */}
-            {onboardingStep === 3 && (
               <div>
                 <Mascot msg="Amazing! Every hero needs a name. What should we call them? 🌟" />
 
@@ -1826,16 +1810,16 @@ export default function StorybookCreator() {
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
-                  <button onClick={() => goToStep(2)} style={{ padding: "14px 20px", borderRadius: 14, border: "1px solid rgba(245,240,224,0.18)", background: "transparent", color: "rgba(245,240,224,0.45)", fontSize: 14, cursor: "pointer" }}>← Back</button>
-                  <button onClick={() => goToStep(4)} disabled={!childName.trim()} style={{ flex: 1, padding: "15px", borderRadius: 14, border: "none", background: childName.trim() ? "linear-gradient(135deg, #E8C07A, #D4A24C)" : "rgba(255,255,255,0.08)", color: childName.trim() ? "#07090F" : "rgba(255,255,255,0.3)", fontSize: 16, fontWeight: 700, cursor: childName.trim() ? "pointer" : "not-allowed", transition: "all 0.2s" }}>
+                  <button onClick={() => goToStep(1)} style={{ padding: "14px 20px", borderRadius: 14, border: "1px solid rgba(245,240,224,0.18)", background: "transparent", color: "rgba(245,240,224,0.45)", fontSize: 14, cursor: "pointer" }}>← Back</button>
+                  <button onClick={() => goToStep(3)} disabled={!childName.trim()} style={{ flex: 1, padding: "15px", borderRadius: 14, border: "none", background: childName.trim() ? "linear-gradient(135deg, #E8C07A, #D4A24C)" : "rgba(255,255,255,0.08)", color: childName.trim() ? "#07090F" : "rgba(255,255,255,0.3)", fontSize: 16, fontWeight: 700, cursor: childName.trim() ? "pointer" : "not-allowed", transition: "all 0.2s" }}>
                     {childName.trim() ? `Pick ${childName}'s adventure →` : "Enter a name to continue →"}
                   </button>
                 </div>
               </div>
             )}
 
-            {/* ── STEP 4: Themes ── */}
-            {onboardingStep === 4 && (
+            {/* ── STEP 3: Themes ── */}
+            {onboardingStep === 3 && (
               <div>
                 <Mascot msg={`Great! Now pick the perfect adventure for ${childName || "your little hero"}...`} />
 
@@ -1851,8 +1835,8 @@ export default function StorybookCreator() {
                   ))}
                 </div>
                 <div style={{ display: "flex", gap: 10, marginTop: 22 }}>
-                  <button onClick={() => goToStep(3)} style={{ padding: "14px 20px", borderRadius: 14, border: "1px solid rgba(245,240,224,0.18)", background: "transparent", color: "rgba(245,240,224,0.45)", fontSize: 14, cursor: "pointer" }}>← Back</button>
-                  <button onClick={() => goToStep(5)} style={{ flex: 1, padding: "16px", borderRadius: 14, border: "none", background: "linear-gradient(135deg, #E8C07A, #D4A24C)", color: "#07090F", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>
+                  <button onClick={() => goToStep(2)} style={{ padding: "14px 20px", borderRadius: 14, border: "1px solid rgba(245,240,224,0.18)", background: "transparent", color: "rgba(245,240,224,0.45)", fontSize: 14, cursor: "pointer" }}>← Back</button>
+                  <button onClick={() => goToStep(4)} style={{ flex: 1, padding: "16px", borderRadius: 14, border: "none", background: "linear-gradient(135deg, #E8C07A, #D4A24C)", color: "#07090F", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>
                     Preview your story →
                   </button>
                 </div>
@@ -1863,7 +1847,7 @@ export default function StorybookCreator() {
             )}
 
             {/* ── STEP 5: Preview ── */}
-            {onboardingStep === 5 && (
+            {onboardingStep === 4 && (
               <div>
                 {/* Full-screen loading — shown until ALL scenes done */}
                 {previewStatus !== "done" && (
@@ -1886,7 +1870,7 @@ export default function StorybookCreator() {
                         </svg>
                       </div>
                     ) : (
-                      <BookAssembly done={previewDone} total={7} msg={previewMsg} />
+                      <BookAssembly done={previewDone} total={3} msg={previewMsg} />
                     )}
                     <h2 style={{ color: "white", fontSize: isMobile ? 20 : 24, fontWeight: 700, margin: "0 0 6px" }}>
                       {trainingFailed ? "Story ready!" : "Creating your story..."}
@@ -2064,7 +2048,7 @@ export default function StorybookCreator() {
                     {/* CTAs */}
                     <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(232,192,122,0.2)", borderRadius: 22, padding: isMobile ? 18 : 24 }}>
                       <p style={{ color: "rgba(232,192,122,0.9)", fontSize: 13, fontWeight: 700, textAlign: "center", margin: "0 0 4px", letterSpacing: "0.04em" }}>Your story is being crafted with care</p>
-                      <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, textAlign: "center", margin: "0 0 18px" }}>6 personalised cinematic 3D-illustrated pages starring {childName || "your child"}</p>
+                      <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, textAlign: "center", margin: "0 0 18px" }}>8 personalised cinematic 3D-illustrated pages starring {childName || "your child"}</p>
                       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                         <button onClick={() => handlePurchase("digital")} disabled={!!checkoutLoading} style={{ width: "100%", padding: "17px", borderRadius: 16, border: "none", background: checkoutLoading === "digital" ? "rgba(232,192,122,0.5)" : "linear-gradient(135deg, #E8C07A, #D4A24C)", color: "#07090F", fontSize: 17, fontWeight: 800, cursor: checkoutLoading ? "not-allowed" : "pointer" }}>
                           {checkoutLoading === "digital" ? "Redirecting..." : PAYMENTS_ENABLED ? "Get Digital Book ($17.99) →" : "Create My Storybook"}
@@ -2085,7 +2069,7 @@ export default function StorybookCreator() {
                         ))}
                       </div>
                     </div>
-                    <button onClick={() => goToStep(4)} style={{ display: "block", margin: "14px auto 0", padding: "8px 16px", borderRadius: 10, border: "none", background: "transparent", color: "rgba(255,255,255,0.3)", fontSize: 13, cursor: "pointer" }}>← Change adventure</button>
+                    <button onClick={() => goToStep(3)} style={{ display: "block", margin: "14px auto 0", padding: "8px 16px", borderRadius: 10, border: "none", background: "transparent", color: "rgba(255,255,255,0.3)", fontSize: 13, cursor: "pointer" }}>← Change adventure</button>
                   </div>
                 )}
               </div>
@@ -2098,16 +2082,16 @@ export default function StorybookCreator() {
       {mainStep === "generating" && (
         <div style={{ textAlign: "center", animation: "fadeUp 0.5s ease both", maxWidth: 400, width: "100%", padding: "0 16px", position: "relative" }}>
           <MagicDust />
-          <BookAssembly done={scenesCompleted} total={7} msg={loadingMsg} />
+          <BookAssembly done={scenesCompleted} total={9} msg={loadingMsg} />
           <h2 style={{ color: "white", fontSize: 22, fontWeight: 700, margin: "0 0 10px" }}>Creating your magical book...</h2>
           <p key={loadingMsg} style={{ color: "rgba(255,255,255,0.55)", fontSize: 15, margin: "0 0 8px", animation: "phaseIn 0.45s ease both" }}>{loadingMsg}</p>
-          <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 13, margin: "0 0 24px" }}>Painting your cover and 6 unique illustrated scenes</p>
+          <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 13, margin: "0 0 24px" }}>Painting your cover and 8 unique illustrated scenes</p>
           {scenesCompleted > 0 && (
             <div style={{ maxWidth: 260, margin: "0 auto 24px" }}>
               <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: 99, height: 8, overflow: "hidden" }}>
-                <div style={{ height: "100%", borderRadius: 99, background: "linear-gradient(90deg, #E8C07A, #D4A24C)", width: `${(scenesCompleted / 7) * 100}%`, transition: "width 0.4s ease" }} />
+                <div style={{ height: "100%", borderRadius: 99, background: "linear-gradient(90deg, #E8C07A, #D4A24C)", width: `${(scenesCompleted / 9) * 100}%`, transition: "width 0.4s ease" }} />
               </div>
-              <p style={{ color: "rgba(232,192,122,0.7)", fontSize: 12, marginTop: 7 }}>{scenesCompleted} of 7 illustrations painted</p>
+              <p style={{ color: "rgba(232,192,122,0.7)", fontSize: 12, marginTop: 7 }}>{scenesCompleted} of 9 illustrations painted</p>
             </div>
           )}
           <div style={{ display: "flex", justifyContent: "center", gap: 8 }}>

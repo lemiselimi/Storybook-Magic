@@ -20,7 +20,7 @@ const CREAM = "#fdfcf7";
 const GOLD  = "#E8C07A";
 const BROWN = "#2a1505";
 
-const CHAPTER_NAMES = ["One", "Two", "Three", "Four", "Five", "Six"];
+const CHAPTER_NAMES = ["One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight"];
 
 export default function BookPage() {
   const { ref } = useParams<{ ref: string }>();
@@ -104,7 +104,7 @@ export default function BookPage() {
 
         {data?.story?.pages && (
           <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 32, width: "100%", maxWidth: 340 }}>
-            {[...Array(6)].map((_, i) => {
+            {data.story.pages.map((_, i) => {
               const url = data.pageUrls?.[i];
               return (
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 12 }}>

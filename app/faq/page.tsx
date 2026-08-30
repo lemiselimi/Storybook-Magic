@@ -27,7 +27,7 @@ const faqs = [
   },
   {
     q: "Can I preview before paying?",
-    a: "Yes — you can preview the first 2 pages of your book completely free. You only pay when you're ready to unlock all 6 pages and download or order a print.",
+    a: "Yes — you can preview the first 2 pages of your book completely free. You only pay when you're ready to unlock all 8 pages and download or order a print.",
   },
   {
     q: "What's included in the digital download?",

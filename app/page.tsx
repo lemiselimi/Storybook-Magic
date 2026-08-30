@@ -71,11 +71,11 @@ const EXAMPLES = [
 const STEPS = [
   { num: "01", title: "Upload a Photo",        desc: "One clear photo is all we need. Our AI reads your child's features to create a cinematic 3D character that looks just like them." },
   { num: "02", title: "Personalise the Story", desc: "Enter their name, age, and choose an adventure theme. AI writes a story crafted just for them: every word, every scene." },
-  { num: "03", title: "Preview Free",           desc: "See the first 2 pages of your book completely free. Love it? Unlock all 6 pages and download instantly." },
+  { num: "03", title: "Preview Free",           desc: "See the first 2 pages of your book completely free. Love it? Unlock all 8 pages and download instantly." },
 ];
 
 const DIGITAL_FEATURES = [
-  "6 unique cinematic 3D-illustrated pages",
+  "8 unique cinematic 3D-illustrated pages",
   "Personalised story tailored to their age",
   "Instant digital download",
   "Shareable link for family",
@@ -86,7 +86,7 @@ const DIGITAL_FEATURES = [
 const PRINT_FEATURES = [
   "Everything in Digital",
   "Premium softcover, 8×8 inch",
-  "Matte-laminated cover, 28 pages",
+  "Matte-laminated cover, 20 pages",
   "Ships within 5-7 days",
 ];
 

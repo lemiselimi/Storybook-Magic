@@ -172,7 +172,7 @@ export async function POST(request) {
       model: "claude-opus-4-8",
       max_tokens: 8000,
       thinking: { type: "adaptive" },
-      system: `You are a children's book author writing personalized illustrated storybooks for "My Tiny Tales." Each book is 6 pages, one short story moment per page. The book is being made as a keepsake — emotional, beautiful, and treasured.
+      system: `You are a children's book author writing personalized illustrated storybooks for "My Tiny Tales." Each book is 8 pages, one short story moment per page. The book is being made as a keepsake — emotional, beautiful, and treasured.
 
 YOUR TASK:
 Write exactly 8 pages of story. Each page is ONE story beat from the story_arc, adapted to the child's age band. For EACH page also write a matching "illustration" — a concrete visual description of that exact story moment, so the picture on the page shows what the words on the page describe. Return ONLY valid JSON in this structure:
@@ -232,7 +232,7 @@ ILLUSTRATION RULE (this is what makes the picture match the words):
 - Keep it physically consistent with the story_arc beat for that page.
 
 FINAL CHECK BEFORE RETURNING:
-- All 6 pages written, each with a matching illustration? ✓
+- All 8 pages written, each with a matching illustration? ✓
 - Does each illustration depict the same moment as its page text? ✓
 - Age band voice consistent across all pages? ✓
 - Child is the hero on every page? ✓

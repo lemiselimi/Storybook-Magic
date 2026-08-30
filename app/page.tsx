@@ -8,8 +8,8 @@ const GOLD       = "#E8C07A";
 const GOLD_WARM  = "#D4A24C";
 const TEXT       = "#F5F0E0";
 const MUTED      = "rgba(245,240,224,0.65)";
-const BG_BASE    = "#07090F";
-const BG_EL      = "#0E1118";
+const BG_BASE    = "#171020";
+const BG_EL      = "#271A38";
 const SURFACE    = "rgba(255,255,255,0.04)";
 const SURF_BDR   = "rgba(255,255,255,0.08)";
 
@@ -273,7 +273,7 @@ export default function LandingPage() {
       {/* ════════════════════════════════════════════════════
           HEADER
       ════════════════════════════════════════════════════ */}
-      <header style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 1000, height: 64, display: "flex", alignItems: "center", padding: isMobile ? "0 20px" : "0 48px", justifyContent: "space-between", background: scrolled ? "rgba(15,11,31,0.88)" : "transparent", backdropFilter: scrolled ? "blur(20px)" : "none", borderBottom: scrolled ? "1px solid rgba(255,255,255,0.06)" : "none", transition: "background 0.3s, backdrop-filter 0.3s, border-color 0.3s" }}>
+      <header style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 1000, height: 64, display: "flex", alignItems: "center", padding: isMobile ? "0 20px" : "0 48px", justifyContent: "space-between", background: scrolled ? "rgba(23,16,32,0.9)" : "transparent", backdropFilter: scrolled ? "blur(20px)" : "none", borderBottom: scrolled ? "1px solid rgba(255,255,255,0.06)" : "none", transition: "background 0.3s, backdrop-filter 0.3s, border-color 0.3s" }}>
         {/* Logo */}
         <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
           <SparkSVG size={22} color={GOLD} glow />
@@ -306,7 +306,7 @@ export default function LandingPage() {
 
       {/* Mobile full-screen menu */}
       {menuOpen && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 999, background: "rgba(15,11,31,0.98)", backdropFilter: "blur(20px)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 32 }}>
+        <div style={{ position: "fixed", inset: 0, zIndex: 999, background: "rgba(23,16,32,0.98)", backdropFilter: "blur(20px)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 32 }}>
           {NAV_LINKS.map(([label, href]) => (
             <a key={label} href={href} onClick={() => setMenuOpen(false)} style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: 28, fontWeight: 600, color: TEXT, textDecoration: "none" }}>{label}</a>
           ))}
@@ -320,8 +320,8 @@ export default function LandingPage() {
       <section style={{ minHeight: "90vh", display: "flex", alignItems: "center", justifyContent: "center", padding: isMobile ? "100px 24px 64px" : "120px 48px 80px", position: "relative", overflow: "hidden" }}>
         {/* Aurora blobs — warm amber/indigo, skip on mobile */}
         {!isMobile && <>
-          <div ref={blobARef} aria-hidden="true" style={{ position: "absolute", top: "-25%", left: "-15%", width: 800, height: 800, borderRadius: "50%", background: "radial-gradient(circle, rgba(232,192,122,0.12) 0%, transparent 70%)", filter: "blur(100px)", pointerEvents: "none", transition: "transform 0.4s ease-out", willChange: "transform" }} />
-          <div ref={blobBRef} aria-hidden="true" style={{ position: "absolute", bottom: "-25%", right: "-15%", width: 900, height: 900, borderRadius: "50%", background: "radial-gradient(circle, rgba(90,60,180,0.15) 0%, transparent 70%)", filter: "blur(120px)", pointerEvents: "none", transition: "transform 0.4s ease-out", willChange: "transform" }} />
+          <div ref={blobARef} aria-hidden="true" style={{ position: "absolute", top: "-25%", left: "-15%", width: 800, height: 800, borderRadius: "50%", background: "radial-gradient(circle, rgba(232,192,122,0.17) 0%, transparent 70%)", filter: "blur(100px)", pointerEvents: "none", transition: "transform 0.4s ease-out", willChange: "transform" }} />
+          <div ref={blobBRef} aria-hidden="true" style={{ position: "absolute", bottom: "-25%", right: "-15%", width: 900, height: 900, borderRadius: "50%", background: "radial-gradient(circle, rgba(155,95,195,0.18) 0%, transparent 70%)", filter: "blur(120px)", pointerEvents: "none", transition: "transform 0.4s ease-out", willChange: "transform" }} />
         </>}
 
         <div style={{ maxWidth: 1200, width: "100%", display: "flex", alignItems: "center", gap: isMobile ? 0 : 72, flexDirection: isMobile ? "column" : "row" }}>
@@ -539,7 +539,7 @@ export default function LandingPage() {
               <div aria-hidden="true" style={{ position: "absolute", inset: 0, borderRadius: 25, overflow: "hidden" }}>
                 <div className="glow-spin" />
               </div>
-            <div className="card-tilt" onMouseMove={tiltCard} onMouseLeave={untiltCard} style={{ background: `linear-gradient(145deg, rgba(14,17,24,0.97), rgba(7,9,15,0.99))`, backdropFilter: "blur(20px)", borderRadius: 24, padding: "36px 32px", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}>
+            <div className="card-tilt" onMouseMove={tiltCard} onMouseLeave={untiltCard} style={{ background: `linear-gradient(145deg, rgba(39,26,56,0.97), rgba(23,16,32,0.99))`, backdropFilter: "blur(20px)", borderRadius: 24, padding: "36px 32px", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}>
               {/* Gold top gradient accent */}
               <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${GOLD}, ${GOLD_WARM})` }} />
               {/* Most Popular ribbon */}

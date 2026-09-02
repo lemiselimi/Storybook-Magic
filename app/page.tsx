@@ -86,7 +86,7 @@ const DIGITAL_FEATURES = [
 const PRINT_FEATURES = [
   "Everything in Digital",
   "Premium softcover, 8×8 inch",
-  "Matte-laminated cover, 20 pages",
+  "Matte-laminated cover, 22 pages",
   "Ships in about 1-2 weeks",
 ];
 

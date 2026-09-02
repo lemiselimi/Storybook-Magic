@@ -10,10 +10,12 @@ export const maxDuration = 60;
 const PS = 584; // interior page: square 584×584 pt
 
 // Interior is padded to this many pages (even; pages print two-up on each
-// sheet). Prodigi softcover minimum is 20 — the leanest, cheapest book that
-// still fits all 8 chapters. Overridable via env.
+// sheet). Prodigi treats page 1 of the PDF as the cover, so the "inside" count
+// it validates is our file count minus the cover page(s): a 20-page file shows
+// as 19 inside pages, just under their 20 minimum. So generate 22 file pages to
+// clear the minimum with margin while still fitting all 8 chapters. Env-overridable.
 const toEven = (n) => (n % 2 === 0 ? n : n + 1);
-const INTERIOR_PAGES = toEven(Number(process.env.PRINT_MIN_PAGES) || Number(process.env.GELATO_INTERIOR_PAGES) || 20);
+const INTERIOR_PAGES = toEven(Number(process.env.PRINT_MIN_PAGES) || Number(process.env.GELATO_INTERIOR_PAGES) || 22);
 
 // Perfect-bound cover wrap: back (584pt) + spine + front (584pt).
 // Spine scales with interior thickness: ~0.097mm/page (170 GSM coated silk),

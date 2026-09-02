@@ -200,7 +200,10 @@ export async function POST(request) {
     fc.drawText(toWinAnsi(story?.dedication || `A story starring ${capName}`).substring(0, 50),
       { x: M, y: PS * 0.08, size: 10, font: iFont, color: GOLD, opacity: 0.7 });
 
-    // Page 2: Title page
+    // Blank flyleaf after the cover (front endpaper).
+    addBlank();
+
+    // Title page
     const p2 = doc.addPage([PS, PS]);
     p2.drawRectangle({ x: 0, y: 0, width: PS, height: PS, color: DARK });
     p2.drawText("My Tiny Tales presents", { x: PS / 2 - 74, y: PS * 0.72, size: 10, font: iFont, color: GOLD, opacity: 0.55 });
@@ -269,20 +272,11 @@ export async function POST(request) {
     p16.drawText(closingText, { x: (PS - closeW) / 2, y: PS * 0.38, size: 11, font: iFont, color: WHITE, opacity: 0.55 });
     p16.drawText("My Tiny Tales", { x: PS / 2 - 34, y: PS * 0.16, size: 8, font: bFont, color: GOLD, opacity: 0.28 });
 
-    // Pad only if a short book falls under the product minimum — reuse the scene
-    // art (zero extra AI cost) so any filler is pictures, not blanks. A normal
-    // 8-chapter book already lands on the target, so this adds nothing. The final
-    // page is reserved for the back cover; keep the count even.
-    const gallery = sceneImgs.filter(Boolean);
+    // Pad to the product minimum with blank flyleaves (kept even; the back cover
+    // is the final page). A normal 8-chapter book lands here with a single blank
+    // before the back cover — a clean endpaper, not recycled art.
     const padTo = toEven(Math.max(Number(body.padTo) || INTERIOR_PAGES, doc.getPageCount() + 1));
-    let gi = 0;
-    while (doc.getPageCount() < padTo - 1) {
-      const g = doc.addPage([PS, PS]);
-      const img = gallery.length ? gallery[gi % gallery.length] : null;
-      if (img) g.drawImage(img, { x: 0, y: 0, width: PS, height: PS });
-      else     g.drawRectangle({ x: 0, y: 0, width: PS, height: PS, color: CREAM });
-      gi++;
-    }
+    while (doc.getPageCount() < padTo - 1) addBlank();
 
     // Back cover — final page.
     const bc = doc.addPage([PS, PS]);

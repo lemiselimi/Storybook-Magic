@@ -78,7 +78,7 @@ export default function LandingPage() {
             <li>
               <span className="mtt-transformation__number">03</span>
               <div className="mtt-transformation__book">
-                <BookMockup3D coverImg="/examples/book-6.png" width={178} height={232} animate={false} />
+                <BookMockup3D coverImg="/examples/book-6.png" width={126} height={164} animate={false} />
               </div>
               <h3>Their book</h3>
               <p>A story to read close now and return to for years.</p>

@@ -34,7 +34,7 @@ export default function LandingPage() {
           <div className="mtt-hero__books" aria-label="A personalised My Tiny Tales storybook">
             <div className="mtt-hero__sun" aria-hidden="true" />
             <div className="mtt-hero__book-object">
-              <BookMockup3D coverImg="/examples/book-1.png" width={358} height={470} animate />
+              <BookMockup3D coverImg="/examples/book-1.png" width={292} height={382} animate />
             </div>
             <div className="mtt-hero__leaf mtt-hero__leaf--one" aria-hidden="true" />
             <div className="mtt-hero__leaf mtt-hero__leaf--two" aria-hidden="true" />

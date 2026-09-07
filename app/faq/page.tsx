@@ -2,11 +2,11 @@
 import { useState } from "react";
 import Link from "next/link";
 
-const GOLD = "#E8C07A";
+const GOLD = "#C0863A";
 const GOLD_WARM = "#D4A24C";
-const TEXT = "#F5F0E0";
-const MUTED = "rgba(245,240,224,0.65)";
-const SURF_BDR = "rgba(255,255,255,0.08)";
+const TEXT = "#26313D";
+const MUTED = "rgba(38,49,61,0.65)";
+const SURF_BDR = "rgba(38,49,61,0.08)";
 
 const faqs = [
   {
@@ -55,7 +55,7 @@ export default function FAQPage() {
   const [open, setOpen] = useState<number | null>(0);
 
   return (
-    <main style={{ minHeight: "100vh", background: "linear-gradient(180deg, #07090F 0%, #0E1118 100%)", color: TEXT, fontFamily: "var(--font-inter, 'Inter', sans-serif)" }}>
+    <main style={{ minHeight: "100vh", background: "#FBF6EC", color: TEXT, fontFamily: "var(--font-inter, 'Inter', sans-serif)" }}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify({
@@ -94,7 +94,7 @@ export default function FAQPage() {
                   <span style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: 17, fontWeight: 600, color: isOpen ? GOLD : TEXT, transition: "color 0.2s", lineHeight: 1.4 }}>
                     {item.q}
                   </span>
-                  <span aria-hidden="true" style={{ flexShrink: 0, width: 26, height: 26, borderRadius: "50%", border: `1px solid ${isOpen ? GOLD : "rgba(245,240,224,0.2)"}`, display: "flex", alignItems: "center", justifyContent: "center", color: isOpen ? GOLD : MUTED, transition: "transform 0.25s ease, border-color 0.2s, color 0.2s", transform: isOpen ? "rotate(45deg)" : "none", fontSize: 18, lineHeight: 1 }}>
+                  <span aria-hidden="true" style={{ flexShrink: 0, width: 26, height: 26, borderRadius: "50%", border: `1px solid ${isOpen ? GOLD : "rgba(38,49,61,0.2)"}`, display: "flex", alignItems: "center", justifyContent: "center", color: isOpen ? GOLD : MUTED, transition: "transform 0.25s ease, border-color 0.2s, color 0.2s", transform: isOpen ? "rotate(45deg)" : "none", fontSize: 18, lineHeight: 1 }}>
                     +
                   </span>
                 </button>

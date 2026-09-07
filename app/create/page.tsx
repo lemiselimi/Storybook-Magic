@@ -1704,7 +1704,7 @@ export default function StorybookCreator() {
             {/* ── STEP 1: Upload ── */}
             {onboardingStep === 1 && (
               <div>
-                <Mascot msg="Upload 1-2 clear photos of your child for the best likeness. Front facing, good lighting, no sunglasses." />
+                <Mascot msg="Let's meet your little hero. Start with a clear photo of them, with their face visible in good light and no sunglasses." />
 
                 {/* Photo slot */}
                 {/* Photo slots */}
@@ -1779,7 +1779,7 @@ export default function StorybookCreator() {
             {/* ── STEP 2: Customize (name / gender / age) ── */}
             {onboardingStep === 2 && (
               <div>
-                <Mascot msg="Amazing! Every hero needs a name. What should we call them? 🌟" />
+                <Mascot msg="Every great hero needs a name. What shall we call your little one?" />
 
                 {/* Form */}
                 <div style={{ background: "rgba(255,255,255,0.07)", backdropFilter: "blur(12px)", borderRadius: 22, padding: isMobile ? 18 : 26, border: "1px solid rgba(255,255,255,0.12)", boxShadow: "0 4px 24px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.08)", display: "flex", flexDirection: "column", gap: 22 }}>
@@ -1821,7 +1821,7 @@ export default function StorybookCreator() {
             {/* ── STEP 3: Themes ── */}
             {onboardingStep === 3 && (
               <div>
-                <Mascot msg={`Great! Now pick the perfect adventure for ${childName || "your little hero"}...`} />
+                <Mascot msg={`Now, which adventure will ${childName || "your little hero"} live?`} />
 
                 <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: 14 }}>
                   {THEMES.map((t) => (

@@ -8,15 +8,15 @@ export const metadata = {
 
 export default function ChildrensDataPage() {
   return (
-    <main style={{ minHeight: "100vh", background: "#0F0B1F", color: "#F5F0E0", fontFamily: "var(--font-inter, sans-serif)" }}>
+    <main style={{ minHeight: "100vh", background: "#FBF6EC", color: "#26313D", fontFamily: "var(--font-inter, sans-serif)" }}>
       <div style={{ maxWidth: 760, margin: "0 auto", padding: "80px 24px 120px" }}>
-        <Link href="/" style={{ color: "#E8C07A", fontSize: 14, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 40, opacity: 0.8 }}>
+        <Link href="/" style={{ color: "#C0863A", fontSize: 14, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 40, opacity: 0.8 }}>
           ← Back to home
         </Link>
-        <h1 style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: 42, fontWeight: 600, marginBottom: 8, color: "#F5F0E0", lineHeight: 1.1 }}>
+        <h1 style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: 42, fontWeight: 600, marginBottom: 8, color: "#26313D", lineHeight: 1.1 }}>
           Children's Data
         </h1>
-        <p style={{ fontSize: 15, color: "rgba(245,240,224,0.6)", marginBottom: 56, lineHeight: 1.6 }}>
+        <p style={{ fontSize: 15, color: "rgba(38,49,61,0.6)", marginBottom: 56, lineHeight: 1.6 }}>
           A plain-English guide for parents: exactly what we collect, how we use it, and your rights as a parent.
         </p>
 
@@ -56,9 +56,9 @@ export default function ChildrensDataPage() {
             },
           ].map((s, i) => (
             <div key={i}>
-              <h2 style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: 20, fontWeight: 600, marginBottom: 12, color: "#F5F0E0" }}>{s.title}</h2>
+              <h2 style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: 20, fontWeight: 600, marginBottom: 12, color: "#26313D" }}>{s.title}</h2>
               {s.body.split("\n\n").map((para, j) => (
-                <p key={j} style={{ fontSize: 15, lineHeight: 1.8, color: "rgba(245,240,224,0.6)", margin: "0 0 12px", whiteSpace: "pre-line" }}>{para}</p>
+                <p key={j} style={{ fontSize: 15, lineHeight: 1.8, color: "rgba(38,49,61,0.6)", margin: "0 0 12px", whiteSpace: "pre-line" }}>{para}</p>
               ))}
             </div>
           ))}

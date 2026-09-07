@@ -63,30 +63,30 @@ const sections = [
 
 export default function TermsPage() {
   return (
-    <main style={{ minHeight: "100vh", background: "#0F0B1F", color: "#F5F0E0", fontFamily: "var(--font-inter, sans-serif)" }}>
+    <main style={{ minHeight: "100vh", background: "#FBF6EC", color: "#26313D", fontFamily: "var(--font-inter, sans-serif)" }}>
       <div style={{ maxWidth: 760, margin: "0 auto", padding: "80px 24px 120px" }}>
-        <Link href="/" style={{ color: "#E8C07A", fontSize: 14, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 40, opacity: 0.8 }}>
+        <Link href="/" style={{ color: "#C0863A", fontSize: 14, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 40, opacity: 0.8 }}>
           ← Back to home
         </Link>
-        <h1 style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: 42, fontWeight: 600, marginBottom: 8, color: "#F5F0E0", lineHeight: 1.1 }}>
+        <h1 style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: 42, fontWeight: 600, marginBottom: 8, color: "#26313D", lineHeight: 1.1 }}>
           Terms of Service
         </h1>
-        <p style={{ fontSize: 15, color: "rgba(245,240,224,0.6)", marginBottom: 56, lineHeight: 1.6 }}>
+        <p style={{ fontSize: 15, color: "rgba(38,49,61,0.6)", marginBottom: 56, lineHeight: 1.6 }}>
           Please read these terms carefully before using My Tiny Tales. By placing an order you agree to be bound by them.
         </p>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 44 }}>
           {sections.map((s, i) => (
             <div key={i}>
-              <h2 style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: 20, fontWeight: 600, marginBottom: 12, color: "#F5F0E0" }}>{s.title}</h2>
-              <p style={{ fontSize: 15, lineHeight: 1.8, color: "rgba(245,240,224,0.6)", margin: 0 }}>{s.body}</p>
+              <h2 style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: 20, fontWeight: 600, marginBottom: 12, color: "#26313D" }}>{s.title}</h2>
+              <p style={{ fontSize: 15, lineHeight: 1.8, color: "rgba(38,49,61,0.6)", margin: 0 }}>{s.body}</p>
             </div>
           ))}
         </div>
 
-        <p style={{ marginTop: 56, fontSize: 14, color: "rgba(245,240,224,0.35)" }}>
+        <p style={{ marginTop: 56, fontSize: 14, color: "rgba(38,49,61,0.35)" }}>
           Questions? Email{" "}
-          <a href="mailto:hello@mytinytales.studio" style={{ color: "#E8C07A" }}>hello@mytinytales.studio</a>
+          <a href="mailto:hello@mytinytales.studio" style={{ color: "#C0863A" }}>hello@mytinytales.studio</a>
         </p>
       </div>
     </main>

@@ -15,7 +15,7 @@ type BookStatus = {
   printApproval?: "pending" | "submitted" | null;
 };
 
-const DARK  = "#07090F";
+const DARK  = "#1E1813";
 const CREAM = "#fdfcf7";
 const GOLD  = "#E8C07A";
 const BROWN = "#2a1505";
@@ -159,7 +159,7 @@ export default function BookPage() {
   const printPending = plan === "print" && printApproval === "pending";
 
   return (
-    <div style={{ minHeight: "100vh", background: "#07090F", fontFamily: "Georgia, 'Times New Roman', serif" }}>
+    <div style={{ minHeight: "100vh", background: "#1E1813", fontFamily: "Georgia, 'Times New Roman', serif" }}>
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
@@ -167,7 +167,7 @@ export default function BookPage() {
       `}</style>
 
       {/* Header */}
-      <div style={{ background: "linear-gradient(135deg, #07090F, #0E1118)", padding: isMobile ? "28px 20px" : "36px 48px", textAlign: "center", borderBottom: "1px solid rgba(232,192,122,0.1)" }}>
+      <div style={{ background: "linear-gradient(135deg, #1E1813, #2C231B)", padding: isMobile ? "28px 20px" : "36px 48px", textAlign: "center", borderBottom: "1px solid rgba(232,192,122,0.1)" }}>
         <p style={{ color: GOLD, fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", margin: "0 0 8px", opacity: 0.7 }}>My Tiny Tales</p>
         <h1 style={{ color: "white", fontSize: isMobile ? 24 : 32, margin: "0 0 8px", fontWeight: 700 }}>{story?.title || "Your Storybook"}</h1>
         <p style={{ color: "rgba(232,192,122,0.6)", fontSize: 13, margin: 0, fontStyle: "italic" }}>{story?.dedication || `A story starring ${capName}`}</p>
@@ -253,7 +253,7 @@ export default function BookPage() {
               </div>
 
               {/* Illustration */}
-              <div style={{ order: isMobile ? 1 : undefined, position: "relative", height: isMobile ? 260 : undefined, overflow: "hidden", background: "#1a1a2e" }}>
+              <div style={{ order: isMobile ? 1 : undefined, position: "relative", height: isMobile ? 260 : undefined, overflow: "hidden", background: "#241C15" }}>
                 {img
                   ? <img src={img} alt={`Chapter ${CHAPTER_NAMES[i]}`} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                   : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", minHeight: 260 }}>
@@ -309,7 +309,7 @@ export default function BookPage() {
       {/* Send-to-print confirmation modal */}
       {showPrintConfirm && (
         <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, backdropFilter: "blur(6px)" }} onClick={() => setShowPrintConfirm(false)}>
-          <div style={{ background: "#0E1118", border: "1px solid rgba(232,192,122,0.3)", borderRadius: 20, padding: isMobile ? "28px 24px" : "36px 40px", maxWidth: 460, width: "100%", textAlign: "center" }} onClick={e => e.stopPropagation()}>
+          <div style={{ background: "#2C231B", border: "1px solid rgba(232,192,122,0.3)", borderRadius: 20, padding: isMobile ? "28px 24px" : "36px 40px", maxWidth: 460, width: "100%", textAlign: "center" }} onClick={e => e.stopPropagation()}>
             <div style={{ width: 52, height: 52, borderRadius: "50%", background: "rgba(232,192,122,0.12)", border: "1px solid rgba(232,192,122,0.3)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
             </div>

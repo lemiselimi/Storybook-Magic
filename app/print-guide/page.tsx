@@ -34,12 +34,12 @@ export default function PrintGuidePage() {
   ];
 
   return (
-    <main style={{ minHeight: "100vh", background: "#0D0820", color: "#EDE8D5", fontFamily: "Georgia, serif" }}>
+    <main style={{ minHeight: "100vh", background: "#FBF6EC", color: "#26313D", fontFamily: "Georgia, serif" }}>
       <div style={{ maxWidth: 680, margin: "0 auto", padding: "80px 24px" }}>
-        <h1 style={{ fontSize: 40, fontWeight: 700, marginBottom: 8, color: "#F5A623" }}>
+        <h1 style={{ fontSize: 40, fontWeight: 700, marginBottom: 8, color: "#26313D" }}>
           Print Guide
         </h1>
-        <p style={{ fontSize: 17, color: "#B8A9C9", marginBottom: 56 }}>
+        <p style={{ fontSize: 17, color: "#5C6672", marginBottom: 56 }}>
           Everything you need to turn your digital storybook into a beautifully printed keepsake.
         </p>
 
@@ -51,7 +51,7 @@ export default function PrintGuidePage() {
                 display: "flex",
                 gap: 28,
                 paddingBottom: 40,
-                borderLeft: "2px solid rgba(245,166,35,0.3)",
+                borderLeft: "2px solid rgba(192,134,58,0.3)",
                 paddingLeft: 28,
                 marginLeft: 20,
                 position: "relative",
@@ -64,12 +64,12 @@ export default function PrintGuidePage() {
                   top: 0,
                   width: 40,
                   height: 40,
-                  background: "#F5A623",
+                  background: "#C0863A",
                   borderRadius: "50%",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  color: "#0D0820",
+                  color: "#2A1D10",
                   fontWeight: 700,
                   fontSize: 13,
                   flexShrink: 0,
@@ -78,10 +78,10 @@ export default function PrintGuidePage() {
                 {s.num}
               </div>
               <div style={{ paddingTop: 8 }}>
-                <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 10, color: "#EDE8D5" }}>
+                <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 10, color: "#26313D" }}>
                   {s.title}
                 </h2>
-                <p style={{ fontSize: 16, lineHeight: 1.75, color: "#B8A9C9", margin: 0 }}>
+                <p style={{ fontSize: 16, lineHeight: 1.75, color: "#5C6672", margin: 0 }}>
                   {s.body}
                 </p>
               </div>
@@ -92,26 +92,26 @@ export default function PrintGuidePage() {
         <div
           style={{
             marginTop: 16,
-            background: "rgba(245,166,35,0.08)",
-            border: "1px solid rgba(245,166,35,0.2)",
+            background: "rgba(192,134,58,0.08)",
+            border: "1px solid rgba(192,134,58,0.2)",
             borderRadius: 16,
             padding: "28px 32px",
           }}
         >
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8, color: "#F5A623" }}>
+          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8, color: "#26313D" }}>
             Recommended paper
           </h3>
-          <p style={{ fontSize: 15, lineHeight: 1.7, color: "#B8A9C9", margin: 0 }}>
-            <strong style={{ color: "#EDE8D5" }}>At home:</strong> Epson Premium Photo Paper Glossy 4×6 or A4 —{" "}
+          <p style={{ fontSize: 15, lineHeight: 1.7, color: "#5C6672", margin: 0 }}>
+            <strong style={{ color: "#26313D" }}>At home:</strong> Epson Premium Photo Paper Glossy 4×6 or A4 —{" "}
             gives vibrant colours and sharp illustration detail.<br />
-            <strong style={{ color: "#EDE8D5" }}>At a print shop:</strong> Ask for 120gsm gloss or silk coated
+            <strong style={{ color: "#26313D" }}>At a print shop:</strong> Ask for 120gsm gloss or silk coated
             paper. Avoid standard 80gsm copier paper — it makes colours look dull.
           </p>
         </div>
 
-        <p style={{ marginTop: 40, fontSize: 14, color: "#6B5A7A", textAlign: "center" }}>
+        <p style={{ marginTop: 40, fontSize: 14, color: "#6A7078", textAlign: "center" }}>
           Need help?{" "}
-          <a href="mailto:hello@mytinytales.studio" style={{ color: "#B8A9C9" }}>
+          <a href="mailto:hello@mytinytales.studio" style={{ color: "#5C6672" }}>
             hello@mytinytales.studio
           </a>
         </p>

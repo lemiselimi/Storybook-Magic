@@ -6,15 +6,17 @@ import { PRODUCT } from "@/lib/product";
 
 // ── Product facts (single source of truth) ──────────────────────────────────
 const P = PRODUCT;
-const COVERS = ["/examples/example-1.webp", "/examples/example-2.webp", "/examples/example-3.webp", "/examples/example-4.webp"];
+const COVERS = ["/examples/book-1.png", "/examples/book-6.png", "/examples/book-4.png", "/examples/book-3.png"];
 
-// Real sample scenes shown as book imagery (these are actual book illustrations,
-// not decoration). No invented reviews or claims.
+// Real pages from an actual "Off to Dreamland" book, shown in story order.
+// These are genuine book illustrations, not decoration. No invented claims.
 const SCENES = [
-  { img: "/examples/example-1.webp", tag: "The Big Adventure", line: "Your child discovers a hidden world and has to be brave to save the day." },
-  { img: "/examples/example-2.webp", tag: "To The Stars", line: "A mission across the cosmos, with kindness as their secret power." },
-  { img: "/examples/example-3.webp", tag: "Dragon Tamer", line: "A frightened dragon needs help, and only one small hero will do." },
-  { img: "/examples/example-4.webp", tag: "Deep Blue", line: "An underwater mystery that only they can solve." },
+  { img: "/examples/book-1.png", tag: "Chapter One",   line: "As the house grows quiet, a silver moonbeam invites them on a dream." },
+  { img: "/examples/book-2.png", tag: "Chapter Two",   line: "They drift up through the glowing clouds into a warm, hushed dreamland." },
+  { img: "/examples/book-3.png", tag: "Chapter Three", line: "A little dream-cloud is sad: some of the night's stars have wandered off." },
+  { img: "/examples/book-4.png", tag: "Chapter Four",  line: "Together they set off across the moonlit sky to bring the lost stars home." },
+  { img: "/examples/book-5.png", tag: "Chapter Five",  line: "One by one the stars are gathered, and the dreamland glows warm again." },
+  { img: "/examples/book-6.png", tag: "Chapter Six",   line: "In a starlit garden, they reach up and hang the very last star." },
 ];
 
 const STEPS = [
@@ -114,7 +116,7 @@ export default function LandingPage() {
             <div className={reduced ? "" : "floaty"}>
               <BookMockup3D coverImg={COVERS[0]} width={280} height={366} animate={!reduced} />
             </div>
-            <p className="hero__caption">An open spread from a real My Tiny Tales book</p>
+            <p className="hero__caption">A real My Tiny Tales book, cover to cover</p>
           </div>
         </section>
 
@@ -125,15 +127,15 @@ export default function LandingPage() {
           </div>
           <div className="intro__grid">
             <figure className="intro__fig reveal">
-              <img src={SCENES[0].img} alt="A child illustrated as the hero of an adventure" loading="lazy" />
+              <img src={SCENES[0].img} alt="A child tucked in bed as a bedtime dream begins" loading="lazy" />
               <figcaption>Their face becomes the hero.</figcaption>
             </figure>
             <figure className="intro__fig reveal">
-              <img src={SCENES[1].img} alt="A personalised storybook scene set among the stars" loading="lazy" />
+              <img src={SCENES[1].img} alt="The child floating up through golden dream clouds" loading="lazy" />
               <figcaption>Their name is woven through the story.</figcaption>
             </figure>
             <figure className="intro__fig reveal">
-              <img src={SCENES[2].img} alt="A storybook scene with a friendly dragon" loading="lazy" />
+              <img src={SCENES[2].img} alt="The child meeting a little cloud on a starlit dream journey" loading="lazy" />
               <figcaption>Their adventure becomes a book they keep.</figcaption>
             </figure>
           </div>
@@ -149,7 +151,7 @@ export default function LandingPage() {
           <div className="spreads">
             {SCENES.map((s, i) => (
               <figure key={i} className={`spread reveal ${i % 2 ? "spread--r" : ""}`}>
-                <div className="spread__img"><img src={s.img} alt={`${s.tag} storybook scene`} loading="lazy" /></div>
+                <div className="spread__img"><img src={s.img} alt={s.line} loading="lazy" /></div>
                 <figcaption className="spread__cap">
                   <span className="spread__tag">{s.tag}</span>
                   <p>{s.line}</p>

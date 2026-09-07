@@ -1,8 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { PRODUCT } from "@/lib/product";
 
 const footerGroups = [
-  { title: "Discover", links: [["How it works", "#how-it-works"], ["Inside the book", "#inside-the-book"], ["The keepsake", "#keepsake"], ["Examples", "#inside-the-book"]] },
+  { title: "Discover", links: [["How it works", "#how-it-works"], ["Inside the book", "#inside-the-book"], ["The keepsake", "#keepsake"], ["Examples", "#story-worlds"]] },
   { title: "Help", links: [["Questions", "/faq"], ["Print guide", "/print-guide"], ["Contact", "/contact"]] },
   { title: "Details", links: [["Privacy", "/privacy"], ["Terms", "/terms"], ["Refunds", "/refunds"], ["Children's data", "/childrens-data"]] },
 ];
@@ -28,6 +30,7 @@ export default function MarketingFooter() {
       <div className="mtt-footer__bottom">
         <span>© {new Date().getFullYear()} My Tiny Tales</span>
         <span>Made for their bookshelf.</span>
+        <button className="mtt-footer__cookie" type="button" onClick={() => window.dispatchEvent(new Event("open_cookie_settings"))}>Cookie settings</button>
       </div>
     </footer>
   );

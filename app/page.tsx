@@ -28,7 +28,7 @@ export default function LandingPage() {
               <Link href="/create" className="mtt-button mtt-button--ink">See their free preview <span aria-hidden="true">→</span></Link>
               <a href="#inside-the-book" className="mtt-text-link">Open the book <span aria-hidden="true">↓</span></a>
             </div>
-            <p className="mtt-hero__note">See the first {P.freePreviewPages} pages before you decide. No card required.</p>
+            <p className="mtt-hero__note">See the first {P.freePreviewPages} pages before you decide. No card required. <Link href="/childrens-data">Photos are deleted within {P.photoDeletionHours} hours.</Link></p>
           </div>
 
           <div className="mtt-hero__books" aria-label="A personalised My Tiny Tales storybook">
@@ -72,7 +72,7 @@ export default function LandingPage() {
                 <Image src="/examples/book-2.png" alt="A child illustrated in a warm bedtime dream scene" fill sizes="(max-width: 720px) 82vw, 22vw" />
               </figure>
               <h3>Their character</h3>
-              <p>Their face appears at the heart of the adventure.</p>
+              <p>An illustrated character carries the story forward.</p>
             </li>
             <li className="mtt-transformation__arrow" aria-hidden="true">→</li>
             <li>
@@ -97,9 +97,9 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="mtt-open-book__copy">
-            <p className="mtt-kicker">Inside their story</p>
-            <h2 id="open-book-title">A whole world, with their familiar face in it.</h2>
-            <p>Here is a real spread from an <em>Off to Dreamland</em> book. Each page moves the story forward, leaving room for the small details children love to find again.</p>
+            <p className="mtt-kicker">Inside a real story</p>
+            <h2 id="open-book-title">A sequence of pages from one small adventure.</h2>
+            <p>These consecutive images are from an <em>Off to Dreamland</em> example. They offer a glimpse of the visual rhythm that carries a story from one page to the next.</p>
             <a href="#story-worlds" className="mtt-text-link">See a few pages <span aria-hidden="true">↓</span></a>
           </div>
         </section>
@@ -124,7 +124,9 @@ export default function LandingPage() {
 
         <section className="mtt-keepsake" id="keepsake" aria-labelledby="keepsake-title">
           <div className="mtt-keepsake__image">
-            <Image src="/examples/book-6.png" alt="A warm, starlit page from a real My Tiny Tales book" fill sizes="(max-width: 850px) 100vw, 50vw" />
+            <div className="mtt-keepsake__book-object">
+              <BookMockup3D coverImg="/examples/book-6.png" width={292} height={382} animate={false} />
+            </div>
             <p className="mtt-keepsake__ribbon">For tonight’s reading—and the bookshelf that holds the years.</p>
           </div>
           <div className="mtt-keepsake__copy">
@@ -132,8 +134,8 @@ export default function LandingPage() {
             <h2 id="keepsake-title">A story to keep, in the way that suits your family.</h2>
             <p>Keep their complete story as a digital book, or choose a printed copy made for bedtime piles, little hands, and family shelves.</p>
             <dl className="mtt-keepsake__options">
-              <div><dt>{P.pricing.digital.name}</dt><dd>{P.pricing.digital.label}</dd><p>Keep their story close, wherever you read together.</p></div>
-              <div><dt>{P.pricing.print.name}</dt><dd>{P.pricing.print.label}</dd><p>A printed edition made for the shelf.</p></div>
+              <div><dt>{P.pricing.digital.name}</dt><dd>{P.pricing.digital.label}</dd><p>A complete digital storybook, ready to keep and print at home.</p></div>
+              <div><dt>{P.pricing.print.name}</dt><dd>{P.pricing.print.label}</dd><p>{P.print.pageCount}-page {P.print.cover}, {P.print.sizeIn}. Includes the digital storybook. Delivered in {P.print.delivery}.</p></div>
             </dl>
             <Link href="/create" className="mtt-button mtt-button--paper">See their free preview <span aria-hidden="true">→</span></Link>
           </div>

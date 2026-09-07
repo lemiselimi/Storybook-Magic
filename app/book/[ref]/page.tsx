@@ -99,7 +99,7 @@ export default function BookPage() {
         <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 15, margin: "0 0 32px", textAlign: "center", maxWidth: 380, lineHeight: 1.6 }}>
           {isPdf
             ? "All illustrations are done — generating your print-ready PDF."
-            : "Our AI illustrators are painting each scene. This usually takes about 5 minutes."}
+            : "We're illustrating each scene of their story. This usually takes about 5 minutes."}
         </p>
 
         {data?.story?.pages && (

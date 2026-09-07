@@ -311,17 +311,21 @@ html { scrollbar-width: thin; scrollbar-color: rgba(232,192,122,0.3) #07090F; }
   .mtt-transformation__heading { gap: 1rem; margin-bottom: 2.5rem; }
   .mtt-transformation__sequence { gap: 1.15rem; }
   .mtt-transformation__number { margin-bottom: .5rem; }
+  .mtt-transformation__sequence > li:not(.mtt-transformation__arrow) { column-gap: 1.1rem; display: grid; grid-template-columns: 10.5rem minmax(0, 1fr); grid-template-rows: auto 1fr; }
+  .mtt-transformation__number { grid-column: 1; grid-row: 1; }
   .mtt-photo-frame, .mtt-transformation__art, .mtt-transformation__book { aspect-ratio: 1; height: auto; margin-bottom: .75rem; max-width: 10.5rem; min-height: 0; }
+  .mtt-photo-frame, .mtt-transformation__art, .mtt-transformation__book { grid-column: 1; grid-row: 2; }
   .mtt-photo-frame { min-height: 0; padding: .8rem; }
   .mtt-photo-frame span { font-size: 1.45rem; }
   .mtt-transformation__art img { object-fit: contain; object-position: center; }
   .mtt-transformation__book { justify-content: flex-start; min-height: 0; padding-left: 0; }
-  .mtt-transformation__book > div { transform: scale(.6); transform-origin: left top; }
-  .mtt-transformation h3 { font-size: 1.4rem; }
-  .mtt-transformation__sequence p { font-size: .84rem; }
+  .mtt-transformation__book > div { transform: none; }
+  .mtt-transformation h3 { font-size: 1.4rem; grid-column: 2; grid-row: 1; margin-top: 0; }
+  .mtt-transformation__sequence p { font-size: .84rem; grid-column: 2; grid-row: 2; }
   .mtt-open-book__book { margin: 0; min-height: 11.5rem; }
   .mtt-worlds__heading { align-items: flex-start; display: block; }
   .mtt-worlds__heading .mtt-kicker { margin-bottom: 1rem; }
+  .mtt-worlds__grid { gap: 1.25rem; grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: none; }
   .mtt-world__image { aspect-ratio: 1; }
   .mtt-keepsake__image { min-height: 21rem; }
   .mtt-keepsake__book-object { transform: scale(.72) rotate(-2.5deg); }

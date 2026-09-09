@@ -1,25 +1,9 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { rateLimit } from "@/lib/security";
 
 export const maxDuration = 60;
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
-// In-memory rate limiting: 5 story generations per IP per 24 h
-const rateLimitMap = new Map();
-const RATE_LIMIT  = 5;
-const RATE_WINDOW = 24 * 60 * 60 * 1000;
-
-function checkRateLimit(ip) {
-  const now = Date.now();
-  const entry = rateLimitMap.get(ip);
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW });
-    return true;
-  }
-  if (entry.count >= RATE_LIMIT) return false;
-  entry.count++;
-  return true;
-}
 
 
 const THEME_DATA = {
@@ -135,20 +119,6 @@ const THEME_DATA = {
       "The moonbeam carries the child gently home to their cozy bed, and they close their eyes — safe, warm, and loved — and drift softly off to sleep.",
     ],
   },
-  bubbles: {
-    title: "Bubble Voyage",
-    category: "Floating & Wonder",
-    arc: [
-      "Child finds a little bottle of magical bubble mix and blows a single bubble that grows enormous and shimmers with rainbow colours.",
-      "The giant bubble gently lifts the child off the ground and floats up, up into a bright open sky full of soft clouds.",
-      "Child drifts into a wondrous floating kingdom of giant rainbow bubbles, each one glowing with its own tiny world inside.",
-      "A small bubble creature is sad because the bubbles are starting to lose their shimmer and softly pop, one by one.",
-      "Child's first eager attempt to help accidentally pops a bubble, and they realise they must be very gentle and clever instead.",
-      "With a soft breath and a kind, careful touch, the child learns how to mend the bubbles and bring their shimmer back.",
-      "One by one the bubbles glow again, and the whole kingdom sparkles and floats, everyone cheering the child.",
-      "The child's own bubble carries them gently home, and they keep one tiny shimmering bubble as a memory of the voyage.",
-    ],
-  },
 };
 
 function getAgeBand(ageNum) {
@@ -160,11 +130,11 @@ function getAgeBand(ageNum) {
 
 export async function POST(request) {
   try {
-    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-    if (!checkRateLimit(ip)) {
+    const limit = await rateLimit(request, "story", 5, 24 * 60 * 60);
+    if (!limit.allowed) {
       return Response.json(
         { error: "limit_reached", message: "You've reached the maximum of 5 free previews in 24 hours. Purchase your book to continue." },
-        { status: 429 }
+        { status: 429, headers: { "Retry-After": String(limit.retryAfter) } }
       );
     }
 
@@ -278,3 +248,4 @@ FINAL CHECK BEFORE RETURNING:
     return Response.json({ error: err.message }, { status: 500 });
   }
 }
+

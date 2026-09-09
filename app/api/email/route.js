@@ -1,39 +1,22 @@
 import { Resend } from "resend";
+import { rateLimit } from "@/lib/security";
 
 const esc = (s) => String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-
-// Simple in-memory rate limit: max 5 requests per IP per 10 minutes
-const rateLimitMap = new Map();
-const RATE_LIMIT = 5;
-const RATE_WINDOW_MS = 10 * 60 * 1000;
-
-function isRateLimited(ip) {
-  const now = Date.now();
-  const entry = rateLimitMap.get(ip) || { count: 0, start: now };
-  if (now - entry.start > RATE_WINDOW_MS) {
-    rateLimitMap.set(ip, { count: 1, start: now });
-    return false;
-  }
-  if (entry.count >= RATE_LIMIT) return true;
-  entry.count++;
-  rateLimitMap.set(ip, entry);
-  return false;
-}
 
 const FROM_DOMAIN = "hello@mytinytales.studio";
 const FROM_NOREPLY = "My Tiny Tales <hello@mytinytales.studio>";
 
 export async function POST(request) {
-  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-  if (isRateLimited(ip)) {
-    return Response.json({ error: "Too many requests" }, { status: 429 });
+  const limit = await rateLimit(request, "email", 5, 10 * 60);
+  if (!limit.allowed) {
+    return Response.json({ error: "Too many requests" }, { status: 429, headers: { "Retry-After": String(limit.retryAfter) } });
   }
 
   try {
     const body = await request.json();
     const { type, email, name, subject, message, shareUrl } = body;
 
-    if (!email) return Response.json({ error: "Email required" }, { status: 400 });
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || ""))) return Response.json({ error: "A valid email is required" }, { status: 400 });
 
     console.log("Email API called, type:", type, "email:", email);
 
@@ -45,6 +28,15 @@ export async function POST(request) {
     const resend = new Resend(process.env.RESEND_API_KEY);
 
     if (type === "preview_lead") {
+      let safeShareUrl;
+      try {
+        const parsed = new URL(shareUrl);
+        const allowed = new Set(["https://mytinytales.studio", "https://storybookapp-alpha.vercel.app", "http://localhost:3000"]);
+        if (!allowed.has(parsed.origin)) throw new Error("untrusted share URL");
+        safeShareUrl = parsed.toString();
+      } catch {
+        return Response.json({ error: "Invalid preview link" }, { status: 400 });
+      }
       await resend.emails.send({
         from: FROM_NOREPLY,
         to: email,
@@ -57,7 +49,7 @@ export async function POST(request) {
             </div>
             <div style="padding:32px;">
               <p style="color:#3d2b1f;font-size:15px;line-height:1.7;">Hi there! Here's your personalised storybook preview link:</p>
-              <a href="${shareUrl || "#"}" style="display:block;margin:20px 0;padding:14px 28px;background:linear-gradient(135deg,#f4c430,#ffb347);color:#1a0a2e;font-weight:700;font-size:15px;text-decoration:none;border-radius:50px;text-align:center;">
+              <a href="${esc(safeShareUrl)}" style="display:block;margin:20px 0;padding:14px 28px;background:linear-gradient(135deg,#f4c430,#ffb347);color:#1a0a2e;font-weight:700;font-size:15px;text-align:center;">
                 View My Book Preview →
               </a>
               <p style="color:#8a6d5a;font-size:13px;">Love what you see? Download the full print-ready PDF for just $17.99, or order a beautiful printed copy delivered to your door.</p>
@@ -114,3 +106,4 @@ export async function POST(request) {
     return Response.json({ error: err.message }, { status: 500 });
   }
 }
+

@@ -2,6 +2,7 @@ import { PDFDocument, rgb } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 import { fal } from "@fal-ai/client";
 import { LATO_BOLD_TTF, LIBRE_REGULAR_TTF, LIBRE_ITALIC_TTF } from "./fonts.js";
+import { isAllowedFalAsset, isInternalRequest } from "@/lib/security";
 
 export const maxDuration = 60;
 
@@ -35,10 +36,13 @@ const GOLD  = rgb(0.910, 0.753, 0.478);
 const WHITE = rgb(1, 1, 1);
 
 async function fetchBytes(url) {
-  if (!url || url === "__failed__") return null;
+  if (!url || url === "__failed__" || !isAllowedFalAsset(url)) return null;
   try {
-    const res = await fetch(url, { signal: AbortSignal.timeout(20_000) });
+    const res = await fetch(url, { signal: AbortSignal.timeout(20_000), redirect: "error" });
     if (!res.ok) { console.warn(`fetchBytes: ${url} → ${res.status}`); return null; }
+    const contentLength = Number(res.headers.get("content-length") || 0);
+    if (contentLength > 20 * 1024 * 1024) return null;
+    if (!res.headers.get("content-type")?.startsWith("image/")) return null;
     return new Uint8Array(await res.arrayBuffer());
   } catch (err) {
     console.warn(`fetchBytes failed: ${err.message}`); return null;
@@ -102,13 +106,17 @@ function fadeIntoPanel(page, x, w, solidTop, fadeTop, color, maxOpacity = 0.9) {
 }
 
 export async function POST(request) {
+  if (!isInternalRequest(request)) return Response.json({ error: "Unauthorized" }, { status: 401 });
   fal.config({ credentials: process.env.FAL_API_KEY });
 
   let body;
   try { body = await request.json(); }
   catch { return Response.json({ error: "Invalid request body" }, { status: 400 }); }
 
-  const { coverFalUrl, pageFalUrls, story, childName } = body;
+    const { coverFalUrl, pageFalUrls, story, childName } = body;
+    if (!isAllowedFalAsset(coverFalUrl) || !Array.isArray(pageFalUrls) || pageFalUrls.length > 8 || pageFalUrls.some((url) => url && !isAllowedFalAsset(url))) {
+      return Response.json({ error: "Invalid book assets" }, { status: 400 });
+    }
 
   try {
     const capName = toWinAnsi(childName
@@ -275,7 +283,7 @@ export async function POST(request) {
     // Pad to the product minimum with blank flyleaves (kept even; the back cover
     // is the final page). A normal 8-chapter book lands here with a single blank
     // before the back cover — a clean endpaper, not recycled art.
-    const padTo = toEven(Math.max(Number(body.padTo) || INTERIOR_PAGES, doc.getPageCount() + 1));
+    const padTo = toEven(Math.max(INTERIOR_PAGES, doc.getPageCount() + 1));
     while (doc.getPageCount() < padTo - 1) addBlank();
 
     // Back cover — final page.
@@ -304,3 +312,4 @@ export async function POST(request) {
     return Response.json({ error: err.message || "PDF generation failed" }, { status: 500 });
   }
 }
+

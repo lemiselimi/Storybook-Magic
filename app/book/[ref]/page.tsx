@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 
 type BookStatus = {
   status: "generating" | "pdf_generating" | "ready" | "failed" | "not_found";
@@ -24,6 +24,9 @@ const CHAPTER_NAMES = ["One", "Two", "Three", "Four", "Five", "Six", "Seven", "E
 
 export default function BookPage() {
   const { ref } = useParams<{ ref: string }>();
+  const searchParams = useSearchParams();
+  const accessToken = searchParams.get("access_token");
+  const sessionId = searchParams.get("session_id");
   const [data, setData]       = useState<BookStatus | null>(null);
   const [isMobile, setMobile] = useState(false);
   const pollRef               = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -39,7 +42,7 @@ export default function BookPage() {
       const res = await fetch("/api/approve-print", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ ref }),
+        body:    JSON.stringify({ ref, accessToken, sessionId }),
       });
       const json = await res.json();
       if (json.ok) setData(prev => prev ? { ...prev, printApproval: "submitted" } : prev);
@@ -57,7 +60,14 @@ export default function BookPage() {
 
   const fetchStatus = async () => {
     try {
-      const res = await fetch(`/api/book-status?ref=${ref}`);
+      if (!accessToken && !sessionId) {
+        setData({ status: "not_found" });
+        return;
+      }
+      const credentials = new URLSearchParams({ ref });
+      if (accessToken) credentials.set("access_token", accessToken);
+      if (sessionId) credentials.set("session_id", sessionId);
+      const res = await fetch(`/api/book-status?${credentials.toString()}`);
       const json: BookStatus = await res.json();
       setData(json);
       if (json.status === "ready" || json.status === "failed") {
@@ -67,11 +77,11 @@ export default function BookPage() {
   };
 
   useEffect(() => {
-    if (!ref) return;
+    if (!ref || (!accessToken && !sessionId)) return;
     fetchStatus();
     pollRef.current = setInterval(fetchStatus, 6000);
     return () => { if (pollRef.current) clearInterval(pollRef.current); };
-  }, [ref]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [ref, accessToken, sessionId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const isReady     = data?.status === "ready";
   const isFailed    = data?.status === "failed";
@@ -335,3 +345,4 @@ export default function BookPage() {
     </div>
   );
 }
+

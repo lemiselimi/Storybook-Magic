@@ -1,26 +1,10 @@
 import { fal } from "@fal-ai/client";
 import sharp from "sharp";
+import { rateLimit } from "@/lib/security";
 
 export const maxDuration = 30;
 
 const MAX_BYTES = 10 * 1024 * 1024; // 10 MB
-
-// In-memory rate limiter — 5 uploads per IP per hour
-const uploadRateMap = new Map();
-const UPLOAD_RATE_LIMIT  = 5;
-const UPLOAD_RATE_WINDOW = 60 * 60 * 1000;
-
-function checkUploadRate(ip) {
-  const now = Date.now();
-  const entry = uploadRateMap.get(ip);
-  if (!entry || now > entry.resetAt) {
-    uploadRateMap.set(ip, { count: 1, resetAt: now + UPLOAD_RATE_WINDOW });
-    return true;
-  }
-  if (entry.count >= UPLOAD_RATE_LIMIT) return false;
-  entry.count++;
-  return true;
-}
 
 // Validate file type by magic bytes — never trust extension or declared MIME
 function detectMimeType(buf) {
@@ -45,11 +29,11 @@ export async function POST(request) {
   fal.config({ credentials: process.env.FAL_API_KEY });
 
   // Rate limit by IP
-  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-  if (!checkUploadRate(ip)) {
+  const limit = await rateLimit(request, "upload", 5, 60 * 60);
+  if (!limit.allowed) {
     return Response.json(
       { error: "rate_limited", message: "Too many uploads. Please wait before trying again." },
-      { status: 429, headers: { "Retry-After": "3600" } }
+      { status: 429, headers: { "Retry-After": String(limit.retryAfter) } }
     );
   }
 
@@ -75,7 +59,7 @@ export async function POST(request) {
     }
 
     // 3 — Decode with sharp, check for animated/multi-frame images, strip EXIF (including GPS)
-    const img      = sharp(rawBuffer);
+    const img      = sharp(rawBuffer, { limitInputPixels: 40_000_000 });
     const metadata = await img.metadata();
 
     if ((metadata.pages && metadata.pages > 1) || metadata.delay) {
@@ -108,3 +92,4 @@ export async function POST(request) {
     return Response.json({ error: err.message }, { status: 500 });
   }
 }
+

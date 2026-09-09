@@ -13,6 +13,7 @@ function checkRateLimit(ip, limit = 10, windowMs = 60 * 60 * 1000) {
 }
 
 export async function POST(request) {
+  if (process.env.NODE_ENV === "production") return new Response("Not found", { status: 404 });
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
   if (!checkRateLimit(ip)) return Response.json({ error: "Too many requests. Try again later." }, { status: 429 });
 
@@ -68,3 +69,4 @@ export async function POST(request) {
     return Response.json({ error: err.message }, { status: 500 });
   }
 }
+

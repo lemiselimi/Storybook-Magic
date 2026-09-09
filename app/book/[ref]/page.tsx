@@ -205,7 +205,9 @@ export default function BookPage() {
             <img src={coverUrl} alt="Book cover" style={{ width: "100%", display: "block" }} />
             <div style={{
               position: "absolute", bottom: 0, left: 0, right: 0,
-              background: "linear-gradient(transparent 0%, rgba(8,4,20,0.72) 35%, rgba(8,4,20,0.96) 100%)",
+              background: "linear-gradient(to top, rgba(8,4,20,0.98) 0%, rgba(8,4,20,0.90) 38%, rgba(8,4,20,0.34) 68%, rgba(8,4,20,0.04) 100%)",
+              backdropFilter: "blur(0.75px)",
+              WebkitBackdropFilter: "blur(0.75px)",
               padding: isMobile ? "48px 20px 22px" : "64px 28px 30px",
             }}>
               <p style={{ color: GOLD, fontSize: 10, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", margin: "0 0 6px", opacity: 0.75, fontFamily: "Georgia, serif" }}>My Tiny Tales</p>

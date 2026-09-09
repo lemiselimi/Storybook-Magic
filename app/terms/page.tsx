@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { PRODUCT } from "@/lib/product";
+
+const P = PRODUCT;
 
 export const metadata = {
   title: "Terms of Service",
@@ -13,7 +16,7 @@ const sections = [
   },
   {
     title: "2. What We Offer",
-    body: "My Tiny Tales is an AI-powered personalised storybook service. You upload a photo of your child, provide their name and age, and choose an adventure theme. We use artificial intelligence to generate a bespoke illustrated storybook in which your child appears as the hero. You may preview 2 pages free of charge; full 8-page books require payment.",
+    body: `My Tiny Tales is an AI-powered personalised storybook service. You upload a photo of your child, provide their name and age, and choose an adventure theme. We use artificial intelligence to generate a bespoke illustrated storybook in which your child appears as the hero. You may preview ${P.freePreviewPages} pages free of charge; complete ${P.storyScenes}-scene stories require payment.`,
   },
   {
     title: "3. Eligibility",
@@ -29,7 +32,7 @@ const sections = [
   },
   {
     title: "6. Print Orders",
-    body: "If you add a print-and-ship option, physical books are produced and fulfilled by our print partner and typically arrive within about 1-2 weeks (production plus shipping). Delivery timescales are estimates only. Risk of loss passes to you on dispatch. See our Refunds Policy for damaged-in-transit claims.",
+    body: `If you add a print-and-ship option, physical books are produced and fulfilled by our print partner and typically arrive in ${P.print.delivery} (production plus shipping). Delivery timescales are estimates only. Risk of loss passes to you on dispatch. See our Refunds Policy for damaged-in-transit claims.`,
   },
   {
     title: "7. Intellectual Property",
@@ -45,7 +48,7 @@ const sections = [
   },
   {
     title: "10. Photo Data & Children's Privacy",
-    body: "Photos you upload are used solely to generate your personalised storybook. Your photos are never used to train AI models, sold, or shared for advertising. We do not store your photos on our own servers; they are sent to our AI provider (fal.ai) purely as a live reference and are automatically deleted from fal.ai within 48 hours of upload. See our Children's Data page for full details.",
+    body: `Photos you upload are used solely to generate your personalised storybook. Your photos are never used to train AI models, sold, or shared for advertising. We do not store your photos on our own servers; they are sent to our AI provider (fal.ai) purely as a live reference and are automatically deleted from fal.ai within ${P.photoDeletionHours} hours of upload. See our Children's Data page for full details.`,
   },
   {
     title: "11. Limitation of Liability",

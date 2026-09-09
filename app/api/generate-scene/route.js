@@ -1,25 +1,21 @@
 import { fal } from "@fal-ai/client";
 import { NEGATIVE_PROMPT } from "../_lib/fal.js";
+import { internalWebhookUrl, isInternalRequest, rateLimit } from "@/lib/security";
 
 export const maxDuration = 30;
 
-const rateLimitMap = new Map();
-function checkRateLimit(ip, limit = 30, windowMs = 60 * 60 * 1000) {
-  const now = Date.now();
-  const entry = rateLimitMap.get(ip);
-  if (!entry || now > entry.resetAt) { rateLimitMap.set(ip, { count: 1, resetAt: now + windowMs }); return true; }
-  if (entry.count >= limit) return false;
-  entry.count++;
-  return true;
-}
-
 export async function POST(request) {
-  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-  if (!checkRateLimit(ip)) return Response.json({ error: "Too many requests. Try again later." }, { status: 429 });
+  const internal = isInternalRequest(request);
+  if (!internal) {
+    const limit = await rateLimit(request, "generate-scene", 12, 60 * 60);
+    if (!limit.allowed) return Response.json({ error: "Too many requests. Try again later." }, { status: 429, headers: { "Retry-After": String(limit.retryAfter) } });
+  }
 
   fal.config({ credentials: process.env.FAL_API_KEY });
   try {
-    const { loraUrl, referenceImageUrl, prompt, seed, webhookUrl } = await request.json();
+    const { loraUrl, referenceImageUrl, prompt, seed } = await request.json();
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || new URL(request.url).origin;
+    const webhookUrl = internal ? internalWebhookUrl(siteUrl) : null;
 
     if (!prompt) return Response.json({ error: "prompt required" }, { status: 400 });
 
@@ -129,3 +125,4 @@ export async function POST(request) {
     return Response.json({ error: err.message, failed: true }, { status: 500 });
   }
 }
+

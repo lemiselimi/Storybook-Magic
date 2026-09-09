@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import BookMockup3D from "./components/BookMockup3D";
+import HomeMiniReader from "./components/HomeMiniReader";
 import MarketingFooter from "./components/MarketingFooter";
 import MarketingNav from "./components/MarketingNav";
 import { PRODUCT } from "@/lib/product";
@@ -51,12 +52,12 @@ export default function LandingPage() {
 
         <section className="mtt-transformation" id="how-it-works" aria-labelledby="transformation-title">
           <div className="mtt-transformation__heading">
-            <p className="mtt-kicker">How a tale begins</p>
+            <p className="mtt-kicker">Every Tiny Tale begins with someone little</p>
             <h2 id="transformation-title">One favourite photo becomes their whole story.</h2>
             <p>Start with the child you know. Their familiar face and name are carried into an illustrated adventure, then gathered into a book for the shelf.</p>
           </div>
           <ol className="mtt-transformation__sequence">
-            <li className="mtt-transformation__photo">
+            <li className="mtt-transformation__photo mtt-transformation__stage mtt-transformation__stage--photo">
               <span className="mtt-transformation__number">01</span>
               <div className="mtt-photo-frame" aria-label="Your child's photo">
                 <span>A favourite<br />photo</span>
@@ -66,7 +67,7 @@ export default function LandingPage() {
               <p>You begin with a clear picture of your little reader.</p>
             </li>
             <li className="mtt-transformation__arrow" aria-hidden="true">→</li>
-            <li>
+            <li className="mtt-transformation__stage mtt-transformation__stage--character">
               <span className="mtt-transformation__number">02</span>
               <figure className="mtt-transformation__art">
                 <Image src="/examples/book-2.png" alt="A child illustrated in a warm bedtime dream scene" fill sizes="(max-width: 720px) 82vw, 22vw" />
@@ -75,10 +76,10 @@ export default function LandingPage() {
               <p>An illustrated character carries the story forward.</p>
             </li>
             <li className="mtt-transformation__arrow" aria-hidden="true">→</li>
-            <li>
+            <li className="mtt-transformation__stage mtt-transformation__stage--book">
               <span className="mtt-transformation__number">03</span>
               <div className="mtt-transformation__book">
-                <BookMockup3D coverImg="/examples/book-6.png" width={126} height={164} animate={false} />
+                <BookMockup3D coverImg="/examples/book-6.png" width={126} height={164} animate={false} scrollOpen />
               </div>
               <h3>Their book</h3>
               <p>A story to read close now and return to for years.</p>
@@ -87,24 +88,7 @@ export default function LandingPage() {
           <Link href="/create" className="mtt-text-link mtt-text-link--strong">Create their free preview <span aria-hidden="true">→</span></Link>
         </section>
 
-        <section className="mtt-open-book" id="inside-the-book" aria-labelledby="open-book-title">
-          <div className="mtt-open-book__book">
-            <div className="mtt-open-book__page mtt-open-book__page--text">
-              <span>Inside a My Tiny Tales book</span>
-              <p>Each scene is told in words on the left, with its illustration on the right.</p>
-              <small>A facing-page story spread</small>
-            </div>
-            <div className="mtt-open-book__page mtt-open-book__page--art">
-              <Image src="/examples/book-3.png" alt="An illustration from the current Off to Dreamland example book" fill sizes="(max-width: 720px) 46vw, 31vw" />
-            </div>
-          </div>
-          <div className="mtt-open-book__copy">
-            <p className="mtt-kicker">Inside a real story</p>
-            <h2 id="open-book-title">Words on the left. Their matching illustration on the right.</h2>
-            <p>Every finished story is read as a facing-page spread. The illustration shown is from the current <em>Off to Dreamland</em> example book.</p>
-            <a href="#story-worlds" className="mtt-text-link">See a few pages <span aria-hidden="true">↓</span></a>
-          </div>
-        </section>
+        <HomeMiniReader />
 
         <section className="mtt-worlds" id="story-worlds" aria-labelledby="worlds-title">
           <div className="mtt-worlds__heading">
@@ -135,6 +119,7 @@ export default function LandingPage() {
             <p className="mtt-kicker">Choose their keepsake</p>
             <h2 id="keepsake-title">A story to keep, in the way that suits your family.</h2>
             <p>Keep their complete story as a digital book, or choose a printed copy made for bedtime piles, little hands, and family shelves.</p>
+            <p className="mtt-keepsake__timecapsule">They won’t always be this little. Their Tiny Tale can be.</p>
             <dl className="mtt-keepsake__options">
               <div><dt>{P.pricing.digital.name}</dt><dd>{P.pricing.digital.label}</dd><p>A complete digital storybook, ready to keep and print at home.</p></div>
               <div><dt>{P.pricing.print.name}</dt><dd>{P.pricing.print.label}</dd><p>{P.print.pageCount}-page {P.print.cover}, {P.print.sizeIn}. Includes the digital storybook. Delivered in {P.print.delivery}.</p></div>
@@ -166,7 +151,7 @@ export default function LandingPage() {
         </section>
 
         <section className="mtt-quiet-cta" aria-labelledby="cta-title">
-          <p className="mtt-kicker">A place for them in the story</p>
+          <p className="mtt-kicker">Make their Tiny Tale</p>
           <h2 id="cta-title">The next page has their name on it.</h2>
           <Link href="/create" className="mtt-button mtt-button--ink">See their free preview <span aria-hidden="true">→</span></Link>
           <p>First {P.freePreviewPages} pages free. No card required.</p>
@@ -177,4 +162,5 @@ export default function LandingPage() {
     </div>
   );
 }
+
 

@@ -339,3 +339,78 @@ html { scrollbar-width: thin; scrollbar-color: rgba(232,192,122,0.3) #07090F; }
   .mtt-home *, .mtt-home *::before, .mtt-home *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
 }
 
+/* Homepage-only editorial interactions */
+.mtt-mini-reader { min-width: 0; }
+
+.mtt-mini-reader__controls {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-top: 1rem;
+}
+
+.mtt-mini-reader__controls button {
+  background: transparent;
+  border: 0;
+  color: var(--mtt-ink);
+  cursor: pointer;
+  font: 700 .78rem/1 var(--mtt-sans);
+  letter-spacing: .06em;
+  padding: .45rem 0;
+  text-transform: uppercase;
+}
+
+.mtt-mini-reader__controls button:hover:not(:disabled) { color: var(--mtt-terracotta); }
+.mtt-mini-reader__controls button:disabled { color: rgba(49, 43, 37, .36); cursor: default; }
+
+.mtt-mini-reader__controls > span {
+  color: var(--mtt-muted);
+  font: .76rem/1 var(--mtt-sans);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.mtt-transformation__stage--book { --book-open: 0; }
+
+.mtt-photo-frame::before,
+.mtt-transformation__art::before {
+  background: var(--mtt-paper-deep);
+  clip-path: polygon(0 0, 100% 0, 100% 100%);
+  content: "";
+  height: 1.25rem;
+  position: absolute;
+  right: 0;
+  top: 0;
+  transform-origin: top right;
+  transition: transform .45s ease;
+  width: 1.25rem;
+  z-index: 2;
+}
+
+.mtt-transformation__book > div > div { transition: transform .6s cubic-bezier(.2, .7, .2, 1); }
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .mtt-transformation__sequence:hover .mtt-photo-frame::before,
+  .mtt-transformation__sequence:hover .mtt-transformation__art::before { transform: rotateY(-145deg); }
+
+  .mtt-transformation__sequence:hover .mtt-transformation__art > img { transform: scale(1.025) translateY(-.2rem); }
+  .mtt-transformation__sequence:hover .mtt-transformation__stage--book { --book-open: 1; }
+}
+
+.mtt-keepsake__copy > p.mtt-keepsake__timecapsule {
+  border-left: 2px solid var(--mtt-terracotta);
+  color: var(--mtt-ink);
+  font: italic clamp(1.15rem, 1.7vw, 1.45rem)/1.35 var(--mtt-serif);
+  margin: 1.6rem 0 0;
+  max-width: 28rem;
+  padding-left: 1rem;
+}
+
+@media (max-width: 620px) {
+  .mtt-mini-reader__controls { gap: .65rem; }
+  .mtt-mini-reader__controls button { font-size: .7rem; }
+  .mtt-mini-reader__controls > span { font-size: .69rem; }
+}
+
+

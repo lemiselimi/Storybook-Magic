@@ -122,7 +122,7 @@ export default function CookieBanner() {
             <div style={{ display: "flex", gap: 10, marginTop: 24, flexWrap: "wrap" }}>
               <button onClick={() => save({ necessary: true, analytics: false, marketing: false })} style={{ flex: 1, padding: "10px 14px", borderRadius: 10, border: "1px solid rgba(31,42,40,0.20)", background: "transparent", color: "#1F2A28", fontSize: 13, cursor: "pointer", minWidth: 100 }}>Reject all</button>
               <button onClick={() => save(consent)} style={{ flex: 1, padding: "10px 14px", borderRadius: 10, border: "1px solid rgba(169,79,56,0.55)", background: "transparent", color: "#A94F38", fontSize: 13, cursor: "pointer", fontWeight: 600, minWidth: 100 }}>Save preferences</button>
-              <button onClick={() => save({ necessary: true, analytics: true, marketing: true })} style={{ flex: 1, padding: "10px 14px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #E8C07A, #D4A24C)", color: "#0F0B1F", fontSize: 13, cursor: "pointer", fontWeight: 700, minWidth: 100 }}>Accept all</button>
+              <button onClick={() => save({ necessary: true, analytics: true, marketing: true })} style={{ flex: 1, padding: "10px 14px", borderRadius: 10, border: "none", background: "#A94F38", color: "#FBF6EC", fontSize: 13, cursor: "pointer", fontWeight: 700, minWidth: 100 }}>Accept all</button>
             </div>
           </div>
         </div>

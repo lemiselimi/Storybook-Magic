@@ -1,5 +1,6 @@
 import Stripe from "stripe";
 import { kv } from "@/lib/kv";
+import { internalAuthorization, internalWebhookUrl } from "@/lib/security";
 
 export const maxDuration = 30;
 export const dynamic = "force-dynamic";
@@ -47,12 +48,12 @@ export async function POST(request) {
       const bookData = await kv.get(`book:${ref}`);
       if (!bookData) throw new Error(`Book data not found for ref ${ref}`);
 
-      const { referenceUrl, coverPrompt, scenePrompts, seed, story, childName, previewImages } = bookData;
+      const { referenceUrl, coverPrompt, scenePrompts, seed, story, childName, previewImages, accessToken } = bookData;
       if (!referenceUrl)  throw new Error("No reference image in book data — photo upload may have failed");
       if (!coverPrompt || !scenePrompts?.length) throw new Error("No precomputed prompts in book data");
 
       const siteUrl    = process.env.NEXT_PUBLIC_SITE_URL ?? "https://mytinytales.studio";
-      const webhookUrl = `${siteUrl}/api/fal-webhook`;
+      const webhookUrl = internalWebhookUrl(siteUrl);
 
       // All image slots: "cover" + 0..5 for the 6 story pages.
       const allJobs = [
@@ -80,6 +81,7 @@ export async function POST(request) {
         sessionId:     session.id,
         plan,
         childName,
+        accessToken,
         story,
         contactEmail,
         customerName,
@@ -95,7 +97,7 @@ export async function POST(request) {
       for (const { slot, prompt } of jobs) {
         const res = await fetch(`${siteUrl}/api/generate-scene`, {
           method:  "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "Authorization": internalAuthorization() },
           body:    JSON.stringify({ referenceImageUrl: referenceUrl, prompt, seed, webhookUrl }),
         }).then(r => r.json());
 
@@ -142,3 +144,4 @@ export async function POST(request) {
 
   return new Response("ok");
 }
+

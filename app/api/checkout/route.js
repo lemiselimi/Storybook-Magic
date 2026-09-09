@@ -1,4 +1,6 @@
 import Stripe from "stripe";
+import { kv } from "@/lib/kv";
+import { hasAccessToken, rateLimit } from "@/lib/security";
 
 const PRICE_DIGITAL = process.env.STRIPE_PRICE_DIGITAL;
 const PRICE_PRINT   = process.env.STRIPE_PRICE_PRINT;
@@ -9,7 +11,13 @@ export async function POST(request) {
   }
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
   try {
-    const { ref, plan } = await request.json();
+    const limit = await rateLimit(request, "checkout", 10, 60 * 60);
+    if (!limit.allowed) return Response.json({ error: "Too many requests" }, { status: 429, headers: { "Retry-After": String(limit.retryAfter) } });
+    const { ref, plan, accessToken } = await request.json();
+    const bookData = await kv.get(`book:${ref}`);
+    if (!bookData || !hasAccessToken(accessToken, bookData.accessToken) || bookData.plan !== plan) {
+      return Response.json({ error: "Book session is no longer available. Please create a new preview." }, { status: 403 });
+    }
     const ALLOWED_ORIGINS = new Set(["https://mytinytales.studio", "http://localhost:3000"]);
     const rawOrigin = request.headers.get("origin") || "";
     const origin = ALLOWED_ORIGINS.has(rawOrigin) ? rawOrigin : "https://mytinytales.studio";
@@ -22,7 +30,7 @@ export async function POST(request) {
       mode: "payment",
       allow_promotion_codes: true,
       metadata: { ref, plan },
-      success_url: `${origin}/book/${ref}?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${origin}/book/${ref}?session_id={CHECKOUT_SESSION_ID}&access_token=${encodeURIComponent(accessToken)}`,
       cancel_url: `${origin}/create?cancelled=1`,
       // Collect shipping address for print orders — Stripe shows address form at checkout
       ...(plan === "print" ? {
@@ -43,3 +51,4 @@ export async function POST(request) {
     return Response.json({ error: err.message }, { status: 500 });
   }
 }
+

@@ -9,7 +9,7 @@ const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
 // Daily Vercel cron: auto-submits print orders the customer hasn't approved
 // within 3 days of the book becoming ready (see vercel.json).
 export async function GET(request) {
-  if (process.env.CRON_SECRET && request.headers.get("authorization") !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!process.env.CRON_SECRET || request.headers.get("authorization") !== `Bearer ${process.env.CRON_SECRET}`) {
     return new Response("Unauthorized", { status: 401 });
   }
 
@@ -47,3 +47,4 @@ export async function GET(request) {
   console.log("auto-print run:", JSON.stringify(out));
   return Response.json(out);
 }
+

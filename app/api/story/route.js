@@ -135,6 +135,20 @@ const THEME_DATA = {
       "The moonbeam carries the child gently home to their cozy bed, and they close their eyes — safe, warm, and loved — and drift softly off to sleep.",
     ],
   },
+  bubbles: {
+    title: "Bubble Voyage",
+    category: "Floating & Wonder",
+    arc: [
+      "Child finds a little bottle of magical bubble mix and blows a single bubble that grows enormous and shimmers with rainbow colours.",
+      "The giant bubble gently lifts the child off the ground and floats up, up into a bright open sky full of soft clouds.",
+      "Child drifts into a wondrous floating kingdom of giant rainbow bubbles, each one glowing with its own tiny world inside.",
+      "A small bubble creature is sad because the bubbles are starting to lose their shimmer and softly pop, one by one.",
+      "Child's first eager attempt to help accidentally pops a bubble, and they realise they must be very gentle and clever instead.",
+      "With a soft breath and a kind, careful touch, the child learns how to mend the bubbles and bring their shimmer back.",
+      "One by one the bubbles glow again, and the whole kingdom sparkles and floats, everyone cheering the child.",
+      "The child's own bubble carries them gently home, and they keep one tiny shimmering bubble as a memory of the voyage.",
+    ],
+  },
 };
 
 function getAgeBand(ageNum) {

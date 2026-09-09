@@ -11,6 +11,7 @@ const THEMES = [
   { id: "jungle",     emoji: "🦁", title: "Jungle Crown",        subtitle: "Animals & Wildlife",       desc: "Your child becomes ruler of the animal kingdom for a day" },
   { id: "superpower", emoji: "🏆", title: "My Superpower",       subtitle: "Real Life Heroes",         desc: "Your child discovers their unique gift and uses it to help their community" },
   { id: "dreamland",  emoji: "🌙", title: "Off to Dreamland",   subtitle: "Bedtime & Dreams",         desc: "A gentle dream adventure carries your child across a soft, starlit world at bedtime" },
+  { id: "bubbles",    emoji: "🫧", title: "Bubble Voyage",      subtitle: "Floating & Wonder",        desc: "Your child blows a magical bubble that carries them on a shimmering journey through a floating bubble world" },
 ];
 
 const CHAPTER_NAMES = ["One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight"];
@@ -24,6 +25,7 @@ const THEME_CLOSING: Record<string, (name: string) => string> = {
   superpower: (n) => `Your superpower is real, ${n}. It lives inside you every single day. The world is a brighter, better place because you are in it.`,
   dino:       (n) => `The dinosaurs will never forget you, ${n}. Wherever you go, stay brave and kind — a good friend is the greatest treasure of all.`,
   dreamland:  (n) => `Sleep tight, ${n}. Whenever you close your eyes, a whole world of dreams is waiting just for you. Sweet dreams, little one.`,
+  bubbles:    (n) => `Keep dreaming big and gentle, ${n}. Like a bubble catching the light, even the smallest kindness can float up and brighten the whole world.`,
 };
 
 const HAIR_COLORS = [
@@ -171,6 +173,7 @@ const THEME_OUTFITS: Record<string, string> = {
   jungle:     "wearing a khaki safari shirt with long sleeves, matching full-length trousers, a wide-brimmed explorer hat, and brown boots",
   superpower: "wearing a bright long-sleeved superhero costume with a flowing cape, full-length leggings, and colourful boots",
   dreamland:  "wearing cozy full-length long-sleeved star-patterned pyjamas and soft slippers",
+  bubbles:    "wearing a bright yellow raincoat over a long-sleeved teal striped shirt, blue leggings, and glossy sky-blue rain boots",
 };
 const DEFAULT_OUTFIT = THEME_OUTFITS.adventure;
 
@@ -261,9 +264,35 @@ const COVER_PROMPTS_BY_THEME: Record<string, string> =  {
     "adventure outfit, golden sparkles and flowers blooming all around their feet, neighbours cheering behind, " +
     "WIDE HEROIC CENTERED COMPOSITION, golden sky at the very top of the frame for title text overlay, " +
     "low angle looking slightly up, cinematic superhero poster style. " + STYLE_TOKEN + " " + SAFETY,
+
+  bubbles:
+    "a photo of TOK, standing centered inside a giant glowing rainbow soap bubble floating in a bright sky, arms spread wide with joy, " +
+    "a whole kingdom of shimmering floating bubbles stretching behind them, soft clouds and sparkles of light everywhere, " +
+    "WIDE HEROIC CENTERED COMPOSITION, bright open sky at the very top of the frame for title text overlay, " +
+    "low angle looking slightly up, dreamy cinematic poster style. " + STYLE_TOKEN + " " + SAFETY,
 };
 
 const SCENE_PROMPTS_BY_THEME: Record<string, string[]> = {
+  bubbles: [
+    "a photo of TOK, blowing through a small bubble wand as an enormous shimmering rainbow bubble grows in front of them, " +
+    "eyes wide with wonder, in a sunny garden with sparkles of light. " + STYLE_TOKEN + " " + SAFETY,
+
+    "a photo of TOK, gently lifting off the ground inside a giant glowing bubble, arms out for balance, " +
+    "floating up into a bright blue sky dotted with soft clouds. " + STYLE_TOKEN + " " + SAFETY,
+
+    "a photo of TOK, drifting through a wondrous floating kingdom of giant rainbow bubbles that each glow softly, " +
+    "marvelling at the shimmering world all around them. " + STYLE_TOKEN + " " + SAFETY,
+
+    "a photo of TOK, kneeling beside a small sad bubble creature on a floating cloud island, reaching out a gentle hand, " +
+    "as nearby bubbles flicker and begin to fade. " + STYLE_TOKEN + " " + SAFETY,
+
+    "a photo of TOK, looking thoughtful with a hand on their chin beside a just-popped bubble, working out a gentler, cleverer plan, " +
+    "soft golden light in the floating bubble world. " + STYLE_TOKEN + " " + SAFETY,
+
+    "a photo of TOK, standing with arms raised in joy as the whole bubble kingdom glows and shimmers back to life around them, " +
+    "sparkles and rainbows filling the bright sky. " + STYLE_TOKEN + " " + SAFETY,
+  ],
+
   dino: [
     "a photo of TOK, stepping through a softly glowing portal onto a grassy prehistoric ridge, eyes wide with wonder, " +
     "a lush green valley full of gentle dinosaurs stretching out ahead, warm morning light. " + STYLE_TOKEN + " " + SAFETY,

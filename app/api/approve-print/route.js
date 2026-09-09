@@ -1,5 +1,6 @@
 import { kv } from "@/lib/kv";
 import { submitPrintFromKV, sendPrintFailureAlert } from "@/lib/print";
+import { hasAccessToken } from "@/lib/security";
 
 export const maxDuration = 60;
 export const dynamic = "force-dynamic";
@@ -14,12 +15,13 @@ export async function POST(request) {
   catch { return Response.json({ error: "Invalid request body" }, { status: 400 }); }
 
   const ref = body?.ref;
-  if (!ref) return Response.json({ error: "ref required" }, { status: 400 });
+  if (!ref || !body?.accessToken) return Response.json({ error: "Book access token required" }, { status: 401 });
 
   let sessionId = null;
   try {
     const result = await kv.get(`result:${ref}`);
     if (!result) return Response.json({ error: "Book not found" }, { status: 404 });
+    if (!hasAccessToken(body.accessToken, result.accessToken)) return Response.json({ error: "Unauthorized" }, { status: 403 });
     sessionId = result.sessionId ?? null;
 
     const { orderId, alreadyFulfilled } = await submitPrintFromKV(ref);
@@ -34,3 +36,4 @@ export async function POST(request) {
     }, { status: 500 });
   }
 }
+

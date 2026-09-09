@@ -1,13 +1,16 @@
 import { kv } from "@/lib/kv";
+import { hasAccessToken } from "@/lib/security";
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const ref = searchParams.get("ref");
-  if (!ref) return Response.json({ error: "ref required" }, { status: 400 });
+  const accessToken = searchParams.get("access_token");
+  if (!ref || !accessToken) return Response.json({ error: "Book access token required" }, { status: 401 });
 
   try {
     const result = await kv.get(`result:${ref}`);
     if (!result) return Response.json({ status: "not_found" }, { status: 404 });
+    if (!hasAccessToken(accessToken, result.accessToken)) return Response.json({ error: "Unauthorized" }, { status: 403 });
 
     // Proxy image URLs through /api/proxy so CORS + caching work correctly
     const proxied = (url) => url ? `/api/proxy?url=${encodeURIComponent(url)}` : null;
@@ -28,3 +31,4 @@ export async function GET(request) {
     return Response.json({ error: err.message }, { status: 500 });
   }
 }
+

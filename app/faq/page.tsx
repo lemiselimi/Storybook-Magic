@@ -14,7 +14,7 @@ const SURF_BDR = "rgba(38,49,61,0.08)";
 const faqs = [
   {
     q: "How does it work?",
-    a: "Upload a photo of your child, tell us their name and age, and we'll create a personalised AI character that looks just like them. Within ${P.previewTime} you'll have a beautifully illustrated ${P.storyScenes}-scene storybook starring your little one.",
+    a: `Upload a photo of your child, tell us their name and age, and we'll create a personalised AI character that looks just like them. Within ${P.previewTime} you'll have a beautifully illustrated ${P.storyScenes}-scene storybook starring your little one.`,
   },
   {
     q: "What photo should I use?",
@@ -22,19 +22,19 @@ const faqs = [
   },
   {
     q: "How long does it take?",
-    a: "Your personalised preview is ready in ${P.previewTime}: the story is written first, then all the illustrated scenes are generated. From photo to preview in one sitting.",
+    a: `Your personalised preview is ready in ${P.previewTime}: the story is written first, then all the illustrated scenes are generated. From photo to preview in one sitting.`,
   },
   {
     q: "Is my child's photo stored?",
-    a: "No. We never store your child's photo on our own servers. It's used only as a live reference to generate your book's illustrations, and is automatically deleted from our AI provider within ${P.photoDeletionHours} hours of upload. We take children's privacy seriously.",
+    a: `No. We never store your child's photo on our own servers. It's used only as a live reference to generate your book's illustrations, and is automatically deleted from our AI provider within ${P.photoDeletionHours} hours of upload. We take children's privacy seriously.`,
   },
   {
     q: "Can I preview before paying?",
-    a: "Yes — you can preview the first ${P.freePreviewPages} pages of your book completely free. You only pay when you're ready to unlock the complete ${P.storyScenes}-scene story and download or order a print.",
+    a: `Yes — you can preview the first ${P.freePreviewPages} pages of your book completely free. You only pay when you're ready to unlock the complete ${P.storyScenes}-scene story and download or order a print.`,
   },
   {
     q: "What's included in the digital download?",
-    a: "A high-resolution PDF of your personalised storybook with ${P.storyScenes} full illustrated scenes plus cover, dedication, and closing pages — ready to print at home or at any print shop.",
+    a: `A high-resolution PDF of your personalised storybook with ${P.storyScenes} full illustrated scenes plus cover, dedication, and closing pages — ready to print at home or at any print shop.`,
   },
   {
     q: "Is there a subscription?",
@@ -42,7 +42,7 @@ const faqs = [
   },
   {
     q: "Can I make a book for any age?",
-    a: "Yes — we support children aged ${P.supportedAges.min}-${P.supportedAges.max}. The story themes and reading level adapt to the age you enter.",
+    a: `Yes — we support children aged ${P.supportedAges.min}-${P.supportedAges.max}. The story themes and reading level adapt to the age you enter.`,
   },
   {
     q: "What if the preview doesn't look right?",
@@ -50,7 +50,7 @@ const faqs = [
   },
   {
     q: "Do you offer refunds?",
-    a: "Yes — we back every book with a ${P.refundDays}-day happiness promise. If something isn't right, contact us within ${P.refundDays} days and we'll re-create your book to make it right, or refund you if we can't. See our Refund Policy for details.",
+    a: `Yes — we back every book with a ${P.refundDays}-day happiness promise. If something isn't right, contact us within ${P.refundDays} days and we'll re-create your book to make it right, or refund you if we can't. See our Refund Policy for details.`,
   },
 ];
 

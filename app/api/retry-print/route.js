@@ -1,11 +1,12 @@
 import { kv } from "@/lib/kv";
 import { submitPrintFromKV } from "@/lib/print";
+import { internalAuthorization, isInternalRequest } from "@/lib/security";
 
 export const maxDuration = 60;
 export const dynamic = "force-dynamic";
 
-// Admin-only: re-submit a failed print order using data already stored in KV.
-// Usage: GET /api/retry-print?ref=<bookRef>&key=<ADMIN_RETRY_KEY>[&rebuild=1][&dry=1][&force=1]
+// Internal-only: re-submit a failed print order using data already stored in KV.
+// Send a POST body with ref and optional rebuild, dryRun, and force booleans.
 //   rebuild=1 — regenerate the interior/cover PDFs from the already-generated
 //               images (free, no new AI cost) so they pick up the current
 //               page-count settings before submitting. Use this after a
@@ -13,21 +14,13 @@ export const dynamic = "force-dynamic";
 //   dry=1     — validate the full order against Gelato as a draft (checks the
 //               page count etc.) WITHOUT placing a real, billable order.
 //   force=1   — resubmit even if an order was already marked fulfilled.
-export async function GET(request) {
-  const adminKey = process.env.ADMIN_RETRY_KEY;
-  if (!adminKey) {
-    return Response.json({ error: "ADMIN_RETRY_KEY not configured" }, { status: 503 });
-  }
-
-  const { searchParams } = new URL(request.url);
-  if (searchParams.get("key") !== adminKey) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const ref     = searchParams.get("ref");
-  const force   = searchParams.get("force") === "1";
-  const rebuild = searchParams.get("rebuild") === "1";
-  const dryRun  = searchParams.get("dry") === "1";
+export async function POST(request) {
+  if (!isInternalRequest(request)) return Response.json({ error: "Unauthorized" }, { status: 401 });
+  const body = await request.json().catch(() => ({}));
+  const ref     = body.ref;
+  const force   = body.force === true;
+  const rebuild = body.rebuild === true;
+  const dryRun  = body.dryRun === true;
   if (!ref) return Response.json({ error: "ref required" }, { status: 400 });
 
   try {
@@ -65,7 +58,7 @@ export async function GET(request) {
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://mytinytales.studio";
       const pdfRes = await fetch(`${siteUrl}/api/generate-book-pdf`, {
         method:  "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "Authorization": internalAuthorization() },
         body:    JSON.stringify({
           coverFalUrl: images["cover"],
           pageFalUrls,
@@ -96,3 +89,4 @@ export async function GET(request) {
     return Response.json({ error: err.message }, { status: 500 });
   }
 }
+

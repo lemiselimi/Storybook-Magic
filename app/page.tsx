@@ -89,25 +89,27 @@ export default function LandingPage() {
 
         <section className="mtt-open-book" id="inside-the-book" aria-labelledby="open-book-title">
           <div className="mtt-open-book__book">
-            <div className="mtt-open-book__page mtt-open-book__page--art">
-              <Image src="/examples/book-3.png" alt="A real page from the Off to Dreamland storybook" fill sizes="(max-width: 720px) 46vw, 31vw" />
+            <div className="mtt-open-book__page mtt-open-book__page--text">
+              <span>Inside a My Tiny Tales book</span>
+              <p>Each scene is told in words on the left, with its illustration on the right.</p>
+              <small>A facing-page story spread</small>
             </div>
             <div className="mtt-open-book__page mtt-open-book__page--art">
-              <Image src="/examples/book-4.png" alt="A following page from the Off to Dreamland storybook" fill sizes="(max-width: 720px) 46vw, 31vw" />
+              <Image src="/examples/book-3.png" alt="An illustration from the current Off to Dreamland example book" fill sizes="(max-width: 720px) 46vw, 31vw" />
             </div>
           </div>
           <div className="mtt-open-book__copy">
             <p className="mtt-kicker">Inside a real story</p>
-            <h2 id="open-book-title">A sequence of pages from one small adventure.</h2>
-            <p>These consecutive images are from an <em>Off to Dreamland</em> example. They offer a glimpse of the visual rhythm that carries a story from one page to the next.</p>
+            <h2 id="open-book-title">Words on the left. Their matching illustration on the right.</h2>
+            <p>Every finished story is read as a facing-page spread. The illustration shown is from the current <em>Off to Dreamland</em> example book.</p>
             <a href="#story-worlds" className="mtt-text-link">See a few pages <span aria-hidden="true">↓</span></a>
           </div>
         </section>
 
         <section className="mtt-worlds" id="story-worlds" aria-labelledby="worlds-title">
           <div className="mtt-worlds__heading">
-            <p className="mtt-kicker">A real book, page by page</p>
-            <h2 id="worlds-title">A dreamland adventure to make their own.</h2>
+            <p className="mtt-kicker">Eight illustrated scenes</p>
+            <h2 id="worlds-title">One complete adventure, from first page to last.</h2>
           </div>
           <div className="mtt-worlds__grid">
             {bookPages.map((page, index) => (

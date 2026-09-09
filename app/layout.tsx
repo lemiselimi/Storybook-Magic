@@ -18,18 +18,18 @@ const outfit = Outfit({
   weight: ["400", "500", "600", "700"],
 });
 
-const SITE_DESC = "Turn a single photo into a personalised children's storybook starring your child as the hero — cinematic 3D illustrations and a custom story, previewed free in minutes.";
+const SITE_DESC = "Personalised illustrated storybooks that make your child the hero—made for reading together and keeping close.";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://mytinytales.studio"),
   title: {
-    default: "My Tiny Tales — Your Child, The Hero of Their Own Story",
+    default: "My Tiny Tales — A Storybook Made Just for Them",
     template: "%s · My Tiny Tales",
   },
   description: SITE_DESC,
   keywords: [
     "personalised children's book", "personalized children's book", "custom storybook",
-    "AI children's book", "make your child the hero of a book", "personalised storybook gift",
+    "make your child the hero of a book", "personalised storybook gift",
     "custom kids book", "photo storybook for kids", "personalised bedtime story",
   ],
   applicationName: "My Tiny Tales",
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
   icons: { icon: "/favicon.svg" },
   openGraph: {
-    title: "My Tiny Tales — Your Child, The Hero of Their Own Story",
+    title: "My Tiny Tales — A Storybook Made Just for Them",
     description: SITE_DESC,
     url: "https://mytinytales.studio",
     siteName: "My Tiny Tales",
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "My Tiny Tales — Your Child, The Hero of Their Own Story",
+    title: "My Tiny Tales — A Storybook Made Just for Them",
     description: SITE_DESC,
     images: ["https://mytinytales.studio/og-image.jpg"],
   },
@@ -102,3 +102,4 @@ export default function RootLayout({
     </html>
   );
 }
+

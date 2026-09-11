@@ -1,6 +1,9 @@
 "use client";
 import { useState, useRef, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { PRODUCT } from "@/lib/product";
+
+const { digital: DIGITAL, print: PRINT } = PRODUCT.pricing;
 
 const THEMES = [
   { id: "adventure",  emoji: "🌋", title: "The Big Adventure",  subtitle: "Quest & Exploration",     desc: "Your child discovers a hidden world and must be brave to save the day", popular: true },
@@ -1166,7 +1169,7 @@ export default function StorybookCreator() {
 
   // ── Purchase ──────────────────────────────────────────────────────────────────
   const handlePurchase = async (plan: "digital" | "print") => {
-    gtagEvent("begin_checkout", { plan, value: plan === "print" ? 37.99 : 17.99, currency: "USD" });
+    gtagEvent("begin_checkout", { plan, value: plan === "print" ? PRINT.amount : DIGITAL.amount, currency: PRODUCT.pricing.currency });
     if (!PAYMENTS_ENABLED) { generateFullBook(); return; }
     setCheckoutLoading(plan);
     try {
@@ -1944,7 +1947,7 @@ export default function StorybookCreator() {
                     <h2 style={{ color: "white", fontSize: isMobile ? 20 : 24, fontWeight: 700, margin: "0 0 10px" }}>Free preview limit reached</h2>
                     <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 15, margin: "0 0 24px" }}>You've used 5 free previews in 24 hours. Purchase once to unlock unlimited generations.</p>
                     <button onClick={() => handlePurchase("digital")} disabled={!!checkoutLoading} style={{ padding: "15px 36px", borderRadius: 16, border: "none", background: checkoutLoading ? "rgba(232,192,122,0.5)" : "linear-gradient(135deg, #E8C07A, #D4A24C)", color: "#1E1813", fontSize: 16, fontWeight: 800, cursor: checkoutLoading ? "not-allowed" : "pointer" }}>
-                      {checkoutLoading === "digital" ? "Redirecting..." : "Unlock My Book ($17.99) →"}
+                      {checkoutLoading === "digital" ? "Redirecting..." : `Unlock My Book (${DIGITAL.label}) →`}
                     </button>
                   </div>
                 )}
@@ -2082,11 +2085,11 @@ export default function StorybookCreator() {
                       <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, textAlign: "center", margin: "0 0 18px" }}>8 personalised cinematic 3D-illustrated pages starring {childName || "your child"}</p>
                       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                         <button onClick={() => handlePurchase("digital")} disabled={!!checkoutLoading} style={{ width: "100%", padding: "17px", borderRadius: 16, border: "none", background: checkoutLoading === "digital" ? "rgba(232,192,122,0.5)" : "linear-gradient(135deg, #E8C07A, #D4A24C)", color: "#1E1813", fontSize: 17, fontWeight: 800, cursor: checkoutLoading ? "not-allowed" : "pointer" }}>
-                          {checkoutLoading === "digital" ? "Redirecting..." : PAYMENTS_ENABLED ? "Get Digital Book ($17.99) →" : "Create My Storybook"}
+                          {checkoutLoading === "digital" ? "Redirecting..." : PAYMENTS_ENABLED ? `Get Digital Book (${DIGITAL.label}) →` : "Create My Storybook"}
                         </button>
                         {PAYMENTS_ENABLED && (
                           <button onClick={() => handlePurchase("print")} disabled={!!checkoutLoading} style={{ width: "100%", padding: "15px", borderRadius: 16, border: "2px solid rgba(232,192,122,0.35)", background: "rgba(232,192,122,0.07)", color: "#E8C07A", fontSize: 16, fontWeight: 700, cursor: checkoutLoading ? "not-allowed" : "pointer" }}>
-                            {checkoutLoading === "print" ? "Redirecting..." : "Print + Digital ($37.99)"}
+                            {checkoutLoading === "print" ? "Redirecting..." : `Print + Digital (${PRINT.label})`}
                           </button>
                         )}
                       </div>

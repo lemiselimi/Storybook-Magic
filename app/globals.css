@@ -139,6 +139,8 @@ html { scrollbar-width: thin; scrollbar-color: rgba(232,192,122,0.3) #07090F; }
 .mtt-keepsake__options div + div { border-right: 0; padding-left: 1rem; }
 .mtt-keepsake__options dt { color: rgba(245,239,226,.72); font-size: .72rem; margin-bottom: .2rem; }
 .mtt-keepsake__options dd { font-family: var(--mtt-display); font-size: 1.5rem; margin: 0; }
+/* "+ shipping" sits beside the print price — shipping is charged separately. */
+.mtt-keepsake__plus { color: var(--mtt-ink-soft); font-family: var(--mtt-sans); font-size: .8rem; letter-spacing: .02em; }
 
 .mtt-quiet-cta { background: var(--mtt-paper); padding: clamp(6rem, 12vw, 11rem) 4.8vw; text-align: center; }
 .mtt-quiet-cta .mtt-kicker { margin-bottom: 1rem; }

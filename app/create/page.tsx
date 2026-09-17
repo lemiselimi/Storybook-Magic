@@ -1161,7 +1161,11 @@ export default function StorybookCreator() {
 
   // ── Purchase ──────────────────────────────────────────────────────────────────
   const handlePurchase = async (plan: "digital" | "print") => {
-    gtagEvent("begin_checkout", { plan, value: plan === "print" ? 37.99 : 17.99, currency: "USD" });
+    gtagEvent("begin_checkout", {
+      plan,
+      value: plan === "print" ? PRODUCT.pricing.print.amount : PRODUCT.pricing.digital.amount,
+      currency: PRODUCT.pricing.currency,
+    });
     if (!PAYMENTS_ENABLED) { generateFullBook(); return; }
     setCheckoutLoading(plan);
     try {
@@ -2080,14 +2084,14 @@ export default function StorybookCreator() {
                     {/* CTAs */}
                     <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(232,192,122,0.2)", borderRadius: 22, padding: isMobile ? 18 : 24 }}>
                       <p style={{ color: "rgba(232,192,122,0.9)", fontSize: 13, fontWeight: 700, textAlign: "center", margin: "0 0 4px", letterSpacing: "0.04em" }}>{childName ? `Continue ${childName}'s story` : "Continue their story"}</p>
-                      <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, textAlign: "center", margin: "0 0 18px" }}>{PRODUCT.storyScenes} illustrated story pages starring {childName || "your child"}. Choose digital, or a printed keepsake with the digital book included.</p>
+                      <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, textAlign: "center", margin: "0 0 18px" }}>{PRODUCT.storyScenes} illustrated story pages starring {childName || "your child"}. Choose digital, or a printed keepsake with the digital book included — shipping from {PRODUCT.shipping.standard.label}, added at checkout.</p>
                       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                         <button onClick={() => handlePurchase("digital")} disabled={!!checkoutLoading} style={{ width: "100%", padding: "17px", borderRadius: 16, border: "none", background: checkoutLoading === "digital" ? "rgba(232,192,122,0.5)" : "linear-gradient(135deg, #E8C07A, #D4A24C)", color: "#1E1813", fontSize: 17, fontWeight: 800, cursor: checkoutLoading ? "not-allowed" : "pointer" }}>
                           {checkoutLoading === "digital" ? "Redirecting..." : PAYMENTS_ENABLED ? (childName ? `Finish ${childName}'s Tiny Tale — Digital (${PRODUCT.pricing.digital.label}) →` : `Finish their Tiny Tale — Digital (${PRODUCT.pricing.digital.label}) →`) : "Finish their Tiny Tale"}
                         </button>
                         {PAYMENTS_ENABLED && (
                           <button onClick={() => handlePurchase("print")} disabled={!!checkoutLoading} style={{ width: "100%", padding: "15px", borderRadius: 16, border: "2px solid rgba(232,192,122,0.35)", background: "rgba(232,192,122,0.07)", color: "#E8C07A", fontSize: 16, fontWeight: 700, cursor: checkoutLoading ? "not-allowed" : "pointer" }}>
-                            {checkoutLoading === "print" ? "Redirecting..." : (childName ? `Finish ${childName}'s Keepsake Book — Print + Digital (${PRODUCT.pricing.print.label}) →` : `Finish their Keepsake Book — Print + Digital (${PRODUCT.pricing.print.label}) →`)}
+                            {checkoutLoading === "print" ? "Redirecting..." : (childName ? `Finish ${childName}'s Keepsake Book — Print + Digital (${PRODUCT.pricing.print.label} + shipping) →` : `Finish their Keepsake Book — Print + Digital (${PRODUCT.pricing.print.label} + shipping) →`)}
                           </button>
                         )}
                       </div>

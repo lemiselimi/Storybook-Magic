@@ -1,9 +1,15 @@
 import Stripe from "stripe";
 import { kv } from "@/lib/kv";
 import { hasAccessToken, rateLimit } from "@/lib/security";
+import { buildShippingOptions, isValidPlan } from "@/lib/commerce";
 
 const PRICE_DIGITAL = process.env.STRIPE_PRICE_DIGITAL;
 const PRICE_PRINT   = process.env.STRIPE_PRICE_PRINT;
+
+// Stripe Tax stays OFF until the owner has confirmed registrations in the
+// Dashboard. Flipping STRIPE_AUTOMATIC_TAX=true is the only switch needed once
+// the Price objects carry tax codes and a tax_behavior. See PRICING.md.
+const AUTOMATIC_TAX = String(process.env.STRIPE_AUTOMATIC_TAX || "").toLowerCase() === "true";
 
 export async function POST(request) {
   if (!process.env.STRIPE_SECRET_KEY || !PRICE_DIGITAL || !PRICE_PRINT) {
@@ -14,6 +20,16 @@ export async function POST(request) {
     const limit = await rateLimit(request, "checkout", 10, 60 * 60);
     if (!limit.allowed) return Response.json({ error: "Too many requests" }, { status: 429, headers: { "Retry-After": String(limit.retryAfter) } });
     const { ref, plan, accessToken } = await request.json();
+
+    // Only "digital" and "print" exist. Reject anything else before touching KV
+    // or Stripe — the plan selects the price, so it must be an allowlist.
+    if (!isValidPlan(plan)) {
+      return Response.json({ error: "Unknown product plan." }, { status: 400 });
+    }
+    if (typeof ref !== "string" || !ref) {
+      return Response.json({ error: "Book reference required." }, { status: 400 });
+    }
+
     const bookData = await kv.get(`book:${ref}`);
     if (!bookData || !hasAccessToken(accessToken, bookData.accessToken) || bookData.plan !== plan) {
       return Response.json({ error: "Book session is no longer available. Please create a new preview." }, { status: 403 });
@@ -22,6 +38,8 @@ export async function POST(request) {
     const rawOrigin = request.headers.get("origin") || "";
     const origin = ALLOWED_ORIGINS.has(rawOrigin) ? rawOrigin : "https://mytinytales.studio";
 
+    // The price id is chosen here, from trusted env config — never sent by the
+    // browser. Same for the shipping rates below.
     const priceId = plan === "print" ? PRICE_PRINT : PRICE_DIGITAL;
 
     const session = await stripe.checkout.sessions.create({
@@ -30,10 +48,13 @@ export async function POST(request) {
       mode: "payment",
       allow_promotion_codes: true,
       metadata: { ref, plan },
+      ...(AUTOMATIC_TAX ? { automatic_tax: { enabled: true } } : {}),
       success_url: `${origin}/book/${ref}?session_id={CHECKOUT_SESSION_ID}&access_token=${encodeURIComponent(accessToken)}`,
       cancel_url: `${origin}/create?cancelled=1`,
-      // Collect shipping address for print orders — Stripe shows address form at checkout
+      // Print orders only: collect a delivery address and let the customer pick
+      // a shipping speed. Digital orders get neither.
       ...(plan === "print" ? {
+        shipping_options: buildShippingOptions(process.env),
         shipping_address_collection: {
           allowed_countries: [
             "US","CA","GB","AU","NZ","DE","FR","NL","SE","NO","DK","FI",

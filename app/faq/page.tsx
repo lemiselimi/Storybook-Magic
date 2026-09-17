@@ -37,6 +37,14 @@ const faqs = [
     a: `A high-resolution PDF of your personalised storybook with ${P.storyScenes} full illustrated scenes plus cover, dedication, and closing pages — ready to print at home or at any print shop.`,
   },
   {
+    q: "How much does it cost?",
+    a: `The ${P.pricing.digital.name} is ${P.pricing.digital.label}. The ${P.pricing.print.name} is ${P.pricing.print.label} plus shipping, and includes the digital book as well. Shipping is added at checkout: ${P.shipping.standard.label} standard or ${P.shipping.express.label} express.`,
+  },
+  {
+    q: "What does shipping cost?",
+    a: `Digital books have no shipping. For printed keepsakes you choose your speed at checkout — ${P.shipping.standard.label} standard or ${P.shipping.express.label} express. Shipping is never included in the ${P.pricing.print.label} book price, and you'll always see it before you pay.`,
+  },
+  {
     q: "Is there a subscription?",
     a: "No subscription. You pay once per book, and it's yours forever.",
   },

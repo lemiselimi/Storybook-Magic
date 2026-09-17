@@ -5,6 +5,8 @@
 // every page stays consistent. Update values in this file only.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { PRICING, SHIPPING } from "./commerce.js";
+
 export const PRODUCT = {
   name: "My Tiny Tales",
   email: "hello@mytinytales.studio",
@@ -31,12 +33,14 @@ export const PRODUCT = {
   },
 
   // ── Pricing (USD) ─────────────────────────────────────────────────────────
-  // Stripe price IDs live in env; these are the display prices/names.
-  pricing: {
-    currency: "USD",
-    digital: { amount: 17.99, label: "$17.99", name: "Digital Storybook" },
-    print: { amount: 37.99, label: "$37.99", name: "The Keepsake Book" },
-  },
+  // Numbers live in lib/commerce.js (the server-side trusted config) and are
+  // re-exported here for display, so there is exactly one place to change a
+  // price. Stripe price ids live in env.
+  //
+  // NOTE: the print price does NOT include shipping — shipping is charged
+  // separately at checkout. Always present print as "$29.99 + shipping".
+  pricing: PRICING,
+  shipping: SHIPPING,
 
   // ── Trust & policy ────────────────────────────────────────────────────────
   photoDeletionHours: 48, // reference photo auto-deletes from the AI provider

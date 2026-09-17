@@ -122,7 +122,7 @@ export default function LandingPage() {
             <p className="mtt-keepsake__timecapsule">They won’t always be this little. Their Tiny Tale can be.</p>
             <dl className="mtt-keepsake__options">
               <div><dt>{P.pricing.digital.name}</dt><dd>{P.pricing.digital.label}</dd><p>A complete digital storybook, ready to keep and print at home.</p></div>
-              <div><dt>{P.pricing.print.name}</dt><dd>{P.pricing.print.label}</dd><p>{P.print.pageCount}-page {P.print.cover}, {P.print.sizeIn}. Includes the digital storybook. Delivered in {P.print.delivery}.</p></div>
+              <div><dt>{P.pricing.print.name}</dt><dd>{P.pricing.print.label} <span className="mtt-keepsake__plus">+ shipping</span></dd><p>{P.print.pageCount}-page {P.print.cover}, {P.print.sizeIn}. Includes the digital storybook. Shipping from {P.shipping.standard.label} at checkout. Delivered in {P.print.delivery}.</p></div>
             </dl>
             <Link href="/create" className="mtt-button mtt-button--paper">Read their first pages <span aria-hidden="true">→</span></Link>
           </div>

@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:print-layout": "node --test test/book-layout.test.mjs",
+    "test:story-quality": "node --test test/story-quality.test.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.82.0",

@@ -2,46 +2,55 @@ import { PDFDocument, rgb } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 import { fal } from "@fal-ai/client";
 import { LATO_BOLD_TTF, LIBRE_REGULAR_TTF, LIBRE_ITALIC_TTF } from "./fonts.js";
+import { isAllowedFalAsset, isInternalRequest } from "@/lib/security";
+import {
+  DEFAULT_INTERIOR_PAGE_COUNT,
+  INNER_GUTTER_ALLOWANCE_PT,
+  PAGE_SIZE_PT,
+  SAFE_MARGIN_PT,
+  TEXT_INNER_MARGIN_PT,
+  controlledCoverSubtitle,
+  displayName,
+  fitTextToBox,
+  preflightBook,
+  validatePdfPlan,
+} from "@/lib/book-layout";
 
 export const maxDuration = 60;
 
-// 8×8" trim + 3mm bleed each side = 206mm × 206mm
-// 206mm × (72pt / 25.4mm) = 583.9pt → 584pt
-const PS = 584; // interior page: square 584×584 pt
+// Prodigi softcover files are supplied at trim size: 210 mm square, with no
+// bleed or crop marks. Prodigi adds production bleed itself.
+const PS = PAGE_SIZE_PT;
+const OUTER = SAFE_MARGIN_PT;
+const INNER = TEXT_INNER_MARGIN_PT;
+const minimumConfiguredPages = Number(process.env.PRINT_MIN_PAGES);
+const configuredMinimum = Number.isFinite(minimumConfiguredPages) ? minimumConfiguredPages : 0;
+const requestedPageCount = Math.max(DEFAULT_INTERIOR_PAGE_COUNT, configuredMinimum);
+const MIN_INTERIOR_PAGES = requestedPageCount % 2 === 0 ? requestedPageCount : requestedPageCount + 1;
 
-// Interior is padded to this many pages (even; pages print two-up on each
-// sheet). Prodigi treats page 1 of the PDF as the cover, so the "inside" count
-// it validates is our file count minus the cover page(s): a 20-page file shows
-// as 19 inside pages, just under their 20 minimum. So generate 22 file pages to
-// clear the minimum with margin while still fitting all 8 chapters. Env-overridable.
-const toEven = (n) => (n % 2 === 0 ? n : n + 1);
-const INTERIOR_PAGES = toEven(Number(process.env.PRINT_MIN_PAGES) || Number(process.env.GELATO_INTERIOR_PAGES) || 22);
-
-// Perfect-bound cover wrap: back (584pt) + spine + front (584pt).
-// Spine scales with interior thickness: ~0.097mm/page (170 GSM coated silk),
-// converted to points (72pt / 25.4mm). ≈ 9pt at 32 interior pages. Adjust if
-// Gelato's spine calculator gives a different value.
-const SPINE = Math.round(INTERIOR_PAGES * 0.097 * 72 / 25.4);
-const CW = PS * 2 + SPINE; // 1175pt wide
-const CH = PS;              // 584pt tall
-
-// Safety margin inside bleed (0.375" = 27pt from trim edge ≈ 36pt from PDF edge)
-const M = 36;
-
-const DARK  = rgb(0.06,  0.04,  0.14);
+const DARK = rgb(0.06, 0.04, 0.14);
 const CREAM = rgb(0.992, 0.973, 0.937);
 const BROWN = rgb(0.165, 0.082, 0.020);
-const GOLD  = rgb(0.910, 0.753, 0.478);
+const GOLD = rgb(0.910, 0.753, 0.478);
 const WHITE = rgb(1, 1, 1);
 
+class PreflightError extends Error {
+  constructor(message, details = []) {
+    super(message);
+    this.name = "PreflightError";
+    this.details = details;
+  }
+}
+
 async function fetchBytes(url) {
-  if (!url || url === "__failed__") return null;
+  if (!url || url === "__failed__" || !isAllowedFalAsset(url)) return null;
   try {
-    const res = await fetch(url, { signal: AbortSignal.timeout(20_000) });
-    if (!res.ok) { console.warn(`fetchBytes: ${url} → ${res.status}`); return null; }
+    const res = await fetch(url, { signal: AbortSignal.timeout(20_000), redirect: "error" });
+    if (!res.ok || !res.headers.get("content-type")?.startsWith("image/")) return null;
+    if (Number(res.headers.get("content-length") || 0) > 20 * 1024 * 1024) return null;
     return new Uint8Array(await res.arrayBuffer());
-  } catch (err) {
-    console.warn(`fetchBytes failed: ${err.message}`); return null;
+  } catch {
+    return null;
   }
 }
 
@@ -51,256 +60,184 @@ async function embedImg(doc, bytes) {
   catch { return null; }
 }
 
-// Fonts embedded as base64 at build time — no fs.readFileSync, no process.cwd(),
-// no outputFileTracingIncludes required. Guaranteed present in any serverless runtime.
-const BOLD_BYTES    = LATO_BOLD_TTF;
-const REGULAR_BYTES = LIBRE_REGULAR_TTF;
-const ITALIC_BYTES  = LIBRE_ITALIC_TTF;
-
-function sanitize(str) {
-  return (str || "")
-    .replace(/[\u{1F000}-\u{1FFFF}]/gu, "")
-    .replace(/[\u{2600}-\u{27BF}]/gu,   "")
-    .replace(/[\u{1F300}-\u{1F9FF}]/gu, "")
-    .trim();
-}
-
-const toWinAnsi = sanitize;
-
-function wrapText(text, maxChars = 60) {
-  const words = sanitize(text).split(" ").filter(Boolean);
-  const lines = [];
-  let line = "";
-  for (const word of words) {
-    const test = line ? `${line} ${word}` : word;
-    if (test.length > maxChars) {
-      if (line) lines.push(line);
-      line = word;
-    } else {
-      line = test;
-    }
-  }
-  if (line) lines.push(line);
-  return lines;
-}
-
-// Fade an illustration into a dark bottom panel without a hard seam. pdf-lib
-// has no native gradients, so approximate one with thin horizontal bands: a
-// solid base where text sits (y 0 → solidTop), then opacity easing smoothly to
-// zero from solidTop up to fadeTop — the scene dissolves into the panel like dusk.
-function fadeIntoPanel(page, x, w, solidTop, fadeTop, color, maxOpacity = 0.9) {
-  page.drawRectangle({ x, y: 0, width: w, height: solidTop, color, opacity: maxOpacity });
-  // Exactly-tiled bands (no overlap) so seams don't double-darken into lines.
+function fadeIntoPanel(page, solidTop, fadeTop, color, maxOpacity = 0.9) {
+  page.drawRectangle({ x: 0, y: 0, width: PS, height: solidTop, color, opacity: maxOpacity });
   const bands = 110;
-  const bh = (fadeTop - solidTop) / bands;
-  for (let i = 0; i < bands; i++) {
-    const t = (i + 0.5) / bands;                  // 0 just above the solid base, 1 at fadeTop
-    const opacity = maxOpacity * Math.pow(1 - t, 1.6);
-    if (opacity < 0.003) continue;
-    page.drawRectangle({ x, y: solidTop + i * bh, width: w, height: bh, color, opacity });
+  const bandHeight = (fadeTop - solidTop) / bands;
+  for (let index = 0; index < bands; index += 1) {
+    const progress = (index + 0.5) / bands;
+    const opacity = maxOpacity * Math.pow(1 - progress, 1.6);
+    if (opacity >= 0.003) page.drawRectangle({ x: 0, y: solidTop + index * bandHeight, width: PS, height: bandHeight, color, opacity });
   }
+}
+
+function drawFittedLines(page, layout, { x = 0, bottomY, font, color, opacity = 1, align = "left" }) {
+  layout.lines.forEach((line, index) => {
+    const width = font.widthOfTextAtSize(line, layout.size);
+    const lineX = align === "center" ? (PS - width) / 2 : align === "optical-center" ? x - width / 2 : x;
+    const y = bottomY + (layout.lines.length - index - 1) * layout.leading;
+    page.drawText(line, { x: lineX, y, size: layout.size, font, color, opacity });
+  });
+}
+
+function coverLayout(title, font) {
+  try {
+    return fitTextToBox(title, { font, maxWidth: PS - OUTER * 2, maxHeight: 112, preferredSize: 30, minimumSize: 20, maxLines: 3, lineHeight: 1.08 });
+  } catch (error) {
+    throw new PreflightError("Cover title cannot fit safely.", [{ code: "cover_title_overflow", message: error.message }]);
+  }
+}
+
+function titlePageLayout(title, font) {
+  try {
+    return fitTextToBox(title, { font, maxWidth: PS - OUTER * 2, maxHeight: 154, preferredSize: 42, minimumSize: 28, maxLines: 3, lineHeight: 1.08 });
+  } catch (error) {
+    throw new PreflightError("Title-page title cannot fit safely.", [{ code: "title_page_overflow", message: error.message }]);
+  }
+}
+
+function storyLayout(text, font) {
+  try {
+    return fitTextToBox(text, { font, maxWidth: PS - OUTER - INNER, maxHeight: 322, preferredSize: 17, minimumSize: 15, maxLines: 14, lineHeight: 1.5 });
+  } catch (error) {
+    throw new PreflightError("Story text cannot fit safely.", [{ code: "story_text_overflow", message: error.message }]);
+  }
+}
+
+function drawFrontCover(page, { image, title, childName, titleFont, bodyFont }) {
+  if (image) page.drawImage(image, { x: 0, y: 0, width: PS, height: PS });
+  else page.drawRectangle({ x: 0, y: 0, width: PS, height: PS, color: DARK });
+  fadeIntoPanel(page, PS * 0.34, PS * 0.58, DARK, 0.9);
+  const layout = coverLayout(title, titleFont);
+  const titleBottom = 112;
+  page.drawText("MY TINY TALES", { x: OUTER, y: titleBottom + layout.height + 20, size: 10.5, font: titleFont, color: GOLD, opacity: 0.85, characterSpacing: 1.1 });
+  drawFittedLines(page, layout, { x: OUTER, bottomY: titleBottom, font: titleFont, color: WHITE });
+  const subtitle = controlledCoverSubtitle(childName);
+  if (subtitle) page.drawText(subtitle, { x: OUTER, y: 66, size: 11, font: bodyFont, color: GOLD, opacity: 0.82 });
+}
+
+function drawTitlePage(page, { title, childName, titleFont, italicFont }) {
+  page.drawRectangle({ x: 0, y: 0, width: PS, height: PS, color: DARK });
+  // This right-hand page is shifted half a gutter toward the outer edge, so
+  // its visual center is not pulled into the binding by raw PDF coordinates.
+  const opticalCenter = PS / 2 + INNER_GUTTER_ALLOWANCE_PT / 2;
+  const presents = "MY TINY TALES PRESENTS";
+  const presentsWidth = titleFont.widthOfTextAtSize(presents, 10);
+  page.drawText(presents, { x: opticalCenter - presentsWidth / 2, y: PS * 0.73, size: 10, font: titleFont, color: GOLD, opacity: 0.7, characterSpacing: 1.1 });
+  const layout = titlePageLayout(title, titleFont);
+  const titleBottom = PS * 0.49 - layout.height / 2;
+  drawFittedLines(page, layout, { x: opticalCenter, bottomY: titleBottom, font: titleFont, color: WHITE, align: "optical-center" });
+  const dividerY = titleBottom - 30;
+  page.drawRectangle({ x: opticalCenter - 28, y: dividerY, width: 56, height: 1.25, color: GOLD, opacity: 0.55 });
+  const subtitle = controlledCoverSubtitle(childName);
+  const subtitleWidth = italicFont.widthOfTextAtSize(subtitle, 12);
+  page.drawText(subtitle, { x: opticalCenter - subtitleWidth / 2, y: dividerY - 38, size: 12, font: italicFont, color: GOLD, opacity: 0.8 });
+}
+
+function drawStoryText(page, { text, sceneIndex, bodyFont }) {
+  page.drawRectangle({ x: 0, y: 0, width: PS, height: PS, color: CREAM });
+  const chapter = ["One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight"][sceneIndex];
+  page.drawRectangle({ x: OUTER, y: PS - OUTER - 1, width: 22, height: 1, color: BROWN, opacity: 0.5 });
+  page.drawText(`CHAPTER ${chapter.toUpperCase()}`, { x: OUTER + 29, y: PS - OUTER - 8, size: 8.5, font: bodyFont, color: BROWN, opacity: 0.68, characterSpacing: 0.6 });
+  const layout = storyLayout(text, bodyFont);
+  const availableTop = PS - OUTER - 54;
+  const availableBottom = OUTER + 34;
+  const bottomY = availableBottom + (availableTop - availableBottom - layout.height) / 2;
+  drawFittedLines(page, layout, { x: OUTER, bottomY, font: bodyFont, color: BROWN });
+  page.drawText(String(sceneIndex * 2 + 1), { x: OUTER, y: OUTER + 1, size: 8.5, font: bodyFont, color: BROWN, opacity: 0.55 });
+}
+
+function drawIllustration(page, { image, sceneIndex, bodyFont }) {
+  if (!image) throw new PreflightError("Required illustration could not be embedded.", [{ code: "illustration_embed", message: `Illustration ${sceneIndex + 1} is unavailable.` }]);
+  page.drawImage(image, { x: 0, y: 0, width: PS, height: PS });
+  const number = String(sceneIndex * 2 + 2);
+  page.drawText(number, { x: PS - OUTER - bodyFont.widthOfTextAtSize(number, 8.5), y: OUTER + 1, size: 8.5, font: bodyFont, color: WHITE, opacity: 0.55 });
+}
+
+function drawEnding(page, { childName, titleFont, italicFont, bodyFont }) {
+  page.drawRectangle({ x: 0, y: 0, width: PS, height: PS, color: DARK });
+  page.drawText("*   *   *", { x: PS / 2 - 22, y: PS * 0.70, size: 10, font: bodyFont, color: GOLD, opacity: 0.45 });
+  const endWidth = titleFont.widthOfTextAtSize("The End", 46);
+  page.drawText("The End", { x: (PS - endWidth) / 2, y: PS * 0.53, size: 46, font: titleFont, color: GOLD });
+  page.drawRectangle({ x: PS / 2 - 26, y: PS * 0.48, width: 52, height: 1, color: GOLD, opacity: 0.35 });
+  const text = `Created with love for ${displayName(childName)}`;
+  const width = italicFont.widthOfTextAtSize(text, 12);
+  page.drawText(text, { x: (PS - width) / 2, y: PS * 0.37, size: 12, font: italicFont, color: WHITE, opacity: 0.65 });
+}
+
+function drawBackCover(page, { titleFont, italicFont }) {
+  page.drawRectangle({ x: 0, y: 0, width: PS, height: PS, color: DARK });
+  // No published Prodigi sticker zone exists, so important content stays in the
+  // central field and clear of the lower edge; this is not a claimed spec.
+  const brand = "MY TINY TALES";
+  const brandWidth = titleFont.widthOfTextAtSize(brand, 14);
+  page.drawText(brand, { x: (PS - brandWidth) / 2, y: PS * 0.57, size: 14, font: titleFont, color: GOLD, opacity: 0.8, characterSpacing: 0.8 });
+  page.drawRectangle({ x: PS / 2 - 30, y: PS * 0.52, width: 60, height: 1.25, color: GOLD, opacity: 0.45 });
+  const line = "A personalised storybook, made with love.";
+  const lineWidth = italicFont.widthOfTextAtSize(line, 10.5);
+  page.drawText(line, { x: (PS - lineWidth) / 2, y: PS * 0.45, size: 10.5, font: italicFont, color: WHITE, opacity: 0.6 });
 }
 
 export async function POST(request) {
-  fal.config({ credentials: process.env.FAL_API_KEY });
-
+  if (!isInternalRequest(request)) return Response.json({ error: "Unauthorized" }, { status: 401 });
   let body;
   try { body = await request.json(); }
   catch { return Response.json({ error: "Invalid request body" }, { status: 400 }); }
 
   const { coverFalUrl, pageFalUrls, story, childName } = body;
+  if (!isAllowedFalAsset(coverFalUrl) || !Array.isArray(pageFalUrls) || pageFalUrls.length !== 8 || pageFalUrls.some((url) => !isAllowedFalAsset(url))) {
+    return Response.json({ error: "Invalid book assets" }, { status: 400 });
+  }
+  const preflight = preflightBook({ story, childName, coverImage: coverFalUrl, sceneImages: pageFalUrls, minimumPages: MIN_INTERIOR_PAGES });
+  if (!preflight.ok) return Response.json({ error: "Book failed print preflight.", preflight }, { status: 422 });
 
   try {
-    const capName = toWinAnsi(childName
-      ? childName.charAt(0).toUpperCase() + childName.slice(1).toLowerCase()
-      : "You");
+    fal.config({ credentials: process.env.FAL_API_KEY });
+    const [coverBytes, ...sceneBytes] = await Promise.all([coverFalUrl, ...pageFalUrls].map(fetchBytes));
+    if (!coverBytes || sceneBytes.some((bytes) => !bytes)) throw new PreflightError("Required image asset could not be downloaded.", [{ code: "image_download", message: "One or more required images are unavailable." }]);
 
-    console.log("PDF: fetching images...");
-    const allBytes = await Promise.all([coverFalUrl, ...(pageFalUrls || [])].map(fetchBytes));
-    const [coverBytes, ...pageBytes] = allBytes;
-    console.log(`PDF: fetched ${allBytes.filter(Boolean).length}/${allBytes.length} images`);
-
-    // ── COVER PDF — perfect-bound wrap (back | spine | front) ────────────────
-    const coverDoc  = await PDFDocument.create();
+    const coverDoc = await PDFDocument.create();
     coverDoc.registerFontkit(fontkit);
-    const cBoldFont = await coverDoc.embedFont(BOLD_BYTES,    { subset: true });
-    const cItalFont = await coverDoc.embedFont(ITALIC_BYTES,  { subset: true });
-    const cNormFont = await coverDoc.embedFont(REGULAR_BYTES, { subset: true });
+    const coverTitleFont = await coverDoc.embedFont(LATO_BOLD_TTF, { subset: true });
+    const coverBodyFont = await coverDoc.embedFont(LIBRE_ITALIC_TTF, { subset: true });
+    const coverPage = coverDoc.addPage([PS, PS]);
+    drawFrontCover(coverPage, { image: await embedImg(coverDoc, coverBytes), title: preflight.title, childName: preflight.childName, titleFont: coverTitleFont, bodyFont: coverBodyFont });
 
-    const coverPage = coverDoc.addPage([CW, CH]);
-
-    // Full background
-    coverPage.drawRectangle({ x: 0, y: 0, width: CW, height: CH, color: DARK });
-
-    // Front cover illustration (right panel, after spine)
-    const frontX = PS + SPINE;
-    const coverImg = await embedImg(coverDoc, coverBytes);
-    if (coverImg) {
-      coverPage.drawImage(coverImg, { x: frontX, y: 0, width: PS, height: CH });
-      // Smooth dusk-like fade into the title panel instead of a hard rectangle.
-      fadeIntoPanel(coverPage, frontX, PS, CH * 0.42, CH * 0.64, DARK, 0.9);
-    }
-
-    // Front cover text
-    coverPage.drawText("My Tiny Tales", { x: frontX + M, y: CH * 0.38, size: 10, font: cBoldFont, color: GOLD, opacity: 0.8 });
-    const titleLines = wrapText(toWinAnsi(story?.title || "My Story"), 22);
-    titleLines.forEach((line, i) => {
-      coverPage.drawText(line, { x: frontX + M, y: CH * 0.30 - i * 24, size: 22, font: cBoldFont, color: WHITE });
-    });
-    const dedication = toWinAnsi(story?.dedication || `A story starring ${capName}`).substring(0, 50);
-    coverPage.drawText(dedication, { x: frontX + M, y: CH * 0.10, size: 10, font: cItalFont, color: GOLD, opacity: 0.7 });
-
-    // Spine — title rotated (drawn horizontally then rotated via translate)
-    if (SPINE >= 6) {
-      const spineTitle = sanitize(story?.title || "My Tiny Tales").substring(0, 28);
-      coverPage.drawText(spineTitle, {
-        x: PS + SPINE / 2 - 2, y: CH * 0.12,
-        size: 5.5, font: cBoldFont, color: GOLD, opacity: 0.5,
-        rotate: { type: "degrees", angle: 90 },
-      });
-    }
-
-    // Back cover
-    coverPage.drawRectangle({ x: M, y: CH / 2, width: 36, height: 1.5, color: GOLD, opacity: 0.4 });
-    coverPage.drawText("My Tiny Tales", { x: M, y: CH / 2 + 12, size: 12, font: cBoldFont, color: GOLD, opacity: 0.6 });
-    coverPage.drawText("A personalised storybook, made with love.", { x: M, y: CH / 2 - 16, size: 9, font: cItalFont, color: WHITE, opacity: 0.4 });
-    coverPage.drawText("mytinytales.studio", { x: M, y: M - 10, size: 8, font: cNormFont, color: GOLD, opacity: 0.3 });
-
-    const coverPdfBytes = await coverDoc.save();
-    console.log("PDF: cover built");
-
-    // ── INTERIOR PDF ──────────────────────────────────────────────────────────
-    // front cover + title + dedication + 8×2 story spreads + The End + keepsake +
-    // illustration gallery + back cover, padded to the product's page minimum.
-    const doc   = await PDFDocument.create();
+    const doc = await PDFDocument.create();
     doc.registerFontkit(fontkit);
-    const hFont = await doc.embedFont(BOLD_BYTES,    { subset: true });
-    const bFont = await doc.embedFont(REGULAR_BYTES, { subset: true });
-    const iFont = await doc.embedFont(ITALIC_BYTES,  { subset: true });
+    const titleFont = await doc.embedFont(LATO_BOLD_TTF, { subset: true });
+    const bodyFont = await doc.embedFont(LIBRE_REGULAR_TTF, { subset: true });
+    const italicFont = await doc.embedFont(LIBRE_ITALIC_TTF, { subset: true });
+    const interiorCoverImage = await embedImg(doc, coverBytes);
+    const sceneImages = await Promise.all(sceneBytes.map((bytes) => embedImg(doc, bytes)));
 
-    const addBlank = (bg = CREAM) => {
-      const p = doc.addPage([PS, PS]);
-      p.drawRectangle({ x: 0, y: 0, width: PS, height: PS, color: bg });
-    };
-
-    // Page 1: Front cover — full-bleed illustration + title, so the digital
-    // download opens on the cover instead of a blank page.
-    const coverImgInt = await embedImg(doc, coverBytes);
-    const fc = doc.addPage([PS, PS]);
-    if (coverImgInt) {
-      fc.drawImage(coverImgInt, { x: 0, y: 0, width: PS, height: PS });
-      // Smooth fade into the title panel instead of a hard-edged rectangle.
-      fadeIntoPanel(fc, 0, PS, PS * 0.32, PS * 0.56, DARK, 0.88);
-    } else {
-      fc.drawRectangle({ x: 0, y: 0, width: PS, height: PS, color: DARK });
+    for (const entry of preflight.plan) {
+      const page = doc.addPage([PS, PS]);
+      if (entry.type === "front_cover") drawFrontCover(page, { image: interiorCoverImage, title: preflight.title, childName: preflight.childName, titleFont, bodyFont: italicFont });
+      else if (entry.type === "flyleaf" || entry.type === "filler") page.drawRectangle({ x: 0, y: 0, width: PS, height: PS, color: CREAM });
+      else if (entry.type === "title") drawTitlePage(page, { title: preflight.title, childName: preflight.childName, titleFont, italicFont });
+      else if (entry.type === "story_text") drawStoryText(page, { text: story.pages[entry.sceneIndex].text, sceneIndex: entry.sceneIndex, bodyFont });
+      else if (entry.type === "illustration") drawIllustration(page, { image: sceneImages[entry.sceneIndex], sceneIndex: entry.sceneIndex, bodyFont });
+      else if (entry.type === "ending") drawEnding(page, { childName: preflight.childName, titleFont, italicFont, bodyFont });
+      else if (entry.type === "back_cover") drawBackCover(page, { titleFont, italicFont });
     }
-    fc.drawText("My Tiny Tales", { x: M, y: PS * 0.30, size: 11, font: hFont, color: GOLD, opacity: 0.8 });
-    wrapText(story?.title || "My Story", 22).forEach((line, i) =>
-      fc.drawText(line, { x: M, y: PS * 0.22 - i * 26, size: 24, font: hFont, color: WHITE }));
-    fc.drawText(toWinAnsi(story?.dedication || `A story starring ${capName}`).substring(0, 50),
-      { x: M, y: PS * 0.08, size: 10, font: iFont, color: GOLD, opacity: 0.7 });
 
-    // Blank flyleaf after the cover (front endpaper).
-    addBlank();
-
-    // Title page
-    const p2 = doc.addPage([PS, PS]);
-    p2.drawRectangle({ x: 0, y: 0, width: PS, height: PS, color: DARK });
-    p2.drawText("My Tiny Tales presents", { x: PS / 2 - 74, y: PS * 0.72, size: 10, font: iFont, color: GOLD, opacity: 0.55 });
-    const tLines = wrapText(story?.title || "My Story", 20);
-    tLines.forEach((line, i) => {
-      const w = hFont.widthOfTextAtSize(line, 28);
-      p2.drawText(line, { x: (PS - w) / 2, y: PS * 0.56 - i * 32, size: 28, font: hFont, color: WHITE });
-    });
-    p2.drawRectangle({ x: PS / 2 - 34, y: PS * 0.42, width: 68, height: 1.5, color: GOLD, opacity: 0.5 });
-    const subText2 = sanitize(`A story starring ${capName}`);
-    const subW = iFont.widthOfTextAtSize(subText2, 12);
-    p2.drawText(subText2, { x: (PS - subW) / 2, y: PS * 0.35, size: 12, font: iFont, color: GOLD, opacity: 0.7 });
-
-    // 8 story spreads — left page = text, right page = full-bleed illustration
-    const pages = story?.pages || [];
-    const CHAPTER_NAMES = ["One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight"];
-    // Embed each scene image once — reused in the spreads and the back gallery.
-    const sceneImgs = await Promise.all((pageBytes || []).map(b => embedImg(doc, b)));
-    for (let i = 0; i < 8; i++) {
-      const storyPage = pages[i];
-      const sceneImg  = sceneImgs[i];
-
-      // LEFT page — cream, text only
-      const textPg = doc.addPage([PS, PS]);
-      textPg.drawRectangle({ x: 0, y: 0, width: PS, height: PS, color: CREAM });
-
-      textPg.drawRectangle({ x: M, y: PS - M - 1, width: 20, height: 1, color: BROWN, opacity: 0.35 });
-      const chLabel = sanitize(`Chapter ${CHAPTER_NAMES[i]}`);
-      textPg.drawText(chLabel, { x: M + 26, y: PS - M - 7, size: 7.5, font: bFont, color: BROWN, opacity: 0.5 });
-
-      if (storyPage?.text) {
-        const lines = wrapText(storyPage.text, 30);
-        const lineH  = 21;
-        const blockH = lines.length * lineH;
-        const startY = (PS + blockH) / 2 - lineH;
-        lines.forEach((line, li) => {
-          textPg.drawText(line, { x: M, y: startY - li * lineH, size: 13.5, font: bFont, color: BROWN });
-        });
-      }
-
-      const pgNum = String((i + 1) * 2 - 1);
-      textPg.drawText(pgNum, { x: M, y: M - 14, size: 8, font: bFont, color: BROWN, opacity: 0.35 });
-
-      // RIGHT page — full-bleed illustration
-      const imgPg = doc.addPage([PS, PS]);
-      if (sceneImg) {
-        imgPg.drawImage(sceneImg, { x: 0, y: 0, width: PS, height: PS });
-      } else {
-        imgPg.drawRectangle({ x: 0, y: 0, width: PS, height: PS, color: DARK });
-      }
-      const pgNum2 = String((i + 1) * 2);
-      const pgW2   = bFont.widthOfTextAtSize(pgNum2, 8);
-      imgPg.drawText(pgNum2, { x: PS - M - pgW2, y: M - 14, size: 8, font: bFont, color: WHITE, opacity: 0.4 });
-    }
-    console.log("PDF: story pages built");
-
-    // Page 16: The End
-    const p16 = doc.addPage([PS, PS]);
-    p16.drawRectangle({ x: 0, y: 0, width: PS, height: PS, color: DARK });
-    p16.drawText("*   *   *", { x: PS / 2 - 22, y: PS * 0.70, size: 10, font: bFont, color: GOLD, opacity: 0.45 });
-    const endW = hFont.widthOfTextAtSize("The End", 44);
-    p16.drawText("The End", { x: (PS - endW) / 2, y: PS * 0.54, size: 44, font: hFont, color: GOLD });
-    p16.drawRectangle({ x: PS / 2 - 26, y: PS * 0.49, width: 52, height: 1, color: GOLD, opacity: 0.35 });
-    const closingText = sanitize(`Created with love for ${capName}`);
-    const closeW = iFont.widthOfTextAtSize(closingText, 11);
-    p16.drawText(closingText, { x: (PS - closeW) / 2, y: PS * 0.38, size: 11, font: iFont, color: WHITE, opacity: 0.55 });
-    p16.drawText("My Tiny Tales", { x: PS / 2 - 34, y: PS * 0.16, size: 8, font: bFont, color: GOLD, opacity: 0.28 });
-
-    // Pad to the product minimum with blank flyleaves (kept even; the back cover
-    // is the final page). A normal 8-chapter book lands here with a single blank
-    // before the back cover — a clean endpaper, not recycled art.
-    const padTo = toEven(Math.max(Number(body.padTo) || INTERIOR_PAGES, doc.getPageCount() + 1));
-    while (doc.getPageCount() < padTo - 1) addBlank();
-
-    // Back cover — final page.
-    const bc = doc.addPage([PS, PS]);
-    bc.drawRectangle({ x: 0, y: 0, width: PS, height: PS, color: DARK });
-    bc.drawText("My Tiny Tales", { x: PS / 2 - 42, y: PS * 0.56, size: 14, font: hFont, color: GOLD, opacity: 0.75 });
-    bc.drawRectangle({ x: PS / 2 - 30, y: PS * 0.52, width: 60, height: 1.5, color: GOLD, opacity: 0.4 });
-    bc.drawText("A personalised storybook, made with love.", { x: PS / 2 - 120, y: PS * 0.45, size: 10, font: iFont, color: WHITE, opacity: 0.5 });
-    bc.drawText("mytinytales.studio", { x: PS / 2 - 44, y: PS * 0.12, size: 9, font: bFont, color: GOLD, opacity: 0.4 });
-
-    const interiorPageCount = doc.getPageCount();
-
-    const interiorPdfBytes = await doc.save();
-    console.log(`PDF: interior built (${interiorPageCount} pages), uploading...`);
-
+    const rendered = validatePdfPlan(doc, preflight.plan);
+    if (!rendered.ok) throw new PreflightError("Rendered PDF failed preflight.", rendered.errors);
+    const [coverPdfBytes, interiorPdfBytes] = await Promise.all([coverDoc.save(), doc.save()]);
     const [coverPdfUrl, interiorPdfUrl] = await Promise.all([
-      fal.storage.upload(new File([coverPdfBytes],    "cover.pdf",    { type: "application/pdf" })),
+      fal.storage.upload(new File([coverPdfBytes], "cover.pdf", { type: "application/pdf" })),
       fal.storage.upload(new File([interiorPdfBytes], "interior.pdf", { type: "application/pdf" })),
     ]);
-
-    console.log("PDF: done. cover:", coverPdfUrl, "interior:", interiorPdfUrl);
-    return Response.json({ coverPdfUrl, interiorPdfUrl, interiorPageCount });
-
-  } catch (err) {
-    console.error("generate-book-pdf error:", err.message, err.stack);
-    return Response.json({ error: err.message || "PDF generation failed" }, { status: 500 });
+    return Response.json({
+      coverPdfUrl,
+      interiorPdfUrl,
+      interiorPageCount: preflight.plan.length,
+      preflight: { ok: true, pagePlan: preflight.plan.map(({ type, intentionalBlank, reason }) => ({ type, intentionalBlank, reason })) },
+    });
+  } catch (error) {
+    const isPreflight = error instanceof PreflightError;
+    console.error("generate-book-pdf error:", error.message, isPreflight ? error.details : error.stack);
+    return Response.json({ error: isPreflight ? "Book failed print preflight." : (error.message || "PDF generation failed"), preflight: isPreflight ? { ok: false, errors: error.details } : undefined }, { status: isPreflight ? 422 : 500 });
   }
 }

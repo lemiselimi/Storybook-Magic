@@ -1,5 +1,6 @@
 import { kv } from "@/lib/kv";
 import { submitPrintFromKV } from "@/lib/print";
+import { hasAccessToken, internalAuthorization } from "@/lib/security";
 
 export const maxDuration = 60;
 export const dynamic = "force-dynamic";
@@ -19,11 +20,12 @@ export async function POST(request) {
   catch { return Response.json({ error: "Invalid request body" }, { status: 400 }); }
 
   const ref = body?.ref;
-  if (!ref) return Response.json({ error: "ref required" }, { status: 400 });
+  if (!ref || !body?.accessToken) return Response.json({ error: "Book access token required" }, { status: 401 });
 
   try {
     const result = await kv.get(`result:${ref}`);
     if (!result) return Response.json({ error: "Book not found" }, { status: 404 });
+    if (!hasAccessToken(body.accessToken, result.accessToken)) return Response.json({ error: "Unauthorized" }, { status: 403 });
 
     const images = result.images || {};
     if (!images["cover"]) return Response.json({ error: "No images stored — cannot rebuild" }, { status: 400 });
@@ -37,18 +39,18 @@ export async function POST(request) {
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://mytinytales.studio";
     const pdfRes = await fetch(`${siteUrl}/api/generate-book-pdf`, {
       method:  "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "Authorization": internalAuthorization() },
       body:    JSON.stringify({ coverFalUrl: images["cover"], pageFalUrls, story: result.story, childName: result.childName }),
     });
     if (!pdfRes.ok) {
       const err = await pdfRes.json().catch(() => ({}));
       return Response.json({ error: `PDF generation failed: ${err.error || pdfRes.status}` }, { status: 500 });
     }
-    const { coverPdfUrl, interiorPdfUrl, interiorPageCount } = await pdfRes.json();
+    const { coverPdfUrl, interiorPdfUrl, interiorPageCount, preflight } = await pdfRes.json();
 
     // Persist the corrected PDFs + matching page count (fixes any stale desync).
     await kv.set(`result:${ref}`, {
-      ...result, coverPdfUrl, interiorPdfUrl, interiorPageCount, status: "ready",
+      ...result, coverPdfUrl, interiorPdfUrl, interiorPageCount, preflight, status: "ready",
     }, { ex: 2_592_000 }).catch(() => {});
 
     // Ask Gelato to validate the full order as a draft — no charge, no printing.

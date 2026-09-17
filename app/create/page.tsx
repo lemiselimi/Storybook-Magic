@@ -1,17 +1,13 @@
 "use client";
 import { useState, useRef, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { PRODUCT } from "@/lib/product";
+import { STORY_THEMES } from "@/lib/story-themes";
 
 const THEMES = [
-  { id: "adventure",  emoji: "🌋", title: "The Big Adventure",  subtitle: "Quest & Exploration",     desc: "Your child discovers a hidden world and must be brave to save the day", popular: true },
-  { id: "dragon",     emoji: "🐉", title: "Dragon Tamer",       subtitle: "Fantasy & Magic",          desc: "A magical creature needs help and only your child has what it takes" },
-  { id: "dino",       emoji: "🦕", title: "Dinosaur Kingdom",   subtitle: "Dinosaurs & Discovery",    desc: "Your child travels to a lost prehistoric world and helps a baby dinosaur find its way home" },
-  { id: "space",      emoji: "🚀", title: "To The Stars",       subtitle: "Space & Science",          desc: "Your child blasts off into the cosmos on a mission to save the universe" },
-  { id: "ocean",      emoji: "🌊", title: "Deep Blue",           subtitle: "Ocean & Nature",           desc: "An underwater mystery only your child can solve" },
-  { id: "jungle",     emoji: "🦁", title: "Jungle Crown",        subtitle: "Animals & Wildlife",       desc: "Your child becomes ruler of the animal kingdom for a day" },
-  { id: "superpower", emoji: "🏆", title: "My Superpower",       subtitle: "Real Life Heroes",         desc: "Your child discovers their unique gift and uses it to help their community" },
-  { id: "dreamland",  emoji: "🌙", title: "Off to Dreamland",   subtitle: "Bedtime & Dreams",         desc: "A gentle dream adventure carries your child across a soft, starlit world at bedtime" },
-];
+  { id: "adventure", emoji: "🌋" }, { id: "dragon", emoji: "🐉" }, { id: "dino", emoji: "🦕" }, { id: "space", emoji: "🚀" },
+  { id: "ocean", emoji: "🌊" }, { id: "jungle", emoji: "🦁" }, { id: "superpower", emoji: "🏆" }, { id: "dreamland", emoji: "🌙" },
+].map((theme) => ({ ...theme, ...STORY_THEMES[theme.id as keyof typeof STORY_THEMES] }));
 
 const CHAPTER_NAMES = ["One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight"];
 
@@ -1203,10 +1199,12 @@ export default function StorybookCreator() {
         const e = await saveRes.json().catch(() => ({}));
         throw new Error(e.error || "Could not save your book details. Please try again.");
       }
+      const { accessToken } = await saveRes.json();
+      if (!accessToken) throw new Error("Could not secure your book session. Please try again.");
 
       const res = await fetch("/api/checkout", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ref, plan }),
+        body: JSON.stringify({ ref, plan, accessToken }),
       }).then(r => r.json());
 
       if (res.url) window.location.href = res.url;
@@ -1483,7 +1481,7 @@ export default function StorybookCreator() {
           </div>
           <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(to top, rgba(5,2,15,0.97) 0%, rgba(5,2,15,0.72) 40%, transparent 100%)", padding: isMobile ? "56px 22px 22px" : "90px 36px 28px", zIndex: 2 }}>
             <h1 style={{ fontFamily: "var(--font-playfair, Georgia, serif)", color: "white", fontSize: isMobile ? "1.65rem" : "2.4rem", fontWeight: 900, margin: "0 0 6px", lineHeight: 1.15, textShadow: "0 2px 20px rgba(0,0,0,0.8)", wordBreak: "break-word" }}>{story.title}</h1>
-            <p style={{ color: "rgba(232,192,122,0.75)", fontFamily: "Georgia, serif", fontStyle: "italic", fontSize: isMobile ? "0.82rem" : "0.95rem", margin: 0, letterSpacing: "0.03em" }}>{THEMES.find((t: any) => t.id === theme)?.subtitle ?? story.dedication}</p>
+            <p style={{ color: "rgba(232,192,122,0.75)", fontFamily: "Georgia, serif", fontStyle: "italic", fontSize: isMobile ? "0.82rem" : "0.95rem", margin: 0, letterSpacing: "0.03em" }}>{story.dedication}</p>
           </div>
         </div>
       );
@@ -1826,22 +1824,22 @@ export default function StorybookCreator() {
                 <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: 14 }}>
                   {THEMES.map((t) => (
                     <div key={t.id} className="theme-card" onClick={() => setTheme(t.id)} style={{ position: "relative", padding: "22px 18px 18px", borderRadius: 20, cursor: "pointer", border: `2px solid ${theme === t.id ? "#E8C07A" : "rgba(255,255,255,0.1)"}`, background: theme === t.id ? "rgba(232,192,122,0.08)" : "rgba(255,255,255,0.04)", boxShadow: theme === t.id ? "0 0 24px rgba(232,192,122,0.18)" : "0 2px 8px rgba(0,0,0,0.2)" }}>
-                      {t.popular && <div style={{ position: "absolute", top: -10, right: 12, background: "linear-gradient(135deg, #ff6b6b, #ee5a24)", color: "white", fontSize: 9, fontWeight: 800, padding: "3px 10px", borderRadius: 20, letterSpacing: "0.06em" }}>MOST POPULAR</div>}
                       <div style={{ fontSize: 44, marginBottom: 11 }}>{t.emoji}</div>
                       <div style={{ color: theme === t.id ? "#E8C07A" : "white", fontWeight: 700, fontSize: 16, marginBottom: 3 }}>{t.title}</div>
-                      <div style={{ color: theme === t.id ? "rgba(232,192,122,0.65)" : "rgba(255,255,255,0.35)", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 9 }}>{t.subtitle}</div>
-                      <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, lineHeight: 1.6 }}>{t.desc}</div>
+                      <div style={{ color: theme === t.id ? "rgba(232,192,122,0.65)" : "rgba(255,255,255,0.35)", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 9 }}>{t.category}</div>
+                      <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, lineHeight: 1.6 }}>{t.selectionLine}</div>
+                      <div style={{ color: theme === t.id ? "rgba(232,192,122,0.78)" : "rgba(255,255,255,0.42)", fontSize: 10, fontStyle: "italic", marginTop: 10 }}>A Tiny Tale about {t.emotionalHeart}</div>
                     </div>
                   ))}
                 </div>
                 <div style={{ display: "flex", gap: 10, marginTop: 22 }}>
                   <button onClick={() => goToStep(2)} style={{ padding: "14px 20px", borderRadius: 14, border: "1px solid rgba(245,240,224,0.18)", background: "transparent", color: "rgba(245,240,224,0.45)", fontSize: 14, cursor: "pointer" }}>← Back</button>
                   <button onClick={() => goToStep(4)} style={{ flex: 1, padding: "16px", borderRadius: 14, border: "none", background: "linear-gradient(135deg, #E8C07A, #D4A24C)", color: "#1E1813", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>
-                    Preview your story →
+                    Read the beginning of their story →
                   </button>
                 </div>
                 <p style={{ color: "rgba(255,255,255,0.28)", fontSize: 12, textAlign: "center", marginTop: 12, lineHeight: 1.6 }}>
-                  Takes 3-4 minutes. We&apos;re painting every illustration just for {childName || "your child"}
+                  We&apos;ll make their character, then open the first two pages. No card required.
                 </p>
               </div>
             )}
@@ -1913,7 +1911,7 @@ export default function StorybookCreator() {
                     <h2 style={{ color: "white", fontSize: isMobile ? 20 : 24, fontWeight: 700, margin: "0 0 10px" }}>Free preview limit reached</h2>
                     <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 15, margin: "0 0 24px" }}>You've used 5 free previews in 24 hours. Purchase once to unlock unlimited generations.</p>
                     <button onClick={() => handlePurchase("digital")} disabled={!!checkoutLoading} style={{ padding: "15px 36px", borderRadius: 16, border: "none", background: checkoutLoading ? "rgba(232,192,122,0.5)" : "linear-gradient(135deg, #E8C07A, #D4A24C)", color: "#1E1813", fontSize: 16, fontWeight: 800, cursor: checkoutLoading ? "not-allowed" : "pointer" }}>
-                      {checkoutLoading === "digital" ? "Redirecting..." : "Unlock My Book ($17.99) →"}
+                      {checkoutLoading === "digital" ? "Redirecting..." : `Unlock My Book (${PRODUCT.pricing.digital.label}) →`}
                     </button>
                   </div>
                 )}
@@ -1922,7 +1920,13 @@ export default function StorybookCreator() {
                 {previewStatus === "done" && previewStory && !previewStory._limitReached && (
                   <div style={{ animation: "fadeIn 0.7s ease both", position: "relative" }}>
                     <GoldBurst />
-                    <Mascot msg={`Here's a sneak peek of ${childName || "your child"}'s story. Take a look!`} />
+                    <Mascot msg={`Open the beginning of ${childName || "your child"}'s Tiny Tale. These first two pages are theirs to read.`} />
+
+                    <div style={{ textAlign: "center", margin: "0 auto 18px", maxWidth: 440 }}>
+                      <p style={{ color: "#E8C07A", fontSize: isMobile ? 12 : 13, fontWeight: 800, letterSpacing: "0.1em", margin: "0 0 6px", textTransform: "uppercase" as const }}>Their story starts here</p>
+                      <h2 style={{ color: "white", fontFamily: "Georgia, 'Times New Roman', serif", fontSize: isMobile ? 23 : 29, lineHeight: 1.1, margin: "0 0 8px" }}>Read the beginning of their story. Free.</h2>
+                      <p style={{ color: "rgba(255,255,255,0.62)", fontSize: isMobile ? 13 : 14, lineHeight: 1.55, margin: 0 }}>Two personalised story pages, with their name, character, and chosen adventure. No card required.</p>
+                    </div>
 
                     {/* Cover thumbnail */}
                     {previewCoverUrl && (
@@ -1933,7 +1937,7 @@ export default function StorybookCreator() {
                           <div style={{ color: "#E8C07A", fontWeight: 800, fontSize: isMobile ? 16 : 19, textShadow: "0 2px 8px rgba(0,0,0,0.6)", marginBottom: 3 }}>{previewStory.title}</div>
                           <div style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, fontStyle: "italic" }}>{previewStory.dedication}</div>
                         </div>
-                        <div style={{ position: "absolute", top: 10, right: 10, background: "rgba(232,192,122,0.95)", borderRadius: 8, padding: "3px 9px", fontSize: 10, fontWeight: 700, color: "#1E1813" }}>Preview</div>
+                        <div style={{ position: "absolute", top: 10, right: 10, background: "rgba(232,192,122,0.95)", borderRadius: 8, padding: "3px 9px", fontSize: 10, fontWeight: 700, color: "#1E1813" }}>Their book begins</div>
                       </div>
                     )}
 
@@ -1947,7 +1951,7 @@ export default function StorybookCreator() {
                       </div>
                     )}
 
-                    {/* Pages 1 & 2 — two-page book spread */}
+                    {/* Two real personalised story pages — text left, matching illustration right. */}
                     <div style={{ display: "flex", flexDirection: "column", gap: 24, marginBottom: 24 }}>
                       {previewStory.pages.slice(0, 2).map((page: any, idx: number) => {
                         const img = previewImages[idx];
@@ -2017,8 +2021,8 @@ export default function StorybookCreator() {
                           <div style={{ width: 48, height: 48, borderRadius: "50%", background: "rgba(232,192,122,0.12)", border: "1px solid rgba(232,192,122,0.25)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E8C07A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                           </div>
-                          <p style={{ color: "white", fontWeight: 700, fontSize: 15, margin: "0 0 4px", textAlign: "center" }}>Pages 3–6 are waiting!</p>
-                          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, margin: 0 }}>Unlock your full story below</p>
+                          <p style={{ color: "white", fontWeight: 700, fontSize: 15, margin: "0 0 4px", textAlign: "center" }}>The rest of their story is ready when you are.</p>
+                          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, margin: 0 }}>Continue their Tiny Tale below</p>
                         </div>
                       </div>
                     </div>
@@ -2047,15 +2051,15 @@ export default function StorybookCreator() {
 
                     {/* CTAs */}
                     <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(232,192,122,0.2)", borderRadius: 22, padding: isMobile ? 18 : 24 }}>
-                      <p style={{ color: "rgba(232,192,122,0.9)", fontSize: 13, fontWeight: 700, textAlign: "center", margin: "0 0 4px", letterSpacing: "0.04em" }}>Your story is being crafted with care</p>
-                      <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, textAlign: "center", margin: "0 0 18px" }}>8 personalised cinematic 3D-illustrated pages starring {childName || "your child"}</p>
+                      <p style={{ color: "rgba(232,192,122,0.9)", fontSize: 13, fontWeight: 700, textAlign: "center", margin: "0 0 4px", letterSpacing: "0.04em" }}>{childName ? `Continue ${childName}'s story` : "Continue their story"}</p>
+                      <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, textAlign: "center", margin: "0 0 18px" }}>{PRODUCT.storyScenes} illustrated story pages starring {childName || "your child"}. Choose digital, or a printed keepsake with the digital book included.</p>
                       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                         <button onClick={() => handlePurchase("digital")} disabled={!!checkoutLoading} style={{ width: "100%", padding: "17px", borderRadius: 16, border: "none", background: checkoutLoading === "digital" ? "rgba(232,192,122,0.5)" : "linear-gradient(135deg, #E8C07A, #D4A24C)", color: "#1E1813", fontSize: 17, fontWeight: 800, cursor: checkoutLoading ? "not-allowed" : "pointer" }}>
-                          {checkoutLoading === "digital" ? "Redirecting..." : PAYMENTS_ENABLED ? "Get Digital Book ($17.99) →" : "Create My Storybook"}
+                          {checkoutLoading === "digital" ? "Redirecting..." : PAYMENTS_ENABLED ? (childName ? `Finish ${childName}'s Tiny Tale — Digital (${PRODUCT.pricing.digital.label}) →` : `Finish their Tiny Tale — Digital (${PRODUCT.pricing.digital.label}) →`) : "Finish their Tiny Tale"}
                         </button>
                         {PAYMENTS_ENABLED && (
                           <button onClick={() => handlePurchase("print")} disabled={!!checkoutLoading} style={{ width: "100%", padding: "15px", borderRadius: 16, border: "2px solid rgba(232,192,122,0.35)", background: "rgba(232,192,122,0.07)", color: "#E8C07A", fontSize: 16, fontWeight: 700, cursor: checkoutLoading ? "not-allowed" : "pointer" }}>
-                            {checkoutLoading === "print" ? "Redirecting..." : "Print + Digital ($37.99)"}
+                            {checkoutLoading === "print" ? "Redirecting..." : (childName ? `Finish ${childName}'s Keepsake Book — Print + Digital (${PRODUCT.pricing.print.label}) →` : `Finish their Keepsake Book — Print + Digital (${PRODUCT.pricing.print.label}) →`)}
                           </button>
                         )}
                       </div>
@@ -2414,7 +2418,7 @@ export default function StorybookCreator() {
             {/* Bottom gradient + title */}
             <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(to top, rgba(5,2,15,0.97) 0%, rgba(5,2,15,0.72) 40%, transparent 100%)", padding: "100px 80px 48px", zIndex: 2 }}>
               <div style={{ color: "white", fontSize: 52, fontWeight: 900, fontFamily: "Georgia, serif", lineHeight: 1.1, marginBottom: 10, textShadow: "0 2px 24px rgba(0,0,0,0.8)" }}>{story.title}</div>
-              <div style={{ color: "rgba(232,192,122,0.75)", fontStyle: "italic", fontSize: 18, fontFamily: "Georgia, serif" }}>{THEMES.find(t => t.id === theme)?.subtitle ?? story.dedication}</div>
+              <div style={{ color: "rgba(232,192,122,0.75)", fontStyle: "italic", fontSize: 18, fontFamily: "Georgia, serif" }}>{story.dedication}</div>
             </div>
           </div>
 

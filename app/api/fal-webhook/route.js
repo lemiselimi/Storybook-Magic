@@ -1,9 +1,11 @@
 import { kv } from "@/lib/kv";
+import { internalAuthorization, isInternalWebhook } from "@/lib/security";
 
 export const maxDuration = 60;
 export const dynamic = "force-dynamic";
 
 export async function POST(request) {
+  if (!isInternalWebhook(request)) return new Response("Unauthorized", { status: 401 });
   let payload;
   try { payload = await request.json(); }
   catch { return new Response("ok"); }
@@ -57,7 +59,7 @@ export async function POST(request) {
     // Generate print-ready PDFs
     const pdfRes = await fetch(`${siteUrl}/api/generate-book-pdf`, {
       method:  "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "Authorization": internalAuthorization() },
       body:    JSON.stringify({
         coverFalUrl:  updatedImages["cover"],
         pageFalUrls:  pageUrls,
@@ -71,7 +73,7 @@ export async function POST(request) {
       throw new Error(`PDF generation failed: ${err.error || pdfRes.status}`);
     }
 
-    const { coverPdfUrl, interiorPdfUrl, interiorPageCount } = await pdfRes.json();
+    const { coverPdfUrl, interiorPdfUrl, interiorPageCount, preflight } = await pdfRes.json();
 
     // Mark book as ready. Print orders are held for customer approval on
     // /book/[ref]; a daily cron auto-submits anything unapproved after 3 days.
@@ -83,6 +85,7 @@ export async function POST(request) {
       coverPdfUrl,
       interiorPdfUrl,
       interiorPageCount,
+      preflight,
       completedAt:    new Date().toISOString(),
       ...(isPrint ? { printApproval: "pending", printReadyAt: new Date().toISOString() } : {}),
     }, { ex: 2_592_000 });
@@ -106,9 +109,6 @@ export async function POST(request) {
     }, { ex: 2_592_000 }).catch(() => {});
 
     if (process.env.RESEND_API_KEY) {
-      const retryLink = result.plan === "print" && process.env.ADMIN_RETRY_KEY
-        ? `<p><a href="${siteUrl}/api/retry-print?ref=${ref}&key=${process.env.ADMIN_RETRY_KEY}">Click here to retry the print order</a></p>`
-        : "";
       fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: { "Authorization": `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
@@ -116,7 +116,7 @@ export async function POST(request) {
           from:    "My Tiny Tales <hello@mytinytales.studio>",
           to:      ["hello@mytinytales.studio"],
           subject: `⚠️ Book completion failed — ref: ${ref}`,
-          html:    `<p><strong>Error:</strong> ${err.message}</p><p><strong>Ref:</strong> ${ref}</p>${retryLink}`,
+          html:    `<p><strong>Error:</strong> ${err.message}</p><p><strong>Ref:</strong> ${ref}</p><p>Use the protected operations workflow to retry this order.</p>`,
         }),
       }).catch(() => {});
     }

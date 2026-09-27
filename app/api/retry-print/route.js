@@ -1,6 +1,7 @@
 import { kv } from "@/lib/kv";
 import { submitPrintFromKV } from "@/lib/print";
 import { internalAuthorization, isInternalRequest } from "@/lib/security";
+import { hasCurrentPrintLayout } from "@/lib/book-layout";
 
 export const maxDuration = 60;
 export const dynamic = "force-dynamic";
@@ -44,7 +45,8 @@ export async function POST(request) {
     // Rebuild the PDFs from the stored images when asked, or when they're
     // missing. This reuses the already-generated illustrations (no new AI cost)
     // and picks up the current page-count / layout settings.
-    if (rebuild || !result.coverPdfUrl || !result.interiorPdfUrl) {
+    const needsRebuild = rebuild || !result.coverPdfUrl || !result.interiorPdfUrl || !hasCurrentPrintLayout(result);
+    if (needsRebuild) {
       const images = result.images || {};
       if (!images["cover"]) {
         return Response.json({ error: "No images stored — cannot rebuild PDFs" }, { status: 400 });
@@ -82,7 +84,7 @@ export async function POST(request) {
     // the payload as a draft without placing a real order.
     const submitRes = await submitPrintFromKV(ref, { dryRun });
     console.log("retry-print: ref", ref, dryRun ? "(dry-run validated)" : `order ${submitRes.orderId}`);
-    return Response.json({ ok: true, ...submitRes, ref, rebuilt: rebuild });
+    return Response.json({ ok: true, ...submitRes, ref, rebuilt: needsRebuild });
 
   } catch (err) {
     console.error("retry-print error:", err.message);

@@ -21,6 +21,7 @@ AGE AND LAYOUT
 - Audience: ${age.label}, ${ageBand} years.
 - Use ${age.sentences} per scene, around ${age.wordsPerPage} words per scene, never more than ${MAX_WORDS_PER_PAGE[ageBand]} words on a scene. Total target: ${age.totalWords} words.
 - Keep every scene short enough for a single printed story page. Do not use long paragraphs.
+- An adult reads toddler books aloud. Simple vocabulary must still form a complete story, not terse image captions. Use warm dialogue, clear cause and effect, and a recurring phrase that changes meaning as the child acts. Introduce the friend and their specific problem before resolving it. Show the journey home. Avoid broken grammar such as "Rainbow shiny" or "breathes soft". Use \n line breaks for natural spoken beats, encoded as JSON escapes.
 - For toddlers, use concrete, rhythmic language and gentle repetition. For older readers, use richer vocabulary, natural dialogue, a real choice, and more layered discovery without becoming babyish.
 
 RETURN ONLY valid JSON in exactly this shape:
@@ -41,6 +42,7 @@ ILLUSTRATION RULES
 - Each illustration describes the exact same moment as its text: child action, setting, and the one or two key visual anchors.
 - Use one concrete visual sentence of 15-30 words. Do not use art-style words, camera directions, brand names, the child's name, or metadata.
 - Keep the child as the subject, but leave enough environmental context for a distinct scene.
+- Choose one consistent outfit and one concrete recurring companion design; repeat these anchors in each illustration where present. Keep hair, age, proportions, clothing colors, and companion appearance consistent. Do not change outfit except for an explicit story action.
 
 EIGHT-BEAT BRIEF
 ${JSON.stringify(theme.arc)}

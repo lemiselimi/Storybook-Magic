@@ -340,6 +340,27 @@ html { scrollbar-width: thin; scrollbar-color: rgba(232,192,122,0.3) #07090F; }
 }
 
 /* Homepage-only editorial interactions */
+.mtt-world__image { aspect-ratio: 1; }
+.mtt-home h1, .mtt-home h2 { text-wrap: balance; }
+.mtt-photo-frame { color: var(--mtt-ink); text-decoration: none; transform: none; box-shadow: none; border-style: dashed; }
+.mtt-photo-frame::after { content: none; }
+.mtt-worlds__heading { gap: 2rem; }
+.mtt-worlds__heading .mtt-kicker { flex: 0 0 12rem; }
+.mtt-introduction, .mtt-open-book, .mtt-reassurance, .mtt-questions { padding-block: clamp(3.5rem, 6vw, 6rem); }
+.mtt-transformation, .mtt-worlds { padding-block: clamp(3.5rem, 6vw, 6rem); }
+.mtt-quiet-cta { padding-block: clamp(4rem, 7vw, 7rem); }
+.mtt-home :focus-visible { outline: 2px solid var(--mtt-terracotta); outline-offset: 4px; }
+.mtt-cookie-dialog { border: 0; padding: 0; margin: auto; width: min(480px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow-y: auto; background: #fbf6ec; }
+.mtt-cookie-dialog::backdrop { background: rgba(31,42,40,.48); }
+.mtt-cookie-dialog button { min-height: 44px; }
+.mtt-cookie-dialog button:focus-visible { outline: 2px solid #a94f38; outline-offset: 3px; }
+@media (max-width: 620px) {
+  .mtt-transformation__sequence > li:not(.mtt-transformation__arrow) { grid-template-columns: minmax(0, .95fr) minmax(0, 1fr); }
+  .mtt-transformation__book > div { transform: scale(.85); transform-origin: left center; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mtt-home *, .mtt-book-mockup * { animation: none !important; }
+}
 .mtt-mini-reader { min-width: 0; }
 
 .mtt-mini-reader__book-frame { position: relative; }
@@ -447,10 +468,10 @@ html { scrollbar-width: thin; scrollbar-color: rgba(232,192,122,0.3) #07090F; }
 }
 
 .mtt-keepsake__copy > p.mtt-keepsake__timecapsule {
-  border-left: 2px solid var(--mtt-terracotta);
-  color: var(--mtt-ink);
+  border-left: 2px solid #f5efe2;
+  color: #fff8ee;
   font: italic clamp(1.15rem, 1.7vw, 1.45rem)/1.35 var(--mtt-serif);
-  margin: 1.6rem 0 0;
+  margin: 1.6rem 0 1.5rem;
   max-width: 28rem;
   padding-left: 1rem;
 }
@@ -466,5 +487,23 @@ html { scrollbar-width: thin; scrollbar-color: rgba(232,192,122,0.3) #07090F; }
 @media (prefers-reduced-motion: reduce) {
   .mtt-mini-reader__book-frame--forward .mtt-mini-reader__book,
   .mtt-mini-reader__book-frame--back .mtt-mini-reader__book { animation: none; }
+}
+
+/* Match the physical square-page book, including the sample spread. */
+.mtt-photo-frame, .mtt-transformation__art, .mtt-transformation__book { aspect-ratio: 1; }
+.mtt-mini-reader { container-type: inline-size; }
+.mtt-mini-reader__book { aspect-ratio: 2 / 1; min-height: 0; }
+.mtt-mini-reader .mtt-open-book__page--text { padding: 4cqw; }
+.mtt-mini-reader .mtt-open-book__page--text span { font-size: clamp(8px, 1.8cqw, 11px); margin-bottom: 3cqw; }
+.mtt-mini-reader .mtt-open-book__page--text p { font-size: clamp(13px, 3.4cqw, 23px); line-height: 1.3; margin-bottom: 3cqw; }
+.mtt-mini-reader .mtt-open-book__page--text small { font-size: clamp(8px, 1.7cqw, 10px); letter-spacing: .04em; }
+.mtt-mini-reader .mtt-mini-reader__title-leaf h3 { font-size: 5.5cqw; margin-bottom: 2cqw; }
+.mtt-mini-reader .mtt-mini-reader__title-leaf p { font-size: clamp(11px, 2.5cqw, 16px); }
+.mtt-mini-reader .mtt-mini-reader__title-leaf small { margin-top: 2cqw; }
+.mtt-mini-reader .mtt-open-book__page--art { background: #fbf7ed; }
+.mtt-home .mtt-hero__note { margin-top: 1.25rem; }
+.mtt-cookie-banner button { min-height: 44px; border-radius: 4px !important; }
+@media (max-width: 620px) {
+  .mtt-hero__leaf { display: none; }
 }
 

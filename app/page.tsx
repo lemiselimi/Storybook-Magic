@@ -35,11 +35,11 @@ export default function LandingPage() {
           <div className="mtt-hero__books" aria-label="A personalised My Tiny Tales storybook">
             <div className="mtt-hero__sun" aria-hidden="true" />
             <div className="mtt-hero__book-object">
-              <BookMockup3D coverImg="/examples/book-1.png" width={292} height={382} animate />
+              <BookMockup3D coverImg="/examples/book-1.png" title="Off to Dreamland" width={320} animate={false} />
             </div>
             <div className="mtt-hero__leaf mtt-hero__leaf--one" aria-hidden="true" />
             <div className="mtt-hero__leaf mtt-hero__leaf--two" aria-hidden="true" />
-            <p className="mtt-hero__caption">A real My Tiny Tales story, made to linger over.</p>
+            <p className="mtt-hero__caption">A square softcover, made for reading together.</p>
           </div>
         </section>
 
@@ -54,15 +54,16 @@ export default function LandingPage() {
           <div className="mtt-transformation__heading">
             <p className="mtt-kicker">Every Tiny Tale begins with someone little</p>
             <h2 id="transformation-title">One favourite photo becomes their whole story.</h2>
-            <p>Start with the child you know. Their familiar face and name are carried into an illustrated adventure, then gathered into a book for the shelf.</p>
+            <p>Choose a photo, preview their illustrated character, then read their story. The artwork below is an example; your free preview shows your own child’s character.</p>
           </div>
           <ol className="mtt-transformation__sequence">
             <li className="mtt-transformation__photo mtt-transformation__stage mtt-transformation__stage--photo">
               <span className="mtt-transformation__number">01</span>
-              <div className="mtt-photo-frame" aria-label="Your child's photo">
-                <span>A favourite<br />photo</span>
-                <small>The one you choose</small>
-              </div>
+              <Link href="/create" className="mtt-photo-frame" aria-label="Choose a photo and start your free preview">
+                <svg aria-hidden="true" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="3" y="5" width="18" height="15" rx="2"/><circle cx="8" cy="10" r="1.5"/><path d="m3 17 5-4 4 3 4-5 5 6"/></svg>
+                <span>Choose<br />their photo</span>
+                <small>Start a free preview →</small>
+              </Link>
               <h3>Their photo</h3>
               <p>You begin with a clear picture of your little reader.</p>
             </li>
@@ -79,7 +80,7 @@ export default function LandingPage() {
             <li className="mtt-transformation__stage mtt-transformation__stage--book">
               <span className="mtt-transformation__number">03</span>
               <div className="mtt-transformation__book">
-                <BookMockup3D coverImg="/examples/book-6.png" width={126} height={164} animate={false} scrollOpen />
+                <BookMockup3D coverImg="/examples/book-1.png" title="Off to Dreamland" width={150} animate={false} />
               </div>
               <h3>Their book</h3>
               <p>A story to read close now and return to for years.</p>
@@ -111,7 +112,7 @@ export default function LandingPage() {
         <section className="mtt-keepsake" id="keepsake" aria-labelledby="keepsake-title">
           <div className="mtt-keepsake__image">
             <div className="mtt-keepsake__book-object">
-              <BookMockup3D coverImg="/examples/book-6.png" width={292} height={382} animate={false} />
+              <BookMockup3D coverImg="/examples/book-1.png" title="Off to Dreamland" width={320} animate={false} />
             </div>
             <p className="mtt-keepsake__ribbon">For tonight’s reading—and the bookshelf that holds the years.</p>
           </div>

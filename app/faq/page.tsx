@@ -2,12 +2,14 @@
 import { useState } from "react";
 import Link from "next/link";
 import { PRODUCT } from "@/lib/product";
+import MarketingNav from "../components/MarketingNav";
+import MarketingFooter from "../components/MarketingFooter";
 
 const P = PRODUCT;
 
-const GOLD = "#C0863A";
-const GOLD_WARM = "#D4A24C";
-const TEXT = "#26313D";
+const GOLD = "#A94F38";
+const GOLD_WARM = "#A94F38";
+const TEXT = "#1F2A28";
 const MUTED = "rgba(38,49,61,0.65)";
 const SURF_BDR = "rgba(38,49,61,0.08)";
 
@@ -58,7 +60,7 @@ export default function FAQPage() {
   const [open, setOpen] = useState<number | null>(0);
 
   return (
-    <main style={{ minHeight: "100vh", background: "#FBF6EC", color: TEXT, fontFamily: "var(--font-inter, 'Inter', sans-serif)" }}>
+    <><MarketingNav /><main style={{ minHeight: "100vh", background: "#FBF6EC", color: TEXT, fontFamily: "var(--font-inter, 'Inter', sans-serif)" }}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify({
@@ -92,6 +94,7 @@ export default function FAQPage() {
                 <button
                   onClick={() => setOpen(isOpen ? null : i)}
                   aria-expanded={isOpen}
+                  aria-controls={`faq-answer-${i}`}
                   style={{ width: "100%", background: "transparent", border: "none", cursor: "pointer", padding: "22px 4px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, textAlign: "left" }}
                 >
                   <span style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: 17, fontWeight: 600, color: isOpen ? GOLD : TEXT, transition: "color 0.2s", lineHeight: 1.4 }}>
@@ -101,7 +104,7 @@ export default function FAQPage() {
                     +
                   </span>
                 </button>
-                <div style={{ display: "grid", gridTemplateRows: isOpen ? "1fr" : "0fr", transition: "grid-template-rows 0.3s ease" }}>
+                <div id={`faq-answer-${i}`} hidden={!isOpen}>
                   <div style={{ overflow: "hidden" }}>
                     <p style={{ fontSize: 15, lineHeight: 1.75, color: MUTED, margin: 0, padding: "0 4px 24px" }}>
                       {item.a}
@@ -115,15 +118,15 @@ export default function FAQPage() {
 
         <div style={{ marginTop: 56, textAlign: "center", background: "rgba(232,192,122,0.05)", border: "1px solid rgba(232,192,122,0.18)", borderRadius: 20, padding: "36px 28px" }}>
           <p style={{ fontFamily: "var(--font-fraunces, Georgia, serif)", fontSize: 20, fontWeight: 600, color: TEXT, margin: "0 0 8px" }}>Still have questions?</p>
-          <p style={{ color: MUTED, fontSize: 14, margin: "0 0 22px" }}>We're happy to help — most emails get a reply within a day.</p>
+          <p style={{ color: MUTED, fontSize: 14, margin: "0 0 22px" }}>We’re happy to help — most emails get a reply within a day.</p>
           <a
             href="mailto:hello@mytinytales.studio"
-            style={{ display: "inline-block", background: `linear-gradient(135deg, ${GOLD}, ${GOLD_WARM})`, color: "#07090F", fontWeight: 700, padding: "14px 32px", borderRadius: 50, textDecoration: "none", fontSize: 15, boxShadow: "0 8px 28px rgba(232,192,122,0.25)" }}
+            style={{ display: "inline-block", background: GOLD_WARM, color: "#FBF6EC", fontWeight: 700, padding: "14px 32px", borderRadius: 4, textDecoration: "none", fontSize: 15 }}
           >
             Email us
           </a>
         </div>
       </div>
-    </main>
+    </main><MarketingFooter /></>
   );
 }

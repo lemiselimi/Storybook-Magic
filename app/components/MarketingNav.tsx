@@ -4,9 +4,9 @@ import Link from "next/link";
 import { useState } from "react";
 
 const links = [
-  { href: "#how-it-works", label: "How it works" },
-  { href: "#inside-the-book", label: "Inside the book" },
-  { href: "#keepsake", label: "The keepsake" },
+  { href: "/#how-it-works", label: "How it works" },
+  { href: "/#inside-the-book", label: "Inside the book" },
+  { href: "/#keepsake", label: "The keepsake" },
 ];
 
 export default function MarketingNav() {

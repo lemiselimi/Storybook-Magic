@@ -4,9 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRef, useState } from "react";
 
-// These passages and illustrations are genuine excerpts from the existing
-// Off to Dreamland example. They remain together so this reader does not
-// imply an invented customer story or a different production page format.
+// Existing example art with descriptive captions, not customer-book excerpts.
 const spreads = [
   { image: "/examples/book-1.png", text: "A silver moonbeam begins a bedtime dream.", page: "2" },
   { image: "/examples/book-2.png", text: "Up through the clouds, a new world opens.", page: "4" },
@@ -44,7 +42,6 @@ export default function HomeMiniReader() {
           onTouchEnd={onTouchEnd}
         >
           <div
-            key={viewIndex}
             className="mtt-open-book__book mtt-mini-reader__book"
             role="button"
             tabIndex={0}
@@ -56,9 +53,9 @@ export default function HomeMiniReader() {
             {isOpening ? (
               <>
                 <div className="mtt-open-book__page mtt-open-book__page--text mtt-mini-reader__title-leaf">
-                  <span>A real Tiny Tale</span>
+                  <span>A layout sample</span>
                   <h3>Off to<br />Dreamland</h3>
-                  <p>An example storybook, opened one page at a time.</p>
+                  <p>Story on the left. Matching artwork on the right.</p>
                   <small>Tap the page to begin</small>
                 </div>
                 <div className="mtt-open-book__page mtt-open-book__page--art">
@@ -70,7 +67,7 @@ export default function HomeMiniReader() {
                 <div className="mtt-open-book__page mtt-open-book__page--text">
                   <span>Off to Dreamland</span>
                   <p>{spread?.text}</p>
-                  <small>Story page {spread?.page}</small>
+                  <small>Illustration caption</small>
                 </div>
                 <div className="mtt-open-book__page mtt-open-book__page--art">
                   <Image key={spread?.image} src={spread?.image ?? spreads[0].image} alt={`Illustration for: ${spread?.text ?? "Off to Dreamland"}`} fill sizes="(max-width: 720px) 46vw, 31vw" />
@@ -100,9 +97,10 @@ export default function HomeMiniReader() {
         )}
       </div>
       <div className="mtt-open-book__copy">
-        <p className="mtt-kicker">Inside a real story</p>
+        <p className="mtt-kicker">Inside the book</p>
         <h2 id="open-book-title">Open a Tiny Tale, one gentle page turn at a time.</h2>
-        <p>Read three genuine excerpts from the current <em>Off to Dreamland</em> example, in the same facing-page format as every finished Tiny Tale.</p>
+        <p>Explore example artwork from <em>Off to Dreamland</em>. These short captions demonstrate the layout; your book has a complete personalised story, with each passage facing its matching illustration.</p>
+        <Link href="/create" className="mtt-text-link">Read your child’s actual story preview <span aria-hidden="true">→</span></Link>
         <a href="#story-worlds" className="mtt-text-link">See the illustrated scenes <span aria-hidden="true">↓</span></a>
       </div>
     </section>

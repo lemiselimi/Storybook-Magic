@@ -2,6 +2,7 @@
 
 interface Props {
   coverImg: string;
+  title?: string;
   width?: number;
   height?: number;
   animate?: boolean;
@@ -9,11 +10,11 @@ interface Props {
   scrollOpen?: boolean;
 }
 
-export default function BookMockup3D({ coverImg, width = 200, height = 272, animate = true, scrollOpen = false }: Props) {
-  const T = 34; // spine/thickness
+export default function BookMockup3D({ coverImg, title, width = 200, height = width, animate = true, scrollOpen = false }: Props) {
+  const T = Math.max(4, width * .02); // thin softcover, not a hardback volume
 
   return (
-    <div style={{ perspective: 1100, display: "inline-block", filter: "drop-shadow(0 32px 56px rgba(0,0,0,0.7))" }}>
+    <div className="mtt-book-mockup" style={{ perspective: 1100, display: "inline-block", filter: "drop-shadow(0 16px 20px rgba(31,42,40,0.22))" }}>
       <div style={{
         width: width + T,
         height,
@@ -59,6 +60,10 @@ export default function BookMockup3D({ coverImg, width = 200, height = 272, anim
             boxShadow: "inset -5px 0 12px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.06)",
           }}>
             <img src={coverImg} alt="Book cover" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top", display: "block" }} />
+            {title && <div style={{ position: "absolute", inset: "auto 0 0", background: "#f9f5eb", color: "#1f2a28", padding: "7% 9%", fontFamily: "Georgia, serif" }}>
+              <span style={{ display: "block", fontSize: width * .025, letterSpacing: ".1em", marginBottom: 6 }}>MY TINY TALES</span>
+              <span style={{ display: "block", fontSize: width * .07, lineHeight: 1.2 }}>{title}</span>
+            </div>}
             {/* Sheen */}
             <div style={{ position: "absolute", inset: 0, background: "linear-gradient(120deg, rgba(255,255,255,0.12) 0%, transparent 45%)", pointerEvents: "none" }} />
           </div>
@@ -78,7 +83,7 @@ export default function BookMockup3D({ coverImg, width = 200, height = 272, anim
         {/* Spine — perpendicular to cover */}
         <div style={{
           position: "absolute", left: T, top: 0, width: T, height,
-          background: "linear-gradient(to right, #08041a, #180c30, #0f0720)",
+          background: "#c7bca5",
           borderRadius: "6px 0 0 6px",
           transformOrigin: "left center",
           transform: "rotateY(90deg)",

@@ -3,6 +3,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { PRODUCT } from "@/lib/product";
 import { STORY_THEMES } from "@/lib/story-themes";
+import BrowserPrintBook from "../components/BrowserPrintBook";
 
 const THEMES = [
   { id: "adventure", emoji: "🌋" }, { id: "dragon", emoji: "🐉" }, { id: "dino", emoji: "🦕" }, { id: "space", emoji: "🚀" },
@@ -10,18 +11,6 @@ const THEMES = [
 ].map((theme) => ({ ...theme, ...STORY_THEMES[theme.id as keyof typeof STORY_THEMES] }));
 
 const CHAPTER_NAMES = ["One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight"];
-
-const THEME_CLOSING: Record<string, (name: string) => string> = {
-  adventure:  (n) => `Remember, ${n}: every great adventure begins with one brave step. The world is full of magic, and you have everything it takes to find it.`,
-  dragon:     (n) => `${n}, you showed the world that kindness is the greatest power of all. Even the most fearsome things become friends when met with a gentle heart.`,
-  space:      (n) => `Reach for the stars, ${n}, because you already proved that one small, brave explorer is all it takes to light up the universe.`,
-  ocean:      (n) => `The ocean is deep and full of mystery, but so is your courage, ${n}. Never stop diving deeper into the wonder of the world.`,
-  jungle:     (n) => `You are the ruler of your own kingdom, ${n}. Lead with kindness, speak with courage, and the world will always follow.`,
-  superpower: (n) => `Your superpower is real, ${n}. It lives inside you every single day. The world is a brighter, better place because you are in it.`,
-  dino:       (n) => `The dinosaurs will never forget you, ${n}. Wherever you go, stay brave and kind — a good friend is the greatest treasure of all.`,
-  dreamland:  (n) => `Sleep tight, ${n}. Whenever you close your eyes, a whole world of dreams is waiting just for you. Sweet dreams, little one.`,
-  bubbles:    (n) => `Keep dreaming big and gentle, ${n}. Like a bubble catching the light, even the smallest kindness can float up and brighten the whole world.`,
-};
 
 const HAIR_COLORS = [
   { id: "auto",        label: "Match photo", hex: "#4A5568" },
@@ -1336,6 +1325,10 @@ export default function StorybookCreator() {
   };
 
   const printBook = () => {
+    if (!story || story.pages.some((_: unknown, index: number) => !pageImages[index] || pageImages[index] === "__failed__")) {
+      alert("Please wait for every illustration before printing your book.");
+      return;
+    }
     window.print();
   };
 
@@ -1387,7 +1380,6 @@ export default function StorybookCreator() {
     if (!page) return null;
     const sceneImg   = pageImages[page.pageNum - 1];
     const isRegen    = regeneratingPage === page.pageNum - 1;
-    const chapterNum = CHAPTER_NAMES[page.pageNum - 1] || String(page.pageNum);
 
     return (
       <div className="print-spread scene-wrap" style={{
@@ -1396,8 +1388,8 @@ export default function StorybookCreator() {
         gridTemplateColumns: isMobile ? "1fr" : "50% 50%",
         gridTemplateRows: isMobile ? "auto auto" : undefined,
         background: "#fdfcf7",
-        height: isMobile ? undefined : 520,
-        minHeight: isMobile ? undefined : 520,
+        height: undefined,
+        minHeight: undefined,
         overflow: "hidden",
       }}>
         {/* Paper grain texture overlay */}
@@ -1418,18 +1410,13 @@ export default function StorybookCreator() {
 
         {/* Text column */}
         <div style={{
-          order: isMobile ? 2 : undefined,
+          order: 0,
           display: "flex", flexDirection: "column", justifyContent: "center",
           padding: isMobile ? "20px 20px 24px" : "48px 36px 48px 48px",
           zIndex: 1,
           background: "#fdfcf7",
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 6 : 9, marginBottom: isMobile ? 10 : 20 }}>
-            <div style={{ height: 1, width: isMobile ? 14 : 22, background: "rgba(120,80,30,0.35)", flexShrink: 0 }} />
-            <span style={{ color: "rgba(120,80,30,0.65)", fontSize: isMobile ? 7 : 9, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", fontFamily: "Georgia, serif", whiteSpace: "nowrap" }}>Ch. {chapterNum}</span>
-          </div>
-
-          <p style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: isMobile ? 11 : 15.5, lineHeight: isMobile ? 1.7 : 1.85, color: "#2a1505", margin: 0, letterSpacing: "0.01em" }}>
+<p style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: isMobile ? 18 : 21, whiteSpace: "pre-line", lineHeight: 1.55, color: "#2a1505", margin: 0, letterSpacing: "0.01em" }}>
             {page.text}
           </p>
 
@@ -1441,9 +1428,9 @@ export default function StorybookCreator() {
 
         {/* Image column */}
         <div style={{
-          order: isMobile ? 1 : undefined,
+          order: 1,
           position: "relative",
-          height: isMobile ? 240 : undefined,
+          aspectRatio: "1", minWidth: 0,
           background: "#f0ece0",
           display: "flex", alignItems: "center", justifyContent: "center",
           overflow: "hidden",
@@ -1458,7 +1445,7 @@ export default function StorybookCreator() {
               <span style={{ fontSize: 40, opacity: 0.4 }}>✨</span>
             </div>
           ) : sceneImg ? (
-            <img crossOrigin="anonymous" className="img-develop" src={sceneImg} alt={`Page ${page.pageNum}`} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", display: "block" }} />
+            <img crossOrigin="anonymous" className="img-develop" src={sceneImg} alt={`Illustration for scene ${page.pageNum}`} style={{ width: "100%", height: "100%", objectFit: "contain", objectPosition: "center", display: "block" }} />
           ) : (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
               <div style={{ width: 28, height: 28, border: "3px solid rgba(120,80,30,0.12)", borderTop: "3px solid rgba(120,80,30,0.4)", borderRadius: "50%", animation: "spin 1.2s linear infinite" }} />
@@ -1494,10 +1481,10 @@ export default function StorybookCreator() {
   // ── renderPageContent — used by both front and back faces of the flip ────────
   const renderPageContent = (page: number) => {
     if (!story) return null;
-    const capName = childName ? childName.charAt(0).toUpperCase() + childName.slice(1).toLowerCase() : 'You';
+    const capName = childName ? childName.charAt(0).toUpperCase() + childName.slice(1) : 'You';
     if (page === -2) {
       return (
-        <div style={{ position: "relative", minHeight: isMobile ? 420 : 560, background: "#1E1813" }}>
+        <div style={{ position: "relative", aspectRatio: "1", maxWidth: 560, margin: "auto", background: "#f9f5eb" }}>
           {pageImages[0] && pageImages[0] !== "__failed__" && (
             <img src={pageImages[0]} alt="Book cover" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top" }} />
           )}
@@ -1507,42 +1494,23 @@ export default function StorybookCreator() {
               <span style={{ color: "#1E1813", fontWeight: 800, fontSize: 11, letterSpacing: "0.06em" }}>My Tiny Tales</span>
             </div>
           </div>
-          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(to top, rgba(5,2,15,0.97) 0%, rgba(5,2,15,0.72) 40%, transparent 100%)", padding: isMobile ? "56px 22px 22px" : "90px 36px 28px", zIndex: 2 }}>
-            <h1 style={{ fontFamily: "var(--font-playfair, Georgia, serif)", color: "white", fontSize: isMobile ? "1.65rem" : "2.4rem", fontWeight: 900, margin: "0 0 6px", lineHeight: 1.15, textShadow: "0 2px 20px rgba(0,0,0,0.8)", wordBreak: "break-word" }}>{story.title}</h1>
-            <p style={{ color: "rgba(232,192,122,0.75)", fontFamily: "Georgia, serif", fontStyle: "italic", fontSize: isMobile ? "0.82rem" : "0.95rem", margin: 0, letterSpacing: "0.03em" }}>{story.dedication}</p>
+          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "#f9f5eb", padding: isMobile ? "20px 22px" : "28px 36px", zIndex: 2 }}>
+            <h1 style={{ fontFamily: "Georgia, serif", color: "#1f2a28", fontSize: isMobile ? "1.65rem" : "2.4rem", fontWeight: 500, margin: "0 0 12px", lineHeight: 1.15, overflowWrap: "anywhere" }}>{story.title}</h1>
+            <p style={{ color: "#94432e", fontFamily: "Georgia, serif", fontStyle: "italic", fontSize: isMobile ? "0.82rem" : "0.95rem", margin: 0 }}>{`A Tiny Tale starring ${capName}`}</p>
           </div>
         </div>
       );
     }
-    if (page === -1) {
-      return (
-        <div style={{ position: 'relative', minHeight: isMobile ? 420 : 560, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: isMobile ? '52px 32px' : '72px 64px', background: '#1E1813' }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 55%, rgba(80,40,160,0.28) 0%, transparent 65%)', pointerEvents: 'none' }} />
-          <p style={{ position: 'relative', color: 'rgba(232,192,122,0.4)', fontSize: isMobile ? 10 : 11, fontWeight: 700, letterSpacing: '0.32em', textTransform: 'uppercase', margin: '0 0 20px', fontFamily: 'Georgia, serif' }}>A story created for</p>
-          <h1 style={{ position: 'relative', fontFamily: 'var(--font-playfair, Georgia, serif)', color: 'white', fontSize: isMobile ? '3.2rem' : '5rem', fontWeight: 900, margin: 0, letterSpacing: '-0.03em', lineHeight: 0.95 }}>{capName}</h1>
-          <div style={{ position: 'relative', width: 52, height: 2, background: 'rgba(232,192,122,0.45)', borderRadius: 1, margin: isMobile ? '22px auto' : '30px auto' }} />
-          <p style={{ position: 'relative', fontFamily: 'Georgia, serif', color: 'rgba(255,255,255,0.58)', fontSize: isMobile ? 14 : 17, lineHeight: 1.85, fontStyle: 'italic', maxWidth: 400, margin: '0 auto' }}>&ldquo;May every adventure remind you how loved, brave, and magical you are.&rdquo;</p>
-          <p style={{ position: 'relative', color: 'rgba(232,192,122,0.22)', fontFamily: 'Georgia, serif', fontSize: 11, letterSpacing: '0.24em', margin: isMobile ? '28px 0 0' : '36px 0 0' }}>My Tiny Tales</p>
-        </div>
-      );
-    }
-    if (page < totalPages) {
+    if (page >= 0 && page < totalPages) {
       return <BookSpread spreadIndex={page} />;
     }
-    // Closing page
-    const closingText = THEME_CLOSING[theme]?.(capName) || ('Remember, ' + capName + ': every great adventure begins with one brave step. The world is full of magic, and you have everything it takes to find it.');
-    const bgImg = (pageImages[5] && pageImages[5] !== '__failed__') ? pageImages[5] : (pageImages[4] && pageImages[4] !== '__failed__') ? pageImages[4] : null;
+    const isDedication = page === -1;
     return (
-      <div style={{ position: 'relative', minHeight: isMobile ? 420 : 560, background: '#1E1813' }}>
-        {bgImg && <img src={bgImg} alt='' style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.35 }} />}
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(5,2,15,0.55) 0%, rgba(5,2,15,0.88) 100%)' }} />
-        <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: isMobile ? 420 : 560, padding: isMobile ? '52px 28px' : '72px 64px', textAlign: 'center' }}>
-          <p style={{ color: 'rgba(232,192,122,0.3)', fontSize: 11, fontWeight: 700, letterSpacing: '0.3em', margin: '0 0 14px', fontFamily: 'Georgia, serif' }}>❖ &nbsp; ❖ &nbsp; ❖</p>
-          <h2 style={{ fontFamily: 'var(--font-playfair, Georgia, serif)', color: '#E8C07A', fontSize: isMobile ? '3.2rem' : '4.8rem', fontWeight: 900, letterSpacing: '-0.02em', lineHeight: 1, margin: '0 0 8px', textShadow: '0 0 60px rgba(232,192,122,0.45)' }}>The End</h2>
-          <div style={{ width: 48, height: 1, background: 'rgba(232,192,122,0.4)', margin: isMobile ? '18px auto' : '22px auto' }} />
-          <p style={{ fontFamily: 'Georgia, serif', color: 'rgba(255,255,255,0.62)', fontSize: isMobile ? 13 : 16, lineHeight: 1.9, fontStyle: 'italic', maxWidth: 420, margin: '0 auto 24px' }}>{closingText}</p>
-          <p style={{ color: 'rgba(255,255,255,0.2)', fontFamily: 'Georgia, serif', fontSize: 11, fontStyle: 'italic', margin: 0 }}>Created with love &middot; {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-        </div>
+      <div style={{ minHeight: isMobile ? 380 : 480, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: isMobile ? "44px 28px" : "64px", background: "#f9f5eb", color: "#1f2a28" }}>
+        <div aria-hidden="true" style={{ width: 38, height: 38, border: "1px solid #aa513b", borderRadius: "50%", marginBottom: 28 }} />
+        <h2 style={{ fontFamily: "Georgia, serif", fontSize: isMobile ? 36 : 48, fontWeight: 400, margin: "0 0 24px" }}>{isDedication ? "For you" : "The End"}</h2>
+        <p style={{ fontFamily: "Georgia, serif", fontSize: isMobile ? 18 : 21, lineHeight: 1.65, whiteSpace: "pre-line", overflowWrap: "anywhere", maxWidth: 440, margin: 0 }}>{isDedication ? (story.dedication || `For ${capName}, with love.`) : `Made with love for ${capName}.`}</p>
+        <p style={{ color: "#94432e", fontSize: 12, letterSpacing: "0.08em", margin: "36px 0 0" }}>My Tiny Tales</p>
       </div>
     );
   };
@@ -1628,7 +1596,7 @@ export default function StorybookCreator() {
         .theme-card:hover{transform:translateY(-4px);box-shadow:0 8px 28px rgba(0,0,0,0.3)!important;}
 
         /* ── Print styles ── */
-        @page { size: landscape; margin: 0; }
+        @page { size: 210mm 210mm; margin: 0; }
         @media print {
           html, body { margin: 0 !important; padding: 0 !important; background: #000 !important; }
           /* Hide the entire Next.js shell — only show the portal */
@@ -1647,8 +1615,8 @@ export default function StorybookCreator() {
             box-sizing: border-box !important;
           }
           .print-page {
-            width: 100vw !important;
-            height: 100vh !important;
+            width: 210mm !important;
+            height: 210mm !important;
             page-break-after: always !important;
             break-after: page !important;
             page-break-inside: avoid !important;
@@ -1983,14 +1951,13 @@ export default function StorybookCreator() {
                     <div style={{ display: "flex", flexDirection: "column", gap: 24, marginBottom: 24 }}>
                       {previewStory.pages.slice(0, 2).map((page: any, idx: number) => {
                         const img = previewImages[idx];
-                        const chNum = CHAPTER_NAMES[page.pageNum - 1] || String(page.pageNum);
                         return (
                           <div key={idx} style={{
                             position: "relative",
                             display: "grid",
                             gridTemplateColumns: isMobile ? "1fr" : "50% 50%",
                             background: "#fdfcf7",
-                            height: isMobile ? undefined : 400,
+                            minHeight: isMobile ? undefined : 400,
                             overflow: "hidden",
                             boxShadow: "0 8px 40px rgba(0,0,0,0.45)",
                           }}>
@@ -2000,12 +1967,8 @@ export default function StorybookCreator() {
                             {!isMobile && <div style={{ position: "absolute", top: 0, bottom: 0, left: "50%", width: 28, transform: "translateX(-50%)", zIndex: 2, pointerEvents: "none", background: "linear-gradient(to right, rgba(0,0,0,0.10) 0%, rgba(0,0,0,0.03) 50%, transparent 100%)" }} />}
 
                             {/* Text page — left */}
-                            <div style={{ order: isMobile ? 2 : undefined, display: "flex", flexDirection: "column", justifyContent: "center", padding: isMobile ? "20px 20px 24px" : "48px 36px 48px 48px", zIndex: 1, background: "#fdfcf7" }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 6 : 9, marginBottom: isMobile ? 10 : 20 }}>
-                                <div style={{ height: 1, width: isMobile ? 14 : 22, background: "rgba(120,80,30,0.35)", flexShrink: 0 }} />
-                                <span style={{ color: "rgba(120,80,30,0.65)", fontSize: isMobile ? 7 : 9, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase" as const, fontFamily: "Georgia, serif", whiteSpace: "nowrap" as const }}>Ch. {chNum}</span>
-                              </div>
-                              <p style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: isMobile ? 13 : 15.5, lineHeight: isMobile ? 1.7 : 1.85, color: "#2a1505", margin: 0, letterSpacing: "0.01em" }}>{page.text}</p>
+                            <div style={{ order: 0, display: "flex", flexDirection: "column", justifyContent: "center", padding: isMobile ? "20px 20px 24px" : "48px 36px 48px 48px", zIndex: 1, background: "#fdfcf7" }}>
+<p style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: isMobile ? 18 : 21, whiteSpace: "pre-line", lineHeight: 1.55, color: "#2a1505", margin: 0, letterSpacing: "0.01em" }}>{page.text}</p>
                               <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 6 : 9, marginTop: isMobile ? 12 : 26 }}>
                                 <div style={{ height: 1, width: isMobile ? 18 : 34, background: "rgba(120,80,30,0.22)", flexShrink: 0 }} />
                                 <span style={{ color: "rgba(120,80,30,0.38)", fontFamily: "Georgia, serif", fontSize: isMobile ? 7 : 9, letterSpacing: "0.14em" }}>{page.pageNum}</span>
@@ -2013,9 +1976,9 @@ export default function StorybookCreator() {
                             </div>
 
                             {/* Illustration — right, full bleed */}
-                            <div style={{ order: isMobile ? 1 : undefined, position: "relative", height: isMobile ? 240 : undefined, overflow: "hidden", background: "#1E1813" }}>
+                            <div style={{ order: 1, position: "relative", aspectRatio: "1", minWidth: 0, overflow: "hidden", background: "#1E1813" }}>
                               {img && img !== "__failed__" ? (
-                                <img src={img} alt={`Page ${page.pageNum}`} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                                <img src={img} alt={`Illustration for scene ${page.pageNum}`} style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
                               ) : (
                                 <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
                                   <div style={{ width: 28, height: 28, border: "3px solid rgba(255,255,255,0.12)", borderTop: "3px solid rgba(255,255,255,0.4)", borderRadius: "50%", animation: "spin 1.2s linear infinite" }} />
@@ -2431,78 +2394,7 @@ export default function StorybookCreator() {
 
       {/* ── Print-only book pages — rendered as body portal for correct pagination ── */}
       {mainStep === "book" && story && typeof document !== "undefined" && createPortal(
-        <div id="print-book-root">
-
-          {/* Page 1: Cover (front of book) — full-bleed poster */}
-          <div className="print-page" style={{ position: "relative", background: "#1E1813" }}>
-            {coverImageUrl && <img crossOrigin="anonymous" src={coverImageUrl} alt="cover" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top" }} />}
-            {/* Top branding */}
-            <div style={{ position: "absolute", top: 28, left: 0, right: 0, display: "flex", justifyContent: "center", zIndex: 2 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(232,192,122,0.92)", borderRadius: 50, padding: "6px 20px" }}>
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="#1E1813" aria-hidden="true"><path d="M12 1l2.39 7.61L22 12l-7.61 2.39L12 22l-2.39-7.61L2 12l7.61-2.39z"/></svg>
-                <span style={{ color: "#1E1813", fontWeight: 800, fontSize: 12, letterSpacing: "0.06em" }}>My Tiny Tales</span>
-              </div>
-            </div>
-            {/* Bottom gradient + title */}
-            <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(to top, rgba(5,2,15,0.97) 0%, rgba(5,2,15,0.72) 40%, transparent 100%)", padding: "100px 80px 48px", zIndex: 2 }}>
-              <div style={{ color: "white", fontSize: 52, fontWeight: 900, fontFamily: "Georgia, serif", lineHeight: 1.1, marginBottom: 10, textShadow: "0 2px 24px rgba(0,0,0,0.8)" }}>{story.title}</div>
-              <div style={{ color: "rgba(232,192,122,0.75)", fontStyle: "italic", fontSize: 18, fontFamily: "Georgia, serif" }}>{story.dedication}</div>
-            </div>
-          </div>
-
-          {/* Page 2: Blank verso (inside front cover — standard in printed books) */}
-          <div className="print-page" style={{ background: "#1E1813" }} />
-
-          {/* Page 3: Dedication */}
-          <div className="print-page" style={{ position: "relative", background: "#1E1813", alignItems: "center", justifyContent: "center", flexDirection: "column" }}>
-            <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse at 50% 55%, rgba(80,40,160,0.3) 0%, transparent 65%)", pointerEvents: "none" }} />
-            <div style={{ position: "relative", textAlign: "center", maxWidth: 700, padding: "0 80px" }}>
-              <p style={{ color: "rgba(232,192,122,0.4)", fontSize: 12, fontWeight: 700, letterSpacing: "0.32em", textTransform: "uppercase", margin: "0 0 24px", fontFamily: "Georgia, serif" }}>A story created for</p>
-              <h1 style={{ fontFamily: "Georgia, serif", color: "white", fontSize: 80, fontWeight: 900, margin: 0, letterSpacing: "-0.03em", lineHeight: 0.9 }}>
-                {childName ? childName.charAt(0).toUpperCase() + childName.slice(1).toLowerCase() : "You"}
-              </h1>
-              <div style={{ width: 60, height: 2, background: "rgba(232,192,122,0.45)", borderRadius: 1, margin: "32px auto" }} />
-              <p style={{ fontFamily: "Georgia, serif", color: "rgba(255,255,255,0.6)", fontSize: 20, lineHeight: 1.85, fontStyle: "italic", margin: 0 }}>
-                &ldquo;May every adventure remind you how loved, brave, and magical you are.&rdquo;
-              </p>
-              <p style={{ color: "rgba(232,192,122,0.22)", fontFamily: "Georgia, serif", fontSize: 13, letterSpacing: "0.24em", margin: "40px 0 0" }}>My Tiny Tales</p>
-            </div>
-          </div>
-
-          {/* Pages 4–9: Story spreads — one page per spread */}
-          {story.pages.map((_: any, i: number) => (
-            <div key={i} className="print-page">
-              <BookSpread spreadIndex={i} />
-            </div>
-          ))}
-
-          {/* Page 10: Closing */}
-          {(() => {
-            const capName = childName ? childName.charAt(0).toUpperCase() + childName.slice(1).toLowerCase() : "";
-            const closingText = THEME_CLOSING[theme]?.(capName) ||
-              ("Remember, " + capName + ": every great adventure begins with one brave step. The world is full of magic, and you have everything it takes to find it.");
-            const bgImgPrint = (pageImages[5] && pageImages[5] !== "__failed__") ? pageImages[5] : null;
-            return (
-              <div className="print-page" style={{ position: "relative", background: "#1E1813", alignItems: "center", justifyContent: "center", flexDirection: "column" }}>
-                {bgImgPrint && <img crossOrigin="anonymous" src={bgImgPrint} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.3 }} />}
-                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(5,2,15,0.5) 0%, rgba(5,2,15,0.9) 100%)" }} />
-                <div style={{ position: "relative", textAlign: "center", maxWidth: 720, padding: "0 80px" }}>
-                  <p style={{ color: "rgba(232,192,122,0.3)", fontSize: 13, letterSpacing: "0.3em", margin: "0 0 16px", fontFamily: "Georgia, serif" }}>❖ &nbsp; ❖ &nbsp; ❖</p>
-                  <h2 style={{ fontFamily: "Georgia, serif", color: "#E8C07A", fontSize: 72, fontWeight: 900, letterSpacing: "-0.02em", lineHeight: 1, margin: "0 0 8px", textShadow: "0 0 60px rgba(232,192,122,0.4)" }}>The End</h2>
-                  <div style={{ width: 60, height: 1, background: "rgba(232,192,122,0.4)", margin: "24px auto" }} />
-                  <p style={{ fontFamily: "Georgia, serif", color: "rgba(255,255,255,0.65)", fontSize: 20, lineHeight: 1.9, fontStyle: "italic", margin: "0 0 28px" }}>{closingText}</p>
-                  <p style={{ color: "rgba(255,255,255,0.22)", fontFamily: "Georgia, serif", fontSize: 13, fontStyle: "italic", margin: 0 }}>
-                    Created with love · {new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
-                  </p>
-                </div>
-              </div>
-            );
-          })()}
-
-          {/* Page 11: Blank inside back cover (print/softcover only) */}
-          <div className="print-page" style={{ background: "#1E1813" }} />
-
-        </div>,
+        <BrowserPrintBook story={story} childName={childName} coverImage={coverImageUrl} images={pageImages} />,
         document.body
       )}
       </div>{/* end inner zIndex wrapper */}

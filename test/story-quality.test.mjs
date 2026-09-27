@@ -72,13 +72,13 @@ test("all adventures have one distinct emotional heart and a complete arc", () =
 test("age bands map ages 2, 5, 8, and 11 to materially different limits", () => {
   assert.deepEqual([2, 5, 8, 11].map(getAgeBand), ["1-3", "4-6", "7-9", "10-12"]);
   assert.equal(Object.keys(AGE_BANDS).length, 4);
-  assert.deepEqual(Object.values(MAX_WORDS_PER_PAGE), [18, 40, 54, 64]);
+  assert.deepEqual(Object.values(MAX_WORDS_PER_PAGE), [45, 40, 54, 64]);
 });
 
 for (const example of examples) {
   test(`representative age-${example.age} ${example.theme} story passes production text limits`, () => {
     const ageBand = getAgeBand(example.age);
-    const story = buildStory(example);
+    const story = example.age === 2 ? JSON.parse(fs.readFileSync("test/fixtures/loli-read-aloud.json", "utf8").replaceAll("Loli", example.name)) : buildStory(example);
     assert.equal(validateStory(story, { childName: example.name, ageBand }), null);
     assert.ok(story.pages.every((page) => wordCount(page.text) <= MAX_WORDS_PER_PAGE[ageBand]));
     assert.ok(story.pages.some((page) => page.text.includes(example.name)));
@@ -96,4 +96,15 @@ test("unresolved values and overlong page copy are rejected before preview", () 
   story.pages[2].text = examples[1].pages[2];
   story.title = "A Quiet Dragon";
   assert.match(validateStory(story, { childName: "Theo", ageBand: "4-6" }), /title does not include/);
+});
+
+
+test("the former caption-only toddler story is rejected", () => {
+  assert.match(validateStory(buildStory(examples[0]), { childName: "Mia", ageBand: "1-3" }), /too thin/);
+});
+
+test("duplicate story beats are rejected", () => {
+  const story = buildStory(examples[1]);
+  story.pages[3].text = story.pages[2].text;
+  assert.match(validateStory(story, { childName: "Theo", ageBand: "4-6" }), /repeats/);
 });

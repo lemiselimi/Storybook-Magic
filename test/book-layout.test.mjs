@@ -28,7 +28,7 @@ test("normal short name and title pass preflight", () => {
 
 test("long child names remain controlled cover copy", () => {
   const subtitle = controlledCoverSubtitle("Alexandria-Marguerite");
-  assert.equal(subtitle, "A Tiny Tale starring Alexandria-marguerite");
+  assert.equal(subtitle, "A Tiny Tale starring Alexandria-Marguerite");
   assert.equal(preflightBook(validBook({ childName: "Alexandria-Marguerite" })).ok, true);
 });
 
@@ -59,9 +59,10 @@ test("unresolved template variables are rejected", () => {
   assert.ok(result.errors.some((error) => error.code === "title_placeholder"));
 });
 
-test("the final filler page is explicit and intentional", () => {
+test("default book uses every printable page and leaves printer-added blanks out of the file", () => {
   const plan = buildInteriorPagePlan();
-  assert.deepEqual(plan.at(-2), { type: "filler", intentionalBlank: true, reason: "print_minimum" });
+  assert.equal(plan.at(-2).type, "ending");
+  assert.ok(!plan.some(page => page.intentionalBlank));
   assert.equal(validatePagePlan(plan).ok, true);
 });
 
@@ -98,4 +99,16 @@ test("generated dedication fragments can never become cover copy", () => {
   assert.equal(coverCopy, "A Tiny Tale starring Elora");
   assert.ok(!coverCopy.includes("Off to Dr"));
   assert.notEqual(coverCopy, defective);
+});
+
+
+test("Prodigi physical spreads pair every text on the left with its own art on the right", () => {
+  const plan = buildInteriorPagePlan();
+  // PDF page 2 is the first right-hand content page (cover is index 0).
+  assert.equal(plan[1].type, "title");
+  for (let index = 0; index < 8; index++) {
+    const left = plan.findIndex(page => page.type === "story_text" && page.sceneIndex === index);
+    assert.equal(left % 2, 0, `Scene ${index + 1} must start on a physical left page`);
+    assert.deepEqual(plan[left + 1], { type: "illustration", sceneIndex: index });
+  }
 });

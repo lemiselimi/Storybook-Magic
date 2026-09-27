@@ -4,7 +4,7 @@ import Link from "next/link";
 import { PRODUCT } from "@/lib/product";
 
 const footerGroups = [
-  { title: "Discover", links: [["How it works", "#how-it-works"], ["Inside the book", "#inside-the-book"], ["The keepsake", "#keepsake"], ["Examples", "#story-worlds"]] },
+  { title: "Discover", links: [["How it works", "/#how-it-works"], ["Inside the book", "/#inside-the-book"], ["The keepsake", "/#keepsake"], ["Examples", "/#story-worlds"]] },
   { title: "Help", links: [["Questions", "/faq"], ["Print guide", "/print-guide"], ["Contact", "/contact"]] },
   { title: "Details", links: [["Privacy", "/privacy"], ["Terms", "/terms"], ["Refunds", "/refunds"], ["Children's data", "/childrens-data"]] },
 ];

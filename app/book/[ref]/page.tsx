@@ -215,14 +215,14 @@ export default function BookPage() {
             <img src={coverUrl} alt="Book cover" style={{ width: "100%", display: "block" }} />
             <div style={{
               position: "absolute", bottom: 0, left: 0, right: 0,
-              background: "linear-gradient(to top, rgba(8,4,20,0.98) 0%, rgba(8,4,20,0.90) 38%, rgba(8,4,20,0.34) 68%, rgba(8,4,20,0.04) 100%)",
+              background: "#f9f5eb",
               backdropFilter: "blur(0.75px)",
               WebkitBackdropFilter: "blur(0.75px)",
-              padding: isMobile ? "48px 20px 22px" : "64px 28px 30px",
+              padding: isMobile ? "16px 20px" : "22px 28px",
             }}>
               <p style={{ color: GOLD, fontSize: 10, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", margin: "0 0 6px", opacity: 0.75, fontFamily: "Georgia, serif" }}>My Tiny Tales</p>
-              <h2 style={{ color: "white", fontSize: isMobile ? 19 : 23, fontWeight: 700, margin: "0 0 7px", lineHeight: 1.2, fontFamily: "Georgia, 'Times New Roman', serif" }}>{story?.title}</h2>
-              <p style={{ color: GOLD, fontSize: 11, fontStyle: "italic", margin: 0, opacity: 0.78, lineHeight: 1.5, fontFamily: "Georgia, serif" }}>{story?.dedication}</p>
+              <h2 style={{ color: "#1f2a28", fontSize: isMobile ? 19 : 23, fontWeight: 700, margin: "0 0 7px", lineHeight: 1.2, fontFamily: "Georgia, 'Times New Roman', serif" }}>{story?.title}</h2>
+              <p style={{ color: GOLD, fontSize: 11, fontStyle: "italic", margin: 0, opacity: 0.78, lineHeight: 1.5, fontFamily: "Georgia, serif" }}>{`A Tiny Tale starring ${capName}`}</p>
             </div>
           </div>
         </div>
@@ -250,12 +250,8 @@ export default function BookPage() {
               )}
 
               {/* Text page */}
-              <div style={{ order: isMobile ? 2 : undefined, display: "flex", flexDirection: "column", justifyContent: "center", padding: isMobile ? "20px 20px 24px" : "44px 36px 44px 44px", zIndex: 1, background: CREAM }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 18 }}>
-                  <div style={{ height: 1, width: 20, background: "rgba(120,80,30,0.35)", flexShrink: 0 }} />
-                  <span style={{ color: "rgba(120,80,30,0.65)", fontSize: 9, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", whiteSpace: "nowrap" }}>Chapter {CHAPTER_NAMES[i] || i + 1}</span>
-                </div>
-                <p style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: isMobile ? 14 : 15.5, lineHeight: 1.85, color: BROWN, margin: 0 }}>
+              <div style={{ order: 0, display: "flex", flexDirection: "column", justifyContent: "center", padding: isMobile ? "20px 20px 24px" : "44px 36px 44px 44px", zIndex: 1, background: CREAM }}>
+<p style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: isMobile ? 18 : 21, whiteSpace: "pre-line", lineHeight: 1.55, color: BROWN, margin: 0 }}>
                   {page.text}
                 </p>
                 <div style={{ display: "flex", alignItems: "center", gap: 9, marginTop: 22 }}>
@@ -265,9 +261,9 @@ export default function BookPage() {
               </div>
 
               {/* Illustration */}
-              <div style={{ order: isMobile ? 1 : undefined, position: "relative", height: isMobile ? 260 : undefined, overflow: "hidden", background: "#241C15" }}>
+              <div style={{ order: 1, position: "relative", aspectRatio: "1", minWidth: 0, overflow: "hidden", background: "#241C15" }}>
                 {img
-                  ? <img src={img} alt={`Chapter ${CHAPTER_NAMES[i]}`} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                  ? <img src={img} alt={`Illustration for scene ${i + 1}`} style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
                   : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", minHeight: 260 }}>
                       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
                       <div style={{ width: 24, height: 24, borderRadius: "50%", border: "3px solid rgba(255,255,255,0.1)", borderTop: "3px solid rgba(255,255,255,0.4)", animation: "spin 1s linear infinite" }} />

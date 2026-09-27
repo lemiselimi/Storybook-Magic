@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 
 type BookStatus = {
+  canRetry?: boolean;
   status: "generating" | "pdf_generating" | "ready" | "failed" | "not_found";
   childName?: string;
   story?: { title?: string; dedication?: string; pages?: { pageNum: number; text: string }[] };
@@ -33,6 +34,25 @@ export default function BookPage() {
   const [showPrintConfirm, setShowPrintConfirm] = useState(false);
   const [approving,        setApproving]        = useState(false);
   const [approveError,     setApproveError]     = useState<string | null>(null);
+
+  const [retrying, setRetrying] = useState(false);
+  const [retryError, setRetryError] = useState<string | null>(null);
+  const retryGeneration = async () => {
+    setRetrying(true);
+    setRetryError(null);
+    try {
+      const response = await fetch("/api/retry-generation", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ref, accessToken, sessionId }),
+        signal: AbortSignal.timeout(60_000),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Please try again later.");
+      await fetchStatus();
+    } catch (error) {
+      setRetryError(error instanceof Error ? error.message : "Please try again later.");
+    } finally { setRetrying(false); }
+  };
 
   const approvePrint = async () => {
     setShowPrintConfirm(false);
@@ -70,7 +90,7 @@ export default function BookPage() {
       const res = await fetch(`/api/book-status?${credentials.toString()}`);
       const json: BookStatus = await res.json();
       setData(json);
-      if (json.status === "ready" || json.status === "failed") {
+      if (json.status === "ready") {
         if (pollRef.current) clearInterval(pollRef.current);
       }
     } catch { /* silent — keep polling */ }
@@ -94,6 +114,19 @@ export default function BookPage() {
       borderTop: `3px solid ${color}`,
       animation: "spin 0.9s linear infinite",
     }} />
+  );
+
+  const recovery = (
+    <div style={{ textAlign: "center", maxWidth: 380 }}>
+      {data?.canRetry && <>
+        <p style={{ color: CREAM, lineHeight: 1.6 }}>One or more illustrations need another try. Your completed pages are saved.</p>
+        <button onClick={retryGeneration} disabled={retrying} style={{ background: GOLD, color: DARK, border: 0, borderRadius: 8, padding: "14px 22px", fontSize: 16, cursor: "pointer" }}>
+          {retrying ? "Retrying…" : "Retry unfinished illustrations"}
+        </button>
+        <p style={{ color: CREAM, fontSize: 13 }}>No additional payment required.</p>
+      </>}
+      {retryError && <p role="alert" style={{ color: CREAM }}>{retryError}</p>}
+    </div>
   );
 
   // Loading / preparing state
@@ -133,9 +166,9 @@ export default function BookPage() {
           </div>
         )}
 
-        <Spinner size={32} />
+        {data?.canRetry ? recovery : <Spinner size={32} />}
         <p style={{ color: "rgba(255,255,255,0.25)", fontSize: 12, marginTop: 20, textAlign: "center" }}>
-          Keep this tab open — your book will appear here automatically.
+          Your progress is saved. You can return to this book using the same link.
         </p>
       </div>
     );
@@ -147,8 +180,9 @@ export default function BookPage() {
         <div style={{ fontSize: 40, marginBottom: 16 }}>😔</div>
         <h1 style={{ color: "white", fontSize: 24, margin: "0 0 12px" }}>Something went wrong</h1>
         <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 15, maxWidth: 360, lineHeight: 1.6 }}>
-          We hit a snag while creating your book. Our team has been notified and will email you shortly to sort it out.
+          An illustration or book file could not be completed. Your completed pages are saved. You do not need to purchase again.
         </p>
+        {recovery}
         <a href="mailto:hello@mytinytales.studio" style={{ marginTop: 24, color: GOLD, fontSize: 14 }}>hello@mytinytales.studio</a>
       </div>
     );

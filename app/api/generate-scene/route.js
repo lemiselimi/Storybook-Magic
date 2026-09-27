@@ -1,3 +1,4 @@
+import { consistentSceneOutfit } from "@/lib/generation-recovery";
 import { fal } from "@fal-ai/client";
 import { NEGATIVE_PROMPT } from "../_lib/fal.js";
 import { internalWebhookUrl, isInternalRequest, rateLimit } from "@/lib/security";
@@ -13,7 +14,8 @@ export async function POST(request) {
 
   fal.config({ credentials: process.env.FAL_API_KEY });
   try {
-    const { loraUrl, referenceImageUrl, prompt, seed } = await request.json();
+    const { loraUrl, referenceImageUrl, prompt: rawPrompt, seed } = await request.json();
+    const prompt = typeof rawPrompt === "string" ? consistentSceneOutfit(rawPrompt) : "";
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || new URL(request.url).origin;
     const webhookUrl = internal ? internalWebhookUrl(siteUrl) : null;
 

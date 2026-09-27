@@ -1,3 +1,4 @@
+import { canRetryGeneration } from "@/lib/generation-recovery";
 import { kv } from "@/lib/kv";
 import { hasAccessToken } from "@/lib/security";
 import Stripe from "stripe";
@@ -32,6 +33,7 @@ export async function GET(request) {
 
     return Response.json({
       status:         result.status,
+      canRetry:       canRetryGeneration(result),
       childName:      result.childName,
       story:          result.story,
       plan:           result.plan,

@@ -17,35 +17,48 @@ export async function POST(request) {
   const jobInfo = await kv.get(`job:${jobId}`);
   if (!jobInfo) {
     console.warn("fal-webhook: unknown job", jobId);
-    return new Response("ok");
+    return new Response("Job mapping not ready", { status: 503 });
   }
 
   const { ref, slot } = jobInfo;
   const imageUrl = payload.payload?.images?.[0]?.url ?? null;
 
-  if (payload.status !== "OK" || !imageUrl) {
+  // Merge each callback atomically: simultaneous scenes must not overwrite one another.
+  const succeeded = payload.status === "OK" && !!imageUrl;
+  const outcome = await kv.eval(`
+    local raw = redis.call('get', KEYS[1])
+    if not raw then return '' end
+    local result = cjson.decode(raw)
+    if result.status == 'ready' or result.status == 'pdf_generating' then return '' end
+    local slot = ARGV[1]
+    result.images = result.images or {}
+    local allDone = false
+    if ARGV[2] == '' then
+      if not result.images[slot] or result.images[slot] == cjson.null then
+        result.status = 'failed'
+        result.error = 'An illustration could not be completed. Your completed pages are saved.'
+      end
+    else
+      result.images[slot] = ARGV[2]
+      local count = 0
+      for _, url in pairs(result.images) do
+        if url ~= cjson.null and url ~= '' then count = count + 1 end
+      end
+      allDone = count >= result.totalJobs
+      if allDone then result.status = 'pdf_generating' end
+    end
+    redis.call('set', KEYS[1], cjson.encode(result), 'EX', 2592000)
+    return cjson.encode({result = result, allDone = allDone})
+  `, [`result:${ref}`], [String(slot), succeeded ? imageUrl : ""]);
+  if (!outcome) return new Response("ok");
+  const { result, allDone } = typeof outcome === "string" ? JSON.parse(outcome) : outcome;
+  if (!succeeded) {
     console.error(`fal-webhook: job ${jobId} failed (ref=${ref} slot=${slot})`);
     return new Response("ok");
   }
-
-  // Read current result, update image slot
-  const result = await kv.get(`result:${ref}`);
-  if (!result || result.status === "ready" || result.status === "pdf_generating") {
-    return new Response("ok"); // already processed
-  }
-
-  const updatedImages = { ...result.images, [slot]: imageUrl };
+  const updatedImages = result.images;
   const completedCount = Object.values(updatedImages).filter(Boolean).length;
-  const allDone = completedCount >= result.totalJobs;
-
-  await kv.set(`result:${ref}`, {
-    ...result,
-    images:  updatedImages,
-    status:  allDone ? "pdf_generating" : "generating",
-  }, { ex: 2_592_000 });
-
   console.log(`fal-webhook: ref=${ref} slot=${slot} (${completedCount}/${result.totalJobs})`);
-
   if (!allDone) return new Response("ok");
 
   // All images ready — generate PDFs, email customer, submit print if needed

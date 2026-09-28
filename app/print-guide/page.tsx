@@ -1,3 +1,6 @@
+import MarketingNav from "../components/MarketingNav";
+import MarketingFooter from "../components/MarketingFooter";
+
 export const metadata = {
   title: "How to Print Your Storybook",
   description: "A simple guide to printing your personalised My Tiny Tales storybook at home, or ordering a premium softcover keepsake.",
@@ -9,32 +12,33 @@ export default function PrintGuidePage() {
     {
       num: "01",
       title: "Download your PDF",
-      body: "After purchase, your high-resolution PDF will download automatically. Save it somewhere easy to find — your Downloads folder or Desktop.",
+      body: "Once your book is ready, open your book link and choose Download PDF. Save a copy to your device so you can keep it and print it again.",
     },
     {
       num: "02",
       title: "Check your print settings",
-      body: "Open the PDF and set print size to A4 (or US Letter). Choose 'Fit to page' or 'Actual size'. Make sure colour printing is enabled and quality is set to High.",
+      body: "The PDF has square pages, approximately 8.3 × 8.3 inches (210 × 210 mm). For A4 or US Letter paper, choose Fit to printable area to avoid clipping. Keep colour printing on and print one test page first.",
     },
     {
       num: "03",
       title: "Print at home",
-      body: "For best results use a photo-quality inkjet printer with glossy or semi-gloss paper (120gsm+). Standard printer paper works fine for draft copies.",
+      body: "Use paper supported by your printer. For double-sided printing, choose paper coated for printing on both sides. Test two pages first to check their orientation and alignment.",
     },
     {
       num: "04",
       title: "Print at a copy shop",
-      body: "Any print shop (Staples, Office Depot, local printer) can print your PDF. Ask for A4 colour double-sided, bound or stapled. Expect to pay $5–$15 depending on options.",
+      body: "Ask your print shop to check the square page size, page order, trimming and binding before printing. Tell them each story passage should face its matching illustration. Request a quote and a proof; prices depend on paper, size and binding.",
     },
     {
       num: "05",
       title: "Bind your book",
-      body: "For a finished look, ask your print shop to spiral-bind or saddle-stitch (staple) the pages. At home, a hole punch and ribbon makes a lovely handmade touch.",
+      body: "Keep the PDF in its original page order. A print shop can advise on binding and any blank pages its process requires. Avoid booklet mode unless the shop has prepared the file for that binding method.",
     },
   ];
 
   return (
-    <main style={{ minHeight: "100vh", background: "#FBF6EC", color: "#26313D", fontFamily: "Georgia, serif" }}>
+    <main className="mtt-home" style={{ minHeight: "100vh", background: "#FBF6EC", color: "#26313D", fontFamily: "Georgia, serif" }}>
+      <MarketingNav />
       <div style={{ maxWidth: 680, margin: "0 auto", padding: "80px 24px" }}>
         <h1 style={{ fontSize: 40, fontWeight: 700, marginBottom: 8, color: "#26313D" }}>
           Print Guide
@@ -102,8 +106,7 @@ export default function PrintGuidePage() {
             Recommended paper
           </h3>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: "#5C6672", margin: 0 }}>
-            <strong style={{ color: "#26313D" }}>At home:</strong> Epson Premium Photo Paper Glossy 4×6 or A4 —{" "}
-            gives vibrant colours and sharp illustration detail.<br />
+            <strong style={{ color: "#26313D" }}>At home:</strong> Choose a paper size and weight your printer supports. Small photo paper will shrink the text considerably.<br />
             <strong style={{ color: "#26313D" }}>At a print shop:</strong> Ask for 120gsm gloss or silk coated
             paper. Avoid standard 80gsm copier paper — it makes colours look dull.
           </p>
@@ -116,6 +119,7 @@ export default function PrintGuidePage() {
           </a>
         </p>
       </div>
+      <MarketingFooter />
     </main>
   );
 }

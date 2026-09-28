@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState, useRef } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 
@@ -28,6 +29,9 @@ export default function BookPage() {
   const searchParams = useSearchParams();
   const accessToken = searchParams.get("access_token");
   const sessionId = searchParams.get("session_id");
+  const [statusError, setStatusError] = useState<string | null>(null);
+  const statusInFlight = useRef(false);
+  const statusStartedAt = useRef(Date.now());
   const [data, setData]       = useState<BookStatus | null>(null);
   const [isMobile, setMobile] = useState(false);
   const pollRef               = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -79,6 +83,8 @@ export default function BookPage() {
   }, []);
 
   const fetchStatus = async () => {
+    if (statusInFlight.current) return;
+    statusInFlight.current = true;
     try {
       if (!accessToken && !sessionId) {
         setData({ status: "not_found" });
@@ -87,17 +93,31 @@ export default function BookPage() {
       const credentials = new URLSearchParams({ ref });
       if (accessToken) credentials.set("access_token", accessToken);
       if (sessionId) credentials.set("session_id", sessionId);
-      const res = await fetch(`/api/book-status?${credentials.toString()}`);
+      const res = await fetch(`/api/book-status?${credentials.toString()}`, { signal: AbortSignal.timeout(15_000), cache: "no-store" });
+      if (res.status === 404 && sessionId && Date.now() - statusStartedAt.current < 60_000) {
+        setStatusError("Confirming your purchase and preparing your book…");
+        return;
+      }
+      if ([401, 403, 404].includes(res.status)) {
+        setData({ status: "not_found" });
+        if (pollRef.current) clearInterval(pollRef.current);
+        return;
+      }
+      if (!res.ok) throw new Error("We could not check your book just now. Your progress is saved; we will try again shortly.");
+      setStatusError(null);
       const json: BookStatus = await res.json();
       setData(json);
       if (json.status === "ready") {
         if (pollRef.current) clearInterval(pollRef.current);
       }
-    } catch { /* silent — keep polling */ }
+    } catch {
+      setStatusError("We could not check your book just now. Your progress is saved; we will try again shortly.");
+    } finally { statusInFlight.current = false; }
   };
 
   useEffect(() => {
-    if (!ref || (!accessToken && !sessionId)) return;
+    if (!ref) return;
+    if (!accessToken && !sessionId) { setData({ status: "not_found" }); return; }
     fetchStatus();
     pollRef.current = setInterval(fetchStatus, 6000);
     return () => { if (pollRef.current) clearInterval(pollRef.current); };
@@ -166,12 +186,22 @@ export default function BookPage() {
           </div>
         )}
 
+        {statusError && <p role="status" style={{ color: CREAM, maxWidth: 380, textAlign: "center" }}>{statusError}</p>}
         {data?.canRetry ? recovery : <Spinner size={32} />}
         <p style={{ color: "rgba(255,255,255,0.25)", fontSize: 12, marginTop: 20, textAlign: "center" }}>
           Your progress is saved. You can return to this book using the same link.
         </p>
       </div>
     );
+  }
+
+  if (data?.status === "not_found") {
+    return <main style={{ minHeight: "100vh", background: DARK, color: CREAM, display: "grid", placeContent: "center", padding: 24, textAlign: "center" }}>
+      <h1>We couldn’t open this book</h1>
+      <p style={{ maxWidth: 420, lineHeight: 1.7 }}>Please use the complete link from your purchase confirmation. If you already paid, contact us with your order details—there is no need to buy again.</p>
+      <a href="mailto:hello@mytinytales.studio" style={{ color: GOLD, padding: 12 }}>Get help with my book</a>
+      <Link href="/" style={{ color: CREAM, padding: 12 }}>Back to My Tiny Tales</Link>
+    </main>;
   }
 
   if (isFailed) {

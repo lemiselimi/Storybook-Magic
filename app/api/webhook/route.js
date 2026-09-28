@@ -2,7 +2,7 @@ import Stripe from "stripe";
 import { kv } from "@/lib/kv";
 import { internalAuthorization, internalWebhookUrl } from "@/lib/security";
 
-export const maxDuration = 30;
+export const maxDuration = 60;
 export const dynamic = "force-dynamic";
 
 export async function POST(request) {
@@ -34,6 +34,17 @@ export async function POST(request) {
 
     const contactEmail  = session.customer_details?.email || "";
     const customerName  = session.shipping_details?.name || session.customer_details?.name || "";
+
+    // A payment notification may be delivered more than once. Never reset an
+    // existing book or overwrite its fulfilment status on a replay.
+    const lockKey = `payment-generation:${session.id}`;
+    const lock = crypto.randomUUID();
+    if (!await kv.set(lockKey, lock, { nx: true, ex: 90 })) {
+      return new Response("Payment processing in progress", { status: 503 });
+    }
+    try {
+      const existing = await kv.get(`result:${ref}`);
+      if (existing?.sessionId === session.id) return new Response("ok");
 
     // Record the paid order in KV
     await kv.set(`order:${session.id}`, {
@@ -94,22 +105,24 @@ export async function POST(request) {
       }, { ex: 2_592_000 });
 
       // Submit all image generation jobs to fal with webhook callback
-      for (const { slot, prompt } of jobs) {
+      const submissions = await Promise.allSettled(jobs.map(async ({ slot, prompt }) => {
         const res = await fetch(`${siteUrl}/api/generate-scene`, {
           method:  "POST",
           headers: { "Content-Type": "application/json", "Authorization": internalAuthorization() },
           body:    JSON.stringify({ referenceImageUrl: referenceUrl, prompt, seed, webhookUrl }),
+          signal: AbortSignal.timeout(25_000),
         }).then(r => r.json());
 
         if (!res.jobId) {
           console.error(`Scene submit failed for slot ${slot}:`, res.error);
-          continue;
+          throw new Error(`Scene submit failed for slot ${slot}`);
         }
 
         // Store reverse lookup so fal-webhook knows which order/slot completed
-        await kv.set(`job:${res.jobId}`, { ref, slot }, { ex: 14_400 }); // 4h TTL
+        await kv.set(`job:${res.jobId}`, { ref, slot, model: res.model }, { ex: 86_400 });
         console.log(`Job submitted: slot=${slot} jobId=${res.jobId}`);
-      }
+      }));
+      if (submissions.some(item => item.status === "rejected")) throw new Error("Some illustrations could not start. Please retry unfinished illustrations.");
 
       console.log("Webhook: all jobs submitted for ref", ref);
 
@@ -119,8 +132,11 @@ export async function POST(request) {
       // Persist a failed status so the customer sees the "something went wrong"
       // screen instead of an endless blank spinner, and so the failure is
       // queryable via book-status rather than only via the admin email.
+      const saved = await kv.get(`result:${ref}`);
       await kv.set(`result:${ref}`, {
-        status:    "failed",
+        ...saved,
+        sessionId: session.id,
+        status: saved?.status === "ready" || saved?.status === "pdf_generating" ? saved.status : "failed",
         plan,
         error:     err.message,
         createdAt: new Date().toISOString(),
@@ -139,6 +155,9 @@ export async function POST(request) {
           }),
         }).catch(() => {});
       }
+    }
+    } finally {
+      await kv.eval("if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end", [lockKey], [lock]).catch(() => {});
     }
   }
 

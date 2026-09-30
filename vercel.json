@@ -1,6 +1,10 @@
 {
   "crons": [
     {
+      "path": "/api/cron/order-watchdog",
+      "schedule": "17 8 * * *"
+    },
+    {
       "path": "/api/cron/auto-print",
       "schedule": "0 9 * * *"
     }

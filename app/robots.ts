@@ -7,7 +7,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/api/", "/book/"],
+      disallow: ["/api/", "/book/", "/operations"],
     },
     sitemap: "https://mytinytales.studio/sitemap.xml",
     host: "https://mytinytales.studio",

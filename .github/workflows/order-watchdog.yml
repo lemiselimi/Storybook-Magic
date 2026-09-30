@@ -1,0 +1,24 @@
+name: Order watchdog
+on:
+  schedule:
+    - cron: '3,13,23,33,43,53 * * * *'
+  workflow_dispatch:
+permissions: {}
+concurrency:
+  group: order-watchdog
+  cancel-in-progress: false
+jobs:
+  check:
+    # Enable only after the route and repository secret have been configured.
+    if: vars.WATCHDOG_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Check paid orders
+        env:
+          WATCHDOG_CRON_SECRET: ${{ secrets.WATCHDOG_CRON_SECRET }}
+        run: |
+          test -n "$WATCHDOG_CRON_SECRET" || { echo "Missing watchdog credentials"; exit 1; }
+          curl --fail --silent --show-error --max-time 70 \
+            --header "Authorization: Bearer $WATCHDOG_CRON_SECRET" \
+            https://mytinytales.studio/api/cron/order-watchdog

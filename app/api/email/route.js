@@ -1,4 +1,4 @@
-import { Resend } from "resend";
+import { sendTrackedEmail } from "@/lib/tracked-email";
 import { rateLimit } from "@/lib/security";
 
 const esc = (s) => String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
@@ -18,14 +18,8 @@ export async function POST(request) {
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || ""))) return Response.json({ error: "A valid email is required" }, { status: 400 });
 
-    console.log("Email API called, type:", type, "email:", email);
-
-    if (!process.env.RESEND_API_KEY) {
-      console.warn("RESEND_API_KEY not set — email not sent");
-      return Response.json({ ok: true });
-    }
-
-    const resend = new Resend(process.env.RESEND_API_KEY);
+    if (!["preview_lead", "contact"].includes(type)) return Response.json({ error: "Invalid email type" }, { status: 400 });
+    const send = (message) => sendTrackedEmail(message, type === "contact" ? "Contact form" : "Preview link");
 
     if (type === "preview_lead") {
       let safeShareUrl;
@@ -37,7 +31,7 @@ export async function POST(request) {
       } catch {
         return Response.json({ error: "Invalid preview link" }, { status: 400 });
       }
-      await resend.emails.send({
+      await send({
         from: FROM_NOREPLY,
         to: email,
         subject: "Your My Tiny Tales preview link ✨",
@@ -63,7 +57,7 @@ export async function POST(request) {
     } else if (type === "contact") {
       await Promise.all([
         // Forward to us
-        resend.emails.send({
+        send({
           from: FROM_NOREPLY,
           to: FROM_DOMAIN,
           replyTo: email,
@@ -76,7 +70,7 @@ export async function POST(request) {
           `,
         }),
         // Confirmation to user
-        resend.emails.send({
+        send({
           from: FROM_NOREPLY,
           to: email,
           subject: "We got your message — My Tiny Tales",
@@ -103,6 +97,6 @@ export async function POST(request) {
     return Response.json({ ok: true });
   } catch (err) {
     console.error("Email API error:", err.message);
-    return Response.json({ error: err.message }, { status: 500 });
+    return Response.json({ error: "Your email could not be confirmed. Please contact hello@mytinytales.studio directly." }, { status: 503 });
   }
 }

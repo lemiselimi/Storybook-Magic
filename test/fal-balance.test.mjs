@@ -1,0 +1,7 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {checkFalBalance} from '../lib/fal-balance.js';
+test('missing billing key never calls provider',async()=>{assert.equal((await checkFalBalance({fetcher:()=>{throw Error('called')}})).status,'not_configured');});
+test('low and exhausted balances trigger attention, healthy balances clear it',async()=>{for(const [balance,expected] of [[24,false],[20,true],[0,true],[-2,true]]) { const result=await checkFalBalance({key:'test',fetcher:async(url,opts)=>{assert.equal(url,'https://api.fal.ai/v1/account/billing?expand=credits');assert.equal(opts.redirect,'error');return Response.json({credits:{current_balance:balance,currency:'USD'}})}});assert.equal(result.needsAttention,expected);}});
+test('invalid and failed billing responses never masquerade as healthy balances or leak secrets',async()=>{for(const fetcher of [async()=>new Response('secret',{status:403}),async()=>Response.json({credits:{current_balance:'20',currency:'USD'}}),async()=>Response.json({credits:{current_balance:20,currency:'EUR'}}),async()=>{throw Error('secret')}]){const result=await checkFalBalance({key:'secret',fetcher});assert.equal(result.status,'unavailable');assert.equal(JSON.stringify(result).includes('secret'),false);}});
+test('invalid threshold fails visibly without provider call',async()=>{const result=await checkFalBalance({key:'test',threshold:'bad',fetcher:()=>{throw Error('called')}});assert.equal(result.status,'unavailable');});

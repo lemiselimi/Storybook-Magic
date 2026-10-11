@@ -24,3 +24,12 @@ Private dashboard: `/operations`. It has no customer data in its HTML. The data 
 ## Verification
 
 Run `node --test test/*.test.mjs`, scoped ESLint, and `npm run build`. Tests use fake providers and do not generate images, send email, charge cards, or order books. A successful local test/build is not proof that the deployed schedule or webhook credentials are connected.
+
+## fal.ai credit monitoring
+
+Official reference: https://fal.ai/docs/platform-apis/v1/account/billing (verified 2026-10-11).
+Set FAL_BILLING_KEY to a separate key with billing:usage:read permission. Do not broaden or replace the image-generation key. FAL_LOW_CREDIT_USD is optional and defaults to 20 USD. Each monitor run requests GET https://api.fal.ai/v1/account/billing?expand=credits, with an eight-second timeout and no redirects. No automatic top-ups are made.
+
+Low/zero/negative balance and unavailable balance are different attention states. Failed requests never imply sufficient credit. Alerts use stable issue text so every cent of spending does not send another email; recovery clears the fingerprint and a later low-credit incident can alert again. A missing billing key is explicitly shown as not connected. The dashboard timestamp and monitor stale warning must be checked before relying on the balance.
+
+Activation remains incomplete until a real authenticated read, scheduled heartbeat, and operator email delivery are verified. The production billing key, GitHub scheduler secret, and Resend webhook signing secret require account access/owner credential handoff; never paste them into chat.

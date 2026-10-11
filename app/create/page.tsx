@@ -1721,16 +1721,16 @@ export default function StorybookCreator() {
                     {photos.map((src, i) => (
                       <div key={i} style={{ position: "relative", width: 130, height: 130, borderRadius: 14, overflow: "hidden", border: "2px solid rgba(76,175,80,0.5)", flexShrink: 0 }}>
                         <img src={src} alt={`Photo ${i + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                        <button onClick={() => removePhoto(i)} style={{ position: "absolute", top: 4, right: 4, width: 24, height: 24, borderRadius: "50%", background: "rgba(0,0,0,0.7)", border: "none", color: "white", fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>×</button>
+                        <button type="button" aria-label={`Remove photo ${i + 1}`} onClick={() => removePhoto(i)} style={{ position: "absolute", top: 4, right: 4, width: 24, height: 24, borderRadius: "50%", background: "rgba(0,0,0,0.7)", border: "none", color: "white", fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>×</button>
                       </div>
                     ))}
 
                     {/* Add slot — visible when < 2 photos */}
                     {photos.length < 2 && (
-                      <div onClick={() => fileRef.current?.click()} style={{ width: 130, height: 130, borderRadius: 14, border: "2px dashed rgba(255,255,255,0.2)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", gap: 6, background: "rgba(255,255,255,0.03)", flexShrink: 0 }}>
-                        <span style={{ fontSize: 32, opacity: 0.45 }}>+</span>
-                        <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 11 }}>{photos.length === 0 ? "Add photo" : "Add 2nd photo"}</span>
-                      </div>
+                      <button type="button" onClick={() => fileRef.current?.click()} style={{ width: 130, height: 130, borderRadius: 14, border: "2px dashed rgba(255,255,255,0.2)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", gap: 6, background: "rgba(255,255,255,0.03)", flexShrink: 0 }}>
+                        <span aria-hidden="true" style={{ fontSize: 32, color: "#F5F0E0" }}>+</span>
+                        <span style={{ color: "#F5F0E0", fontSize: 14 }}>{photos.length === 0 ? "Add photo" : "Add 2nd photo"}</span>
+                      </button>
                     )}
                   </div>
 

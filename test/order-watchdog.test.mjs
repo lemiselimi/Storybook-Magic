@@ -71,7 +71,7 @@ function monitor(kv,{sessions=[],sendError=false,alerts=true,stripeFailure=false
   let sends=0;
   class Stripe {checkout={sessions:{list:async()=>{if(stripeFailure)throw new Error('Stripe down');return {data:sessions,has_more:false};}}};}
   class Resend {emails={send:async()=>{sends++;return sendError?{error:{message:'failed'}}:{data:{id:'alert'}};}};}
-  const api=load('lib/order-watchdog.js',{'node:crypto':crypto,stripe:Stripe,resend:{Resend},'@/lib/kv':{kv},'@/lib/generation-recovery':recovery,'@/lib/order-health':{orderHealth,EMAIL_PROBLEMS:new Set(['email.bounced']),emailLabel}},
+  const api=load('lib/order-watchdog.js',{'node:crypto':crypto,stripe:Stripe,resend:{Resend},'@/lib/kv':{kv},'@/lib/generation-recovery':recovery,'@/lib/fal-balance':{checkFalBalance:async()=>({status:'not_configured',needsAttention:false})},'@/lib/order-health':{orderHealth,EMAIL_PROBLEMS:new Set(['email.bounced']),emailLabel}},
     {STRIPE_SECRET_KEY:'test',...(alerts?{RESEND_API_KEY:'test',WATCHDOG_ALERT_EMAIL:'owner@example.test'}:{})});
   return {...api,sends:()=>sends};
 }

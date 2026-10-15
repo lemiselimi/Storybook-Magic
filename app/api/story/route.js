@@ -28,7 +28,9 @@ RETURN ONLY valid JSON in exactly this shape:
 {"title":"string","dedication":"string","pages":[{"pageNum":1,"text":"string","illustration":"string"},{"pageNum":2,"text":"string","illustration":"string"},{"pageNum":3,"text":"string","illustration":"string"},{"pageNum":4,"text":"string","illustration":"string"},{"pageNum":5,"text":"string","illustration":"string"},{"pageNum":6,"text":"string","illustration":"string"},{"pageNum":7,"text":"string","illustration":"string"},{"pageNum":8,"text":"string","illustration":"string"}]}
 
 WRITING RULES
-- Begin with an invitation, discovery, or immediate story moment. Give the child a clear reason to continue.
+- Begin with an invitation, discovery, or immediate story moment. Give the child a clear reason to continue. Never open with a bare greeting such as "Good morning, [Name]!"; the first scene shows where the child is and what is happening before anyone speaks to them.
+- Keep a small, fixed cast. Give each animal character one exact species and call it by that same word in every scene. Never use two look-alike species as separate characters (toucan and parrot, frog and toad, rabbit and hare, seal and sea lion).
+- When the child's first attempt fails, let the failure land: show concretely why it did not work for each side before the child tries again. Do not resolve it in the same breath.
 - Include a small problem, mystery, challenge, or goal; escalation; a choice or attempt by the child; a satisfying resolution; and a warm closing that connects back to them.
 - Use the child's name naturally in several scenes, not mechanically in every sentence. Do not invent hobbies, family details, favorite objects, or biographical facts that were not provided.
 - Let concrete nouns and vivid verbs do the work. Give each scene one observable sensory detail.
@@ -36,12 +38,13 @@ WRITING RULES
 - Avoid generic AI prose, adjective piles, unnecessary exclamation marks, constant use of words such as "magical," "sparkling," "amazing," or repetitive praise of the child.
 - Never use these phrases or close variants: "little did they know", "adventure of a lifetime", "heart full of courage", "magical journey", "from that day on", "more than they ever imagined", "eyes lit up", "big smile", "took a deep breath", "with all their might", "the adventure was just beginning", "happily ever after".
 - No violence beyond mild, child-safe adventure tension. No weapons, scary villains, romance, death, bodily functions, public figures, or copyrighted characters.
-- The title includes the child's name and sounds like a real picture book title. The dedication is one restrained warm line beginning "For [Name],"; do not append a subtitle, theme name, template fragment, or internal label.
+- The title includes the child's name and sounds like a real picture book title. The dedication is one restrained warm line beginning "For [Name],"; do not append a subtitle, theme name, template fragment, or internal label. The dedication is read before the story, so it must not name, hint at, or summarise the emotional heart, lesson, or trait the story is about (not "who listens", "who is brave", "who shares"); keep it open-ended and personal.
 
 ILLUSTRATION RULES
 - Each illustration describes the exact same moment as its text: child action, setting, and the one or two key visual anchors.
 - Use one concrete visual sentence of 15-30 words. Do not use art-style words, camera directions, brand names, the child's name, or metadata.
 - Keep the child as the subject, but leave enough environmental context for a distinct scene.
+- Name every animal in the scene by its exact species, matching the text, and add no other named animals. The child is the only person: no other children, adults, princesses, or characters absent from the text. No buildings, ruins, temples, pyramids, or landmarks unless the text names them.
 - Choose one consistent outfit and one concrete recurring companion design; repeat these anchors in each illustration where present. Keep hair, age, proportions, clothing colors, and companion appearance consistent. Do not change outfit except for an explicit story action.
 
 EIGHT-BEAT BRIEF

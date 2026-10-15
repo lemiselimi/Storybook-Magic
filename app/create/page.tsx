@@ -189,7 +189,7 @@ function buildGenderedPrompt(prompt: string, gender: string, age: number, hairCo
       ? `${age}-year-old girl, ${sizeHint}${hairHint}${eyeHint}${wear}, `
       : `${age}-year-old child, ${sizeHint}${hairHint}${eyeHint}${wear}, `;
   // Prepend style anchor immediately after TOK trigger for maximum influence
-  const continuity = " Preserve the reference child's exact hairstyle, hair length and hairline on every page; do not invent a ponytail or haircut. Depict the action in the full scene text literally; a frightened frozen companion must remain crouched and still, never running or chasing. ";
+  const continuity = " Preserve the reference child's exact hairstyle, hair length and hairline on every page; do not invent a ponytail or haircut. Depict the action in the full scene text literally; a frightened frozen companion must remain crouched and still, never running or chasing. The child is the only human in the picture: no other children, adults, princesses, royalty, or characters not named in the scene. Draw each animal as exactly the species named, with no look-alike substitutes. No buildings, ruins, temples, pyramids, or real-world landmarks unless the scene names them. ";
   const companion = theme === "dragon" ? " The only dragon is the same tiny leaf-green baby dragon on every page and cover: knee-high beside the child, amber eyes, cream belly, two short rounded horns, small gold-lined wings. Never enlarge it, change its color, or have the child ride it. " : "";
   return prompt.replace("a photo of TOK,", `a photo of TOK, ${STYLE_ANCHOR}${hint}`) + continuity + companion;
 }
@@ -241,7 +241,7 @@ const COVER_PROMPTS_BY_THEME: Record<string, string> =  {
 
   jungle:
     "a photo of TOK, standing centered in a sun-dappled jungle clearing wearing a crown of tropical flowers, arms spread wide, " +
-    "friendly lions, elephants, and parrots gathered proudly behind them, golden light streaming through the canopy, " +
+    "a friendly monkey and a family of elephants gathered proudly behind them, golden light streaming through the canopy, " +
     "WIDE HEROIC CENTERED COMPOSITION, glowing canopy and golden sky at the very top for title text overlay, " +
     "low angle looking slightly up, cinematic adventure poster style. " + STYLE_TOKEN + " " + SAFETY,
 

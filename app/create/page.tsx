@@ -10,6 +10,9 @@ const THEMES = [
   { id: "jungle", emoji: "🐘" }, { id: "space", emoji: "🚀" }, { id: "ocean", emoji: "🌊" }, { id: "bubbles", emoji: "🫧" },
 ].map((theme) => ({ ...theme, ...STORY_THEMES[theme.id as keyof typeof STORY_THEMES] }));
 
+// Free preview = cover + first two story pages.
+const PREVIEW_IMAGE_COUNT = 3;
+
 const CHAPTER_NAMES = ["One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight"];
 
 const HAIR_COLORS = [
@@ -519,7 +522,7 @@ export default function StorybookCreator() {
   const [previewCoverUrl, setPreviewCoverUrl] = useState<string | null>(null);
   const [previewStatus,  setPreviewStatus]  = useState<"idle" | "loading" | "done">("idle");
   const [previewMsg,     setPreviewMsg]     = useState("Writing your story...");
-  const [previewDone,    setPreviewDone]    = useState(0); // scenes completed count (out of 7)
+  const [previewDone,    setPreviewDone]    = useState(0); // preview images completed (out of PREVIEW_IMAGE_COUNT)
   const [trainingFailed, setTrainingFailed] = useState(false);
   const [retryingScenes, setRetryingScenes] = useState(false);
   const previewStarted  = useRef(false);
@@ -1625,10 +1628,10 @@ export default function StorybookCreator() {
                           {done ? (
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1E1813" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                           ) : (
-                            <span style={{ fontSize: 10, fontWeight: 700, color: active ? "#E8C07A" : "rgba(245,240,224,0.3)" }}>{i + 1}</span>
+                            <span style={{ fontSize: 10, fontWeight: 700, color: active ? "#E8C07A" : "rgba(245,240,224,0.5)" }}>{i + 1}</span>
                           )}
                         </div>
-                        {!isMobile && <span style={{ fontSize: 10, fontWeight: active ? 700 : 400, color: active ? "#E8C07A" : done ? "rgba(232,192,122,0.5)" : "rgba(245,240,224,0.25)", letterSpacing: "0.05em", whiteSpace: "nowrap" }}>{stepLabels[i]}</span>}
+                        {!isMobile && <span style={{ fontSize: 10, fontWeight: active ? 700 : 400, color: active ? "#E8C07A" : done ? "rgba(232,192,122,0.7)" : "rgba(245,240,224,0.5)", letterSpacing: "0.05em", whiteSpace: "nowrap" }}>{stepLabels[i]}</span>}
                       </div>
                     );
                   })}
@@ -1657,7 +1660,7 @@ export default function StorybookCreator() {
                     <span style={{ color: photos.length > 0 ? "#4caf50" : "rgba(255,255,255,0.4)", fontSize: 13, fontWeight: 600 }}>
                       {photos.length}/2 photos added
                     </span>
-                    {photos.length === 0 && <p style={{ color: "rgba(255,255,255,0.38)", fontSize: 13, margin: "4px 0 0" }}>Tap + or drag & drop</p>}
+                    {photos.length === 0 && <p style={{ color: "rgba(255,255,255,0.58)", fontSize: 13, margin: "4px 0 0" }}>Tap + or drag & drop</p>}
                   </div>
 
                   {/* Thumbnails row */}
@@ -1722,17 +1725,17 @@ export default function StorybookCreator() {
                 {/* Form */}
                 <div style={{ background: "rgba(255,255,255,0.07)", backdropFilter: "blur(12px)", borderRadius: 22, padding: isMobile ? 18 : 26, border: "1px solid rgba(255,255,255,0.12)", boxShadow: "0 4px 24px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.08)", display: "flex", flexDirection: "column", gap: 22 }}>
                   <div>
-                    <label style={{ color: "rgba(255,255,255,0.45)", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: 9 }}>Child's first name</label>
-                    <input value={childName} onChange={(e) => setChildName(e.target.value)} placeholder="e.g. Emma, Liam, Zara..." autoFocus style={{ width: "100%", padding: "14px 16px", borderRadius: 13, border: "1.5px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.06)", color: "white", fontSize: 20, fontWeight: 600, boxSizing: "border-box" }} />
+                    <label htmlFor="child-name" style={{ color: "rgba(255,255,255,0.6)", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: 9 }}>Child's first name</label>
+                    <input id="child-name" autoComplete="off" value={childName} onChange={(e) => setChildName(e.target.value)} placeholder="e.g. Emma, Liam, Zara..." autoFocus style={{ width: "100%", padding: "14px 16px", borderRadius: 13, border: "1.5px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.06)", color: "white", fontSize: 20, fontWeight: 600, boxSizing: "border-box" }} />
                   </div>
                   <div>
                     <label style={{ color: "rgba(255,255,255,0.45)", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: 9 }}>Boy or Girl?</label>
                     <div style={{ display: "flex", gap: 12 }}>
                       {[{ id: "boy", emoji: "👦", label: "Boy" }, { id: "girl", emoji: "👧", label: "Girl" }].map(g => (
-                        <div key={g.id} onClick={() => setChildGender(g.id as "boy" | "girl" | "neutral")} style={{ flex: 1, padding: "18px 12px", borderRadius: 16, cursor: "pointer", textAlign: "center", border: `2px solid ${childGender === g.id ? "#E8C07A" : "rgba(255,255,255,0.1)"}`, background: childGender === g.id ? "rgba(232,192,122,0.1)" : "rgba(255,255,255,0.03)", transition: "all 0.15s", boxShadow: childGender === g.id ? "0 0 16px rgba(232,192,122,0.15)" : "none" }}>
+                        <button type="button" aria-pressed={childGender === g.id} key={g.id} onClick={() => setChildGender(g.id as "boy" | "girl" | "neutral")} style={{ font: "inherit", flex: 1, padding: "18px 12px", borderRadius: 16, cursor: "pointer", textAlign: "center", border: `2px solid ${childGender === g.id ? "#E8C07A" : "rgba(255,255,255,0.1)"}`, background: childGender === g.id ? "rgba(232,192,122,0.1)" : "rgba(255,255,255,0.03)", transition: "all 0.15s", boxShadow: childGender === g.id ? "0 0 16px rgba(232,192,122,0.15)" : "none" }}>
                           <div style={{ fontSize: 36, marginBottom: 6 }}>{g.emoji}</div>
                           <div style={{ color: childGender === g.id ? "#E8C07A" : "rgba(255,255,255,0.6)", fontWeight: 700, fontSize: 15 }}>{g.label}</div>
-                        </div>
+                        </button>
                       ))}
                     </div>
                   </div>
@@ -1740,10 +1743,10 @@ export default function StorybookCreator() {
                     <label style={{ color: "rgba(255,255,255,0.45)", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: 9 }}>
                       Age — <span style={{ color: "#E8C07A", fontSize: 17, fontWeight: 700 }}>{childAge} years old</span>
                     </label>
-                    <input type="range" min={1} max={12} step={1} value={childAge} onChange={(e) => setChildAge(Number(e.target.value))} style={{ width: "100%" }} />
+                    <input type="range" aria-label="Child's age" aria-valuetext={`${childAge} years old`} min={1} max={12} step={1} value={childAge} onChange={(e) => setChildAge(Number(e.target.value))} style={{ width: "100%" }} />
                     <div style={{ display: "flex", justifyContent: "space-between", marginTop: 5 }}>
-                      <span style={{ color: "rgba(255,255,255,0.25)", fontSize: 11 }}>1 yr</span>
-                      <span style={{ color: "rgba(255,255,255,0.25)", fontSize: 11 }}>12 yrs</span>
+                      <span style={{ color: "rgba(255,255,255,0.58)", fontSize: 11 }}>1 yr</span>
+                      <span style={{ color: "rgba(255,255,255,0.58)", fontSize: 11 }}>12 yrs</span>
                     </div>
                   </div>
                 </div>
@@ -1763,13 +1766,13 @@ export default function StorybookCreator() {
 
                 <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: 14 }}>
                   {THEMES.map((t) => (
-                    <div key={t.id} className="theme-card" onClick={() => setTheme(t.id)} style={{ position: "relative", padding: "22px 18px 18px", borderRadius: 20, cursor: "pointer", border: `2px solid ${theme === t.id ? "#E8C07A" : "rgba(255,255,255,0.1)"}`, background: theme === t.id ? "rgba(232,192,122,0.08)" : "rgba(255,255,255,0.04)", boxShadow: theme === t.id ? "0 0 24px rgba(232,192,122,0.18)" : "0 2px 8px rgba(0,0,0,0.2)" }}>
+                    <button type="button" aria-pressed={theme === t.id} key={t.id} className="theme-card" onClick={() => setTheme(t.id)} style={{ font: "inherit", textAlign: "left", width: "100%", position: "relative", padding: "22px 18px 18px", borderRadius: 20, cursor: "pointer", border: `2px solid ${theme === t.id ? "#E8C07A" : "rgba(255,255,255,0.1)"}`, background: theme === t.id ? "rgba(232,192,122,0.08)" : "rgba(255,255,255,0.04)", boxShadow: theme === t.id ? "0 0 24px rgba(232,192,122,0.18)" : "0 2px 8px rgba(0,0,0,0.2)" }}>
                       <div style={{ fontSize: 44, marginBottom: 11 }}>{t.emoji}</div>
                       <div style={{ color: theme === t.id ? "#E8C07A" : "white", fontWeight: 700, fontSize: 16, marginBottom: 3 }}>{t.title}</div>
-                      <div style={{ color: theme === t.id ? "rgba(232,192,122,0.65)" : "rgba(255,255,255,0.35)", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 9 }}>{t.category}</div>
-                      <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, lineHeight: 1.6 }}>{t.selectionLine}</div>
+                      <div style={{ color: theme === t.id ? "rgba(232,192,122,0.65)" : "rgba(255,255,255,0.55)", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 9 }}>{t.category}</div>
+                      <div style={{ color: "rgba(255,255,255,0.62)", fontSize: 12, lineHeight: 1.6 }}>{t.selectionLine}</div>
                       <div style={{ color: theme === t.id ? "rgba(232,192,122,0.78)" : "rgba(255,255,255,0.42)", fontSize: 10, fontStyle: "italic", marginTop: 10 }}>A Tiny Tale about {t.emotionalHeart}</div>
-                    </div>
+                    </button>
                   ))}
                 </div>
                 <div style={{ display: "flex", gap: 10, marginTop: 22 }}>
@@ -1778,7 +1781,7 @@ export default function StorybookCreator() {
                     Read the beginning of their story →
                   </button>
                 </div>
-                <p style={{ color: "rgba(255,255,255,0.28)", fontSize: 12, textAlign: "center", marginTop: 12, lineHeight: 1.6 }}>
+                <p style={{ color: "rgba(255,255,255,0.58)", fontSize: 12, textAlign: "center", marginTop: 12, lineHeight: 1.6 }}>
                   We&apos;ll make their character, then open the first two pages. No card required.
                 </p>
               </div>
@@ -1814,7 +1817,7 @@ export default function StorybookCreator() {
                       {trainingFailed ? "Story ready!" : "Creating your story..."}
                     </h2>
                     {!trainingFailed && (
-                      <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 12, margin: "0 0 12px" }}>
+                      <p style={{ color: "rgba(255,255,255,0.58)", fontSize: 12, margin: "0 0 12px" }}>
                         Takes 3-4 minutes. We&apos;re painting every illustration to look just like {childName || "your child"}
                       </p>
                     )}
@@ -1829,9 +1832,9 @@ export default function StorybookCreator() {
                     {!trainingFailed && previewDone > 0 && (
                       <div style={{ maxWidth: 240, margin: "12px auto 20px" }}>
                         <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: 99, height: 6, overflow: "hidden" }}>
-                          <div style={{ height: "100%", borderRadius: 99, background: "linear-gradient(90deg, #E8C07A, #D4A24C)", width: `${(previewDone / 7) * 100}%`, transition: "width 0.5s ease" }} />
+                          <div style={{ height: "100%", borderRadius: 99, background: "linear-gradient(90deg, #E8C07A, #D4A24C)", width: `${(previewDone / PREVIEW_IMAGE_COUNT) * 100}%`, transition: "width 0.5s ease" }} />
                         </div>
-                        <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginTop: 6 }}>{previewDone} of 7 scenes</p>
+                        <p style={{ color: "rgba(255,255,255,0.58)", fontSize: 11, marginTop: 6 }}>{previewDone} of {PREVIEW_IMAGE_COUNT} illustrations</p>
                       </div>
                     )}
                     {!trainingFailed && (
@@ -2004,11 +2007,11 @@ export default function StorybookCreator() {
                           { icon: <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>, text: "Instant download" },
                           { icon: <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>, text: "30-day guarantee" },
                         ].map((t, i) => (
-                          <span key={i} style={{ color: "rgba(255,255,255,0.3)", fontSize: 11, display: "flex", alignItems: "center", gap: 5 }}>{t.icon}{t.text}</span>
+                          <span key={i} style={{ color: "rgba(255,255,255,0.58)", fontSize: 11, display: "flex", alignItems: "center", gap: 5 }}>{t.icon}{t.text}</span>
                         ))}
                       </div>
                     </div>
-                    <button onClick={() => goToStep(3)} style={{ display: "block", margin: "14px auto 0", padding: "8px 16px", borderRadius: 10, border: "none", background: "transparent", color: "rgba(255,255,255,0.3)", fontSize: 13, cursor: "pointer" }}>← Change adventure</button>
+                    <button onClick={() => goToStep(3)} style={{ display: "block", margin: "14px auto 0", padding: "8px 16px", borderRadius: 10, border: "none", background: "transparent", color: "rgba(255,255,255,0.58)", fontSize: 13, cursor: "pointer" }}>← Change adventure</button>
                   </div>
                 )}
               </div>
@@ -2024,7 +2027,7 @@ export default function StorybookCreator() {
           <BookAssembly done={scenesCompleted} total={9} msg={loadingMsg} />
           <h2 style={{ color: "white", fontSize: 22, fontWeight: 700, margin: "0 0 10px" }}>Creating your magical book...</h2>
           <p key={loadingMsg} style={{ color: "rgba(255,255,255,0.55)", fontSize: 15, margin: "0 0 8px", animation: "phaseIn 0.45s ease both" }}>{loadingMsg}</p>
-          <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 13, margin: "0 0 24px" }}>Painting your cover and 8 unique illustrated scenes</p>
+          <p style={{ color: "rgba(255,255,255,0.58)", fontSize: 13, margin: "0 0 24px" }}>Painting your cover and 8 unique illustrated scenes</p>
           {scenesCompleted > 0 && (
             <div style={{ maxWidth: 260, margin: "0 auto 24px" }}>
               <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: 99, height: 8, overflow: "hidden" }}>
@@ -2073,17 +2076,17 @@ export default function StorybookCreator() {
 
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: isMobile ? 10 : 16, marginTop: 18 }}>
             <button onClick={() => navigate(Math.max(-2, currentPage - 1))} disabled={currentPage === -2} style={{ padding: isMobile ? "10px 16px" : "11px 22px", borderRadius: 11, border: "1px solid rgba(255,255,255,0.18)", background: "rgba(255,255,255,0.07)", color: "white", fontSize: 14, cursor: currentPage === -2 ? "not-allowed" : "pointer", opacity: currentPage === -2 ? 0.3 : 1 }}>← Prev</button>
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
               {/* Cover dot */}
-              <div onClick={() => navigate(-2)} title="Cover" style={{ width: currentPage === -2 ? 10 : 6, height: currentPage === -2 ? 10 : 6, borderRadius: "50%", background: currentPage === -2 ? "#E8C07A" : "rgba(255,255,255,0.2)", cursor: "pointer", transition: "all 0.2s" }} />
+              <button type="button" aria-label="Go to cover" aria-current={currentPage === -2 ? "page" : undefined} onClick={() => navigate(-2)} title="Cover" style={{ border: "none", boxSizing: "content-box", padding: 7, backgroundClip: "content-box", width: currentPage === -2 ? 10 : 6, height: currentPage === -2 ? 10 : 6, borderRadius: "50%", background: currentPage === -2 ? "#E8C07A" : "rgba(255,255,255,0.2)", cursor: "pointer", transition: "all 0.2s" }} />
               {/* Dedication dot */}
-              <div onClick={() => navigate(-1)} title="Dedication" style={{ width: currentPage === -1 ? 10 : 6, height: currentPage === -1 ? 10 : 6, borderRadius: "50%", background: currentPage === -1 ? "#E8C07A" : "rgba(255,255,255,0.2)", cursor: "pointer", transition: "all 0.2s" }} />
+              <button type="button" aria-label="Go to dedication" aria-current={currentPage === -1 ? "page" : undefined} onClick={() => navigate(-1)} title="Dedication" style={{ border: "none", boxSizing: "content-box", padding: 7, backgroundClip: "content-box", width: currentPage === -1 ? 10 : 6, height: currentPage === -1 ? 10 : 6, borderRadius: "50%", background: currentPage === -1 ? "#E8C07A" : "rgba(255,255,255,0.2)", cursor: "pointer", transition: "all 0.2s" }} />
               {/* Page dots */}
               {story.pages.map((_: any, i: number) => (
-                <div key={i} onClick={() => navigate(i)} title={`Page ${i + 1}`} style={{ width: currentPage === i ? 10 : 6, height: currentPage === i ? 10 : 6, borderRadius: "50%", background: currentPage === i ? "#E8C07A" : "rgba(255,255,255,0.2)", cursor: "pointer", transition: "all 0.2s" }} />
+                <button type="button" key={i} aria-label={`Go to page ${i + 1}`} aria-current={currentPage === i ? "page" : undefined} onClick={() => navigate(i)} title={`Page ${i + 1}`} style={{ border: "none", boxSizing: "content-box", padding: 7, backgroundClip: "content-box", width: currentPage === i ? 10 : 6, height: currentPage === i ? 10 : 6, borderRadius: "50%", background: currentPage === i ? "#E8C07A" : "rgba(255,255,255,0.2)", cursor: "pointer", transition: "all 0.2s" }} />
               ))}
               {/* Closing dot */}
-              <div onClick={() => navigate(totalPages)} title="The End" style={{ width: currentPage === totalPages ? 10 : 6, height: currentPage === totalPages ? 10 : 6, borderRadius: "50%", background: currentPage === totalPages ? "#E8C07A" : "rgba(255,255,255,0.2)", cursor: "pointer", transition: "all 0.2s" }} />
+              <button type="button" aria-label="Go to the end" aria-current={currentPage === totalPages ? "page" : undefined} onClick={() => navigate(totalPages)} title="The End" style={{ border: "none", boxSizing: "content-box", padding: 7, backgroundClip: "content-box", width: currentPage === totalPages ? 10 : 6, height: currentPage === totalPages ? 10 : 6, borderRadius: "50%", background: currentPage === totalPages ? "#E8C07A" : "rgba(255,255,255,0.2)", cursor: "pointer", transition: "all 0.2s" }} />
             </div>
             <button onClick={() => navigate(Math.min(totalPages, currentPage + 1))} disabled={currentPage >= totalPages} style={{ padding: isMobile ? "10px 16px" : "11px 22px", borderRadius: 11, border: "none", background: "linear-gradient(135deg, #F5A623, #ffb347)", color: "#1E1813", fontSize: 14, fontWeight: 600, cursor: currentPage >= totalPages ? "not-allowed" : "pointer", opacity: currentPage >= totalPages ? 0.4 : 1 }}>Next →</button>
           </div>
@@ -2129,7 +2132,7 @@ export default function StorybookCreator() {
           {/* ── Send to Print confirmation modal ── */}
           {showPrintConfirm && (
             <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, backdropFilter: "blur(6px)" }} onClick={() => setShowPrintConfirm(false)}>
-              <div style={{ background: "#1A1530", border: "1px solid rgba(232,192,122,0.3)", borderRadius: 20, padding: isMobile ? "28px 24px" : "36px 40px", maxWidth: 460, width: "100%", textAlign: "center" }} onClick={e => e.stopPropagation()}>
+              <div role="dialog" aria-modal="true" aria-label="Send to print" style={{ background: "#1A1530", border: "1px solid rgba(232,192,122,0.3)", borderRadius: 20, padding: isMobile ? "28px 24px" : "36px 40px", maxWidth: 460, width: "100%", textAlign: "center" }} onClick={e => e.stopPropagation()}>
                 <div style={{ width: 52, height: 52, borderRadius: "50%", background: "rgba(232,192,122,0.12)", border: "1px solid rgba(232,192,122,0.3)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E8C07A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.63 3.4 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.82a16 16 0 0 0 6.29 6.29l1.67-1.67a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
                 </div>
@@ -2322,7 +2325,7 @@ export default function StorybookCreator() {
           {/* New Book confirmation modal */}
           {showNewBookConfirm && (
             <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }} onClick={() => setShowNewBookConfirm(false)}>
-              <div style={{ background: "rgba(20,16,45,0.98)", borderRadius: 20, padding: "32px 28px", maxWidth: 380, width: "100%", border: "1px solid rgba(232,192,122,0.2)", boxShadow: "0 32px 80px rgba(0,0,0,0.6)", textAlign: "center" }} onClick={e => e.stopPropagation()}>
+              <div role="dialog" aria-modal="true" aria-label="Start a new book" style={{ background: "rgba(20,16,45,0.98)", borderRadius: 20, padding: "32px 28px", maxWidth: 380, width: "100%", border: "1px solid rgba(232,192,122,0.2)", boxShadow: "0 32px 80px rgba(0,0,0,0.6)", textAlign: "center" }} onClick={e => e.stopPropagation()}>
                 <div style={{ fontSize: 40, marginBottom: 14 }}>📖</div>
                 <h3 style={{ color: "white", fontWeight: 700, fontSize: 18, margin: "0 0 10px" }}>Start a new book?</h3>
                 <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 14, margin: "0 0 24px", lineHeight: 1.6 }}>Your current book will be lost.</p>

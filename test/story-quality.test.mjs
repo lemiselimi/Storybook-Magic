@@ -61,11 +61,12 @@ function buildStory(example) {
 }
 
 test("all adventures have one distinct emotional heart and a complete arc", () => {
-  assert.equal(Object.keys(STORY_THEMES).length, 10);
+  assert.equal(Object.keys(STORY_THEMES).length, 8);
   for (const theme of Object.values(STORY_THEMES)) {
     assert.ok(theme.emotionalHeart);
     assert.equal(theme.arc.length, 8);
     assert.ok(theme.selectionLine);
+    assert.ok(theme.companion);
   }
 });
 

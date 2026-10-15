@@ -6,8 +6,8 @@ import { STORY_THEMES } from "@/lib/story-themes";
 import BrowserPrintBook from "../components/BrowserPrintBook";
 
 const THEMES = [
-  { id: "christmas", emoji: "🎄" }, { id: "adventure", emoji: "🌋" }, { id: "dragon", emoji: "🐉" }, { id: "dino", emoji: "🦕" }, { id: "space", emoji: "🚀" },
-  { id: "ocean", emoji: "🌊" }, { id: "jungle", emoji: "🦁" }, { id: "superpower", emoji: "🏆" }, { id: "dreamland", emoji: "🌙" }, { id: "bubbles", emoji: "🫧" },
+  { id: "christmas", emoji: "🎄" }, { id: "dreamland", emoji: "🌙" }, { id: "dragon", emoji: "🐉" }, { id: "dino", emoji: "🦕" },
+  { id: "jungle", emoji: "🐘" }, { id: "space", emoji: "🚀" }, { id: "ocean", emoji: "🌊" }, { id: "bubbles", emoji: "🫧" },
 ].map((theme) => ({ ...theme, ...STORY_THEMES[theme.id as keyof typeof STORY_THEMES] }));
 
 const CHAPTER_NAMES = ["One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight"];
@@ -149,18 +149,18 @@ function GoldBurst() {
 // makes the hero feel native to each story world. Every outfit is fully covering
 // (long sleeves, full-length legs, shoes) to satisfy SAFETY.
 const THEME_OUTFITS: Record<string, string> = {
-  adventure:  "wearing a rust-orange hooded jacket over a cream long-sleeved shirt, forest-green trousers, and worn brown lace-up boots",
-  dragon:     "wearing a hooded forest-green adventurer's tunic over a long-sleeved cream shirt, brown trousers, and sturdy knee-high leather boots",
+  dragon:    "wearing a hooded forest-green adventurer's tunic over a long-sleeved cream shirt, brown trousers, and sturdy knee-high leather boots",
   dino:       "wearing a khaki explorer's jacket over a long-sleeved olive shirt, cargo trousers, and rugged brown hiking boots",
   space:      "wearing a sleek white and orange astronaut spacesuit with long sleeves and full-length legs, sealed gloves, and white moon boots",
   ocean:      "wearing a long-sleeved blue and teal full-body diving wetsuit that fully covers the arms and legs, with matching neoprene water boots",
   jungle:     "wearing a khaki safari shirt with long sleeves, matching full-length trousers, a wide-brimmed explorer hat, and brown boots",
-  superpower: "wearing a bright long-sleeved superhero costume with a flowing cape, full-length leggings, and colourful boots",
   dreamland:  "wearing cozy full-length long-sleeved star-patterned pyjamas and soft slippers",
   christmas:  "wearing a cozy red knitted long-sleeved jumper with a cream snowflake band, a cream wool scarf, full-length dark green trousers, and warm brown snow boots",
   bubbles:    "wearing a bright yellow raincoat over a long-sleeved teal striped shirt, blue leggings, and glossy sky-blue rain boots",
 };
-const DEFAULT_OUTFIT = THEME_OUTFITS.adventure;
+// Themes that have been retired fall back to the bedtime story.
+const DEFAULT_THEME = "dreamland";
+const DEFAULT_OUTFIT = "wearing a rust-orange hooded jacket over a cream long-sleeved shirt, forest-green trousers, and worn brown lace-up boots";
 
 // Injects gender, age, theme-appropriate clothing, and explicit coverage into
 // every prompt at generation time. This is the primary guard against wrong
@@ -191,9 +191,9 @@ function buildGenderedPrompt(prompt: string, gender: string, age: number, hairCo
       : `${age}-year-old child, ${sizeHint}${hairHint}${eyeHint}${wear}, `;
   // Prepend style anchor immediately after TOK trigger for maximum influence
   const continuity = " Preserve the reference child's exact hairstyle, hair length and hairline on every page; do not invent a ponytail or haircut. Depict the action in the full scene text literally; a frightened frozen companion must remain crouched and still, never running or chasing. The child is the only human in the picture: no other children, adults, princesses, royalty, or characters not named in the scene. Draw each animal as exactly the species named, with no look-alike substitutes. No buildings, ruins, temples, pyramids, or real-world landmarks unless the scene names them. ";
-  const companion = theme === "dragon" ? " The only dragon is the same tiny leaf-green baby dragon on every page and cover: knee-high beside the child, amber eyes, cream belly, two short rounded horns, small gold-lined wings. Never enlarge it, change its color, or have the child ride it. "
-    : theme === "christmas" ? " The only reindeer is the same small young reindeer on every page and cover: knee-high beside the child, soft fawn fur, cream chest, tiny velvet antlers, red ribbon collar with one silver bell. Never enlarge it, add a glowing red nose, or have the child ride it. No Santa Claus. "
-    : "";
+  const design = theme && STORY_THEMES[theme as keyof typeof STORY_THEMES]?.companion;
+  const companion = (design ? ` Whenever the companion appears it is always ${design}, identical in design, colour and size on every page and cover; never enlarge it or have the child ride it. ` : "")
+    + (theme === "christmas" ? "No glowing red nose. No Santa Claus. " : "");
   return prompt.replace("a photo of TOK,", `a photo of TOK, ${STYLE_ANCHOR}${hint}`) + continuity + companion;
 }
 
@@ -206,12 +206,6 @@ const COVER_PROMPT =
 
 // Per-theme cover prompts — wide establishing/poster shot so title text can overlay cleanly at top
 const COVER_PROMPTS_BY_THEME: Record<string, string> =  {
-  adventure:
-    "a photo of TOK, standing centered before a towering glowing magical portal archway, arms spread wide, " +
-    "adventure outfit, golden sparkles and magical light swirling everywhere, enchanted forest stretching deep behind, " +
-    "WIDE HEROIC CENTERED COMPOSITION, glowing golden sky at the very top of the frame for title text overlay, " +
-    "low angle looking slightly up, cinematic poster style. " + STYLE_TOKEN + " " + SAFETY,
-
   dragon:
     "a photo of TOK, standing beside one tiny leaf-green baby dragon, no taller than the child's knee, with amber eyes, cream belly, two short rounded horns and small gold-lined wings, " +
     "adventure outfit, the tiny dragon perched beside the child, misty mountain peaks and golden sky, " +
@@ -231,10 +225,10 @@ const COVER_PROMPTS_BY_THEME: Record<string, string> =  {
     "low angle looking slightly up, dreamy cinematic bedtime poster style. " + STYLE_TOKEN + " " + SAFETY,
 
   space:
-    "a photo of TOK, floating centered in deep space in a spacesuit, arms spread wide, " +
-    "a blazing galaxy and thousands of stars filling the background, Earth glowing blue far below, " +
+    "a photo of TOK, standing centered on the grey moon surface in a spacesuit with arms spread wide, " +
+    "a small round silver robot with a blinking antenna light beside them, a little silver rocket parked behind, Earth glowing blue in the sky, " +
     "WIDE HEROIC CENTERED COMPOSITION, deep starfield at the very top of the frame for title text overlay, " +
-    "low angle looking slightly up, cinematic sci-fi poster style. " + STYLE_TOKEN + " " + SAFETY,
+    "low angle looking slightly up, cinematic space poster style. " + STYLE_TOKEN + " " + SAFETY,
 
   ocean:
     "a photo of TOK, standing centered on a sunlit rock at the ocean edge, arms spread wide, " +
@@ -243,16 +237,10 @@ const COVER_PROMPTS_BY_THEME: Record<string, string> =  {
     "low angle looking slightly up, cinematic adventure poster style. " + STYLE_TOKEN + " " + SAFETY,
 
   jungle:
-    "a photo of TOK, standing centered in a sun-dappled jungle clearing wearing a crown of tropical flowers, arms spread wide, " +
-    "a friendly monkey and a family of elephants gathered proudly behind them, golden light streaming through the canopy, " +
+    "a photo of TOK, standing centered on a sunny jungle riverbank with arms spread wide, " +
+    "a baby elephant with big floppy ears beside them, a wide shallow river with flat stepping stones behind, golden light through the canopy, " +
     "WIDE HEROIC CENTERED COMPOSITION, glowing canopy and golden sky at the very top for title text overlay, " +
     "low angle looking slightly up, cinematic adventure poster style. " + STYLE_TOKEN + " " + SAFETY,
-
-  superpower:
-    "a photo of TOK, standing centered in a sunny neighbourhood street, arms raised with golden light beaming from their palms, " +
-    "adventure outfit, golden sparkles and flowers blooming all around their feet, neighbours cheering behind, " +
-    "WIDE HEROIC CENTERED COMPOSITION, golden sky at the very top of the frame for title text overlay, " +
-    "low angle looking slightly up, cinematic superhero poster style. " + STYLE_TOKEN + " " + SAFETY,
 
   bubbles:
     "a photo of TOK, standing centered inside a giant glowing rainbow soap bubble floating in a bright sky, arms spread wide with joy, " +
@@ -354,37 +342,6 @@ const SCENE_PROMPTS_BY_THEME: Record<string, string[]> = {
     "a warm golden glow filling the peaceful bedroom. " + STYLE_TOKEN + " " + SAFETY,
   ],
 
-  adventure: [
-    "a photo of TOK, leaning excitedly forward with one arm outstretched and fingers spread, " +
-    "reaching toward a swirling magical stone archway portal glowing with golden sparkles, " +
-    "one foot lifted mid-step, mouth open in amazement, golden sparkles landing on their hand, " +
-    "magical garden at golden hour, fireflies swirling all around. " + STYLE_TOKEN + " " + SAFETY,
-
-    "a photo of TOK, spinning with arms spread wide and head tilted back laughing with delight, " +
-    "caught mid-spin with hair and clothes in motion, surrounded by enormous glowing enchanted trees, " +
-    "bioluminescent mushrooms below, fireflies and magical particles swirling all around. " + STYLE_TOKEN + " " + SAFETY,
-
-    "a photo of TOK, kneeling in a field of tall grass with both arms raised high and fingers spread, " +
-    "reaching up toward a single enormous glowing star falling from the night sky, " +
-    "head tilted back, eyes wide, shooting comets and stars everywhere above, " +
-    "pine tree silhouettes on the horizon. " + STYLE_TOKEN + " " + SAFETY,
-
-    "a photo of TOK, crouching very low to the ground with one hand gently extended palm-up " +
-    "toward a tiny glowing creature peeking out from under a mossy rock, " +
-    "face close to the ground, expression soft and caring, " +
-    "giant colourful mushrooms towering above, magical dappled forest light filtering through trees. " + STYLE_TOKEN + " " + SAFETY,
-
-    "a photo of TOK, leaping upward with both arms raised high above their head holding a glowing rainbow crystal, " +
-    "caught at the peak of a joyful jump, face lit up with triumph, " +
-    "brilliant rainbow light beams exploding outward from the crystal in all directions, " +
-    "dark magical forest clearing at night below. " + STYLE_TOKEN + " " + SAFETY,
-
-    "a photo of TOK, dancing and spinning with arms raised in pure joy, " +
-    "caught mid-spin with a huge laugh, hair and clothes swirling with motion, " +
-    "joyful glowing rabbits, deer and fireflies dancing all around, " +
-    "warm golden magical light flooding the scene, stars and tree canopy above. " + STYLE_TOKEN + " " + SAFETY,
-  ],
-
   dragon: [
     "a photo of TOK, discovering a tiny leaf-green baby dragon hiding behind a basket at a mountain festival. " + STYLE_TOKEN + " " + SAFETY,
     "a photo of TOK, sitting quietly beside the tiny leaf-green baby dragon, waiting for it to approach. " + STYLE_TOKEN + " " + SAFETY,
@@ -396,29 +353,21 @@ const SCENE_PROMPTS_BY_THEME: Record<string, string[]> = {
     "a photo of TOK, returning to the mountain festival with the tiny leaf-green baby dragon flying beside them. " + STYLE_TOKEN + " " + SAFETY,
   ],
   space: [
-    "a photo of TOK, sitting in a rocket cockpit pressing a glowing red launch button with both hands, " +
-    "face lit with excitement and anticipation, instrument panels glowing all around, " +
-    "through the cockpit window a star-filled sky and the curve of Earth below. " + STYLE_TOKEN + " " + SAFETY,
+    "a photo of TOK, kneeling in a moonlit garden beside a tiny round silver robot with one blinking antenna light, a small silver rocket landed on the grass behind. " + STYLE_TOKEN + " " + SAFETY,
 
-    "a photo of TOK, floating weightless inside a space station, arms spread wide laughing with delight, " +
-    "hair floating upward in zero gravity, spinning slowly with a huge grin, " +
-    "Earth visible through a large circular porthole behind them, stars stretching to infinity. " + STYLE_TOKEN + " " + SAFETY,
+    "a photo of TOK, climbing into the cockpit of a small silver rocket with the little robot on the seat beside them, stars overhead. " + STYLE_TOKEN + " " + SAFETY,
 
-    "a photo of TOK, in a spacesuit floating outside the spacecraft, one arm outstretched pointing " +
-    "toward a spectacular glowing planet with colourful rings directly ahead, " +
-    "mouth open in amazement, the Milky Way a brilliant band of light behind them. " + STYLE_TOKEN + " " + SAFETY,
+    "a photo of TOK, looking out of the rocket window with the little robot as a ringed planet and twinkling satellites drift past. " + STYLE_TOKEN + " " + SAFETY,
 
-    "a photo of TOK, face to face with small friendly glowing alien creatures floating in space, " +
-    "both hands extended gently toward them, the aliens reaching back curiously with tiny glowing fingers, " +
-    "a swirling purple and gold nebula filling the background sky. " + STYLE_TOKEN + " " + SAFETY,
+    "a photo of TOK, standing on the grey moon surface beside the little robot, rows of identical craters stretching away under a black starry sky. " + STYLE_TOKEN + " " + SAFETY,
 
-    "a photo of TOK, both arms raised high reaching toward fading stars that burst back to brilliant life " +
-    "wherever their hands touch, golden light radiating outward from each fingertip, " +
-    "the dark galaxy transforming into a field of blazing stars all around them. " + STYLE_TOKEN + " " + SAFETY,
+    "a photo of TOK, standing at the edge of a crater where sunlight glints on moon ice, the little robot's antenna light dim and drooping. " + STYLE_TOKEN + " " + SAFETY,
 
-    "a photo of TOK, floating peacefully back toward Earth in a spacesuit, arms open wide, " +
-    "smiling with quiet pride, a spectacular newly-lit galaxy of warm golden stars stretching " +
-    "in every direction behind them, Earth glowing blue and beautiful far below. " + STYLE_TOKEN + " " + SAFETY,
+    "a photo of TOK, walking slowly across the moon with the little robot, its antenna light blinking fast as they turn toward a shadowed crater. " + STYLE_TOKEN + " " + SAFETY,
+
+    "a photo of TOK, watching a round door slide open beside a small shadowed crater as little robots roll out to welcome the robot home. " + STYLE_TOKEN + " " + SAFETY,
+
+    "a photo of TOK, in bed by the window looking up at the moon, one tiny light blinking on it in the night sky. " + STYLE_TOKEN + " " + SAFETY,
   ],
 
   ocean: [
@@ -448,57 +397,22 @@ const SCENE_PROMPTS_BY_THEME: Record<string, string[]> = {
   ],
 
   jungle: [
-    "a photo of TOK, stepping with wide-eyed wonder beneath a towering jungle archway of twisted roots " +
-    "and enormous tropical leaves, colourful parrots and tiny monkeys watching curiously from the branches, " +
-    "shafts of golden light cutting through the canopy above, flowers blooming everywhere. " + STYLE_TOKEN + " " + SAFETY,
+    "a photo of TOK, kneeling on a jungle riverbank beside a worried baby elephant with big floppy ears, a wide brown river behind. " + STYLE_TOKEN + " " + SAFETY,
 
-    "a photo of TOK, standing with arms spread wide as a dozen brightly-coloured tropical birds " +
-    "land on their outstretched arms and shoulders, laughing with delight, " +
-    "playful monkeys hanging from the branches all around, a waterfall glowing in the background. " + STYLE_TOKEN + " " + SAFETY,
+    "a photo of TOK, pointing across the river where an elephant family grazes on the far bank, the baby elephant beside them. " + STYLE_TOKEN + " " + SAFETY,
 
-    "a photo of TOK, kneeling as a procession of animals — lions, elephants, deer — bow their heads " +
-    "respectfully before them in a sun-dappled jungle clearing, " +
-    "a monkey carefully placing a crown of tropical flowers on their head. " + STYLE_TOKEN + " " + SAFETY,
+    "a photo of TOK, walking along the leafy riverbank beside the baby elephant, butterflies drifting past. " + STYLE_TOKEN + " " + SAFETY,
 
-    "a photo of TOK, standing proudly on a mossy rock in the heart of the jungle with arms raised high, " +
-    "surveying their animal kingdom below — elephants, zebras, and parrots gathered in the clearing, " +
-    "golden afternoon light flooding the scene through a break in the canopy. " + STYLE_TOKEN + " " + SAFETY,
+    "a photo of TOK, standing with the baby elephant at the narrowest point of the river, the far bank close across fast water. " + STYLE_TOKEN + " " + SAFETY,
 
-    "a photo of TOK, carefully freeing a small bird whose wing is caught in a vine, " +
-    "kneeling with gentle focused hands, the tiny bird looking up trustingly, " +
-    "surrounding animals watching in respectful silence, soft dappled forest light all around. " + STYLE_TOKEN + " " + SAFETY,
+    "a photo of TOK, scrambling back up the muddy bank with the baby elephant as fast deep water rushes past. " + STYLE_TOKEN + " " + SAFETY,
 
-    "a photo of TOK, dancing in the middle of a jungle celebration, animals dancing all around them, " +
-    "elephants swaying, monkeys clapping, parrots swooping overhead in circles, " +
-    "the entire jungle alive with warm golden light, fireflies and flower petals raining down. " + STYLE_TOKEN + " " + SAFETY,
+    "a photo of TOK, crouching by the river beside the baby elephant, looking at a wide shallow stretch with flat stones showing through the ripples. " + STYLE_TOKEN + " " + SAFETY,
+
+    "a photo of TOK, stepping carefully across flat stones in wide shallow water side by side with the baby elephant, its family waiting ahead. " + STYLE_TOKEN + " " + SAFETY,
+
+    "a photo of TOK, holding a smooth striped river stone at sunset as the baby elephant waves its trunk goodbye beside its mother. " + STYLE_TOKEN + " " + SAFETY,
   ],
-
-  superpower: [
-    "a photo of TOK, staring in amazement at their own hands as they begin to glow with warm golden light, " +
-    "tiny sparks floating up from their fingertips, eyes wide with wonder and discovery, " +
-    "standing in a sunlit park, golden bokeh light swirling around them. " + STYLE_TOKEN + " " + SAFETY,
-
-    "a photo of TOK, arms outstretched with golden light radiating from their hands, " +
-    "catching a stack of tumbling books in mid-air and holding them suspended with a focused expression, " +
-    "a child in the background watching in amazement, bright school hallway setting. " + STYLE_TOKEN + " " + SAFETY,
-
-    "a photo of TOK, standing in the centre of a playground with golden light beaming from their palms, " +
-    "fixing a broken swing that glows and becomes new again, laughing children looking on in wonder, " +
-    "warm golden afternoon light flooding the scene. " + STYLE_TOKEN + " " + SAFETY,
-
-    "a photo of TOK, facing a dark storm cloud with one arm raised, expression fierce and determined, " +
-    "golden light from their hand pushing the storm back, sunlight breaking through around them, " +
-    "townsfolk watching from behind with hopeful expressions. " + STYLE_TOKEN + " " + SAFETY,
-
-    "a photo of TOK, standing tall with arms raised high, a spectacular burst of golden light " +
-    "exploding outward from their whole body in all directions, " +
-    "flowers blooming instantly around their feet, birds taking flight from the golden shockwave. " + STYLE_TOKEN + " " + SAFETY,
-
-    "a photo of TOK, standing humbly and smiling as neighbours and friends cheer and applaud all around, " +
-    "golden sparkles still floating gently from their hands, sunflowers blooming at their feet, " +
-    "a warm sunny street celebration with banners and balloons in every direction. " + STYLE_TOKEN + " " + SAFETY,
-  ],
-
 };
 
 const PAYMENTS_ENABLED = !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
@@ -592,7 +506,7 @@ export default function StorybookCreator() {
   const [childName,   setChildName]   = useState("");
   const [childAge,    setChildAge]    = useState(5);
   const [childGender, setChildGender] = useState<"boy" | "girl" | "neutral">("boy");
-  const [theme,       setTheme]       = useState("adventure");
+  const [theme,       setTheme]       = useState(DEFAULT_THEME);
 
   // ── Preview (step 5) ─────────────────────────────────────────────────────────
   const [previewStory,   setPreviewStory]   = useState<any>(null);
@@ -903,7 +817,7 @@ export default function StorybookCreator() {
         let done = 0;
         const PREVIEW_PAGES = 2;          // free pages shown before the paywall
         const total = 1 + PREVIEW_PAGES;  // cover + preview pages (rest generated after purchase)
-        const themePrompts = SCENE_PROMPTS_BY_THEME[theme] ?? SCENE_PROMPTS_BY_THEME.adventure;
+        const themePrompts = SCENE_PROMPTS_BY_THEME[theme] ?? SCENE_PROMPTS_BY_THEME[DEFAULT_THEME];
         // Stable seed shared with full book — same LoRA + same seed + same prompts = consistent character
         if (!bookSeedRef.current) bookSeedRef.current = Math.floor(Math.random() * 2_147_483_647);
         const bookSeed = bookSeedRef.current;
@@ -1003,7 +917,7 @@ export default function StorybookCreator() {
     const failedIdxs = previewImages.map((img, i) => img === "__failed__" ? i : -1).filter(i => i >= 0);
     if (failedIdxs.length === 0) return;
     setRetryingScenes(true);
-    const themePrompts = SCENE_PROMPTS_BY_THEME[theme] ?? SCENE_PROMPTS_BY_THEME.adventure;
+    const themePrompts = SCENE_PROMPTS_BY_THEME[theme] ?? SCENE_PROMPTS_BY_THEME[DEFAULT_THEME];
     for (const idx of failedIdxs) {
       try {
         const sub = await fetchWithTimeout("/api/generate-scene", {
@@ -1127,7 +1041,7 @@ export default function StorybookCreator() {
           return null;
         };
 
-        const fullThemePrompts = SCENE_PROMPTS_BY_THEME[_theme] ?? SCENE_PROMPTS_BY_THEME.adventure;
+        const fullThemePrompts = SCENE_PROMPTS_BY_THEME[_theme] ?? SCENE_PROMPTS_BY_THEME[DEFAULT_THEME];
         // Themes with costume/kit requirements use hardcoded prompts so the gear is always correct.
         // For all other themes, use the AI illustration description for per-page accuracy.
         const USE_FIXED_PROMPTS = new Set<string>();
@@ -1183,7 +1097,7 @@ export default function StorybookCreator() {
 
       // Pre-compute all 7 image prompts so the server-side webhook can generate
       // images without needing access to client-side prompt logic.
-      const fullThemePrompts = SCENE_PROMPTS_BY_THEME[theme] ?? SCENE_PROMPTS_BY_THEME.adventure;
+      const fullThemePrompts = SCENE_PROMPTS_BY_THEME[theme] ?? SCENE_PROMPTS_BY_THEME[DEFAULT_THEME];
       const USE_FIXED_PROMPTS = new Set<string>();
       const computedSeed = bookSeedRef.current ?? Math.floor(Math.random() * 2_147_483_647);
       if (!bookSeedRef.current) bookSeedRef.current = computedSeed;
@@ -1300,7 +1214,7 @@ export default function StorybookCreator() {
       const storyText = story?.pages?.[pageIdx]?.text || "";
       const basePrompt = illustrationDesc
         ? `a photo of TOK, ${illustrationDesc} Scene context: ${storyText.substring(0, 120)} ${STYLE_TOKEN} ${SAFETY}`
-        : (SCENE_PROMPTS_BY_THEME[theme] ?? SCENE_PROMPTS_BY_THEME.adventure)[pageIdx];
+        : (SCENE_PROMPTS_BY_THEME[theme] ?? SCENE_PROMPTS_BY_THEME[DEFAULT_THEME])[pageIdx];
       const prompt = buildGenderedPrompt(basePrompt, childGender, childAge, hairColor, eyeColor, theme);
       const seed = Math.floor(Math.random() * 2_147_483_647);
       const sub = await fetchWithTimeout("/api/generate-scene", {
@@ -1391,7 +1305,7 @@ export default function StorybookCreator() {
     setPreviewCoverUrl(null); setCoverImageUrl(null);
     setPreviewStatus("idle"); setPreviewDone(0); previewStarted.current = false;
     setPageImages(Array(8).fill(null)); setScenesCompleted(0);
-    setChildGender("boy"); setChildName(""); setChildAge(5); setTheme("adventure");
+    setChildGender("boy"); setChildName(""); setChildAge(5); setTheme(DEFAULT_THEME);
     setIsSharedView(false); setRegeneratingPage(null); setFalError(null); setIsDemo(false); setShowNewBookConfirm(false);
     setDisplayedPage(-2); setFlipBack(null); setIsFlipping(false); setGenerationError(null);
     bookSeedRef.current = null; pendingStoryRef.current = null;

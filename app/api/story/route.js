@@ -55,8 +55,9 @@ FINAL CHECK
 - The child actively drives the change in scenes 5-7.
 - The emotional heart is earned by the resolution, not stated as a lesson.
 - Resolve the exact problem introduced. Do not confuse a lost physical object with an ability regained.
-- For the dragon adventure, the companion is always a knee-high leaf-green baby dragon with amber eyes, a cream belly, two short rounded horns and small gold-lined wings. It cannot make its flame because it is frightened; its flame has not flown away. Every illustration must preserve this design and size.
-- For the Christmas Eve adventure, the companion is always a small knee-high young reindeer with soft fawn fur, a cream chest, tiny velvet antlers and a red ribbon collar with one silver bell. Santa never appears; the sleigh team stays offstage. Every illustration must preserve this design and size.
+- The companion is always ${theme.companion}. Describe it this way in every illustration where it appears, and preserve its design and size.
+- For the dragon adventure, the dragon cannot make its flame because it is frightened; its flame has not flown away.
+- For the Christmas Eve adventure, Santa never appears; the sleigh team stays offstage.
 - Check every illustration against its full passage: if the dragon freezes or crouches, it must not run or chase. Do not invent hair, hair length or hairstyle; these come from the child reference photo.
 - Every scene fits the word limit and has a matching illustration.
 - Valid JSON only, with no commentary.`;
@@ -77,7 +78,7 @@ export async function POST(request) {
     const ageNum = Number(body.childAge) || 5;
     const ageBand = getAgeBand(ageNum);
     const pronouns = body.gender === "girl" ? "she/her" : body.gender === "boy" ? "he/him" : "they/them";
-    const theme = STORY_THEMES[body.themeId] ?? STORY_THEMES.adventure;
+    const theme = STORY_THEMES[body.themeId] ?? STORY_THEMES.dreamland;
 
     const response = await client.messages.create({
       model: "claude-opus-4-8",

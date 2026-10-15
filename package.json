@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "test:print-layout": "node --test test/book-layout.test.mjs",
-    "test:story-quality": "node --test test/story-quality.test.mjs"
+    "test:story-quality": "node --test test/story-quality.test.mjs",
+    "test:commerce": "node --test test/commerce.test.mjs",
+    "test": "node --test \"test/**/*.test.mjs\""
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.82.0",

@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 import { kv } from "@/lib/kv";
 import { internalAuthorization, internalWebhookUrl } from "@/lib/security";
+import { shippingMethodFromStripeSession } from "@/lib/commerce";
 
 export const maxDuration = 60;
 export const dynamic = "force-dynamic";
@@ -35,6 +36,13 @@ export async function POST(request) {
     const contactEmail  = session.customer_details?.email || "";
     const customerName  = session.shipping_details?.name || session.customer_details?.name || "";
 
+    // Capture the shipping speed the customer paid for at the moment of payment
+    // so it is visible to admin/support without a Stripe round-trip. Fulfilment
+    // still re-derives it from the Stripe session, which stays authoritative.
+    const shippingMethod = plan === "print"
+      ? shippingMethodFromStripeSession(session, process.env)
+      : null;
+
     // A payment notification may be delivered more than once. Never reset an
     // existing book or overwrite its fulfilment status on a replay.
     const lockKey = `payment-generation:${session.id}`;
@@ -48,11 +56,11 @@ export async function POST(request) {
 
     // Record the paid order in KV
     await kv.set(`order:${session.id}`, {
-      ref, plan, status: "paid", contactEmail, customerName,
+      ref, plan, status: "paid", contactEmail, customerName, shippingMethod,
       sessionId: session.id, paidAt: new Date().toISOString(),
     }, { ex: 2_592_000 }).catch(e => console.error("KV order write failed:", e.message));
 
-    console.log("Webhook: payment confirmed, ref:", ref, "plan:", plan);
+    console.log("Webhook: payment confirmed, ref:", ref, "plan:", plan, "shipping:", shippingMethod ?? "n/a");
 
     // Kick off background book generation
     try {
@@ -91,6 +99,7 @@ export async function POST(request) {
         status:        "generating",
         sessionId:     session.id,
         plan,
+        shippingMethod,
         childName,
         accessToken,
         story,

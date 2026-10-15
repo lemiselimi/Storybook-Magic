@@ -56,6 +56,7 @@ FINAL CHECK
 - The emotional heart is earned by the resolution, not stated as a lesson.
 - Resolve the exact problem introduced. Do not confuse a lost physical object with an ability regained.
 - For the dragon adventure, the companion is always a knee-high leaf-green baby dragon with amber eyes, a cream belly, two short rounded horns and small gold-lined wings. It cannot make its flame because it is frightened; its flame has not flown away. Every illustration must preserve this design and size.
+- For the Christmas Eve adventure, the companion is always a small knee-high young reindeer with soft fawn fur, a cream chest, tiny velvet antlers and a red ribbon collar with one silver bell. Santa never appears; the sleigh team stays offstage. Every illustration must preserve this design and size.
 - Check every illustration against its full passage: if the dragon freezes or crouches, it must not run or chase. Do not invent hair, hair length or hairstyle; these come from the child reference photo.
 - Every scene fits the word limit and has a matching illustration.
 - Valid JSON only, with no commentary.`;

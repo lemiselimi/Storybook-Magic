@@ -6,7 +6,7 @@ import { STORY_THEMES } from "@/lib/story-themes";
 import BrowserPrintBook from "../components/BrowserPrintBook";
 
 const THEMES = [
-  { id: "adventure", emoji: "🌋" }, { id: "dragon", emoji: "🐉" }, { id: "dino", emoji: "🦕" }, { id: "space", emoji: "🚀" },
+  { id: "christmas", emoji: "🎄" }, { id: "adventure", emoji: "🌋" }, { id: "dragon", emoji: "🐉" }, { id: "dino", emoji: "🦕" }, { id: "space", emoji: "🚀" },
   { id: "ocean", emoji: "🌊" }, { id: "jungle", emoji: "🦁" }, { id: "superpower", emoji: "🏆" }, { id: "dreamland", emoji: "🌙" }, { id: "bubbles", emoji: "🫧" },
 ].map((theme) => ({ ...theme, ...STORY_THEMES[theme.id as keyof typeof STORY_THEMES] }));
 
@@ -157,6 +157,7 @@ const THEME_OUTFITS: Record<string, string> = {
   jungle:     "wearing a khaki safari shirt with long sleeves, matching full-length trousers, a wide-brimmed explorer hat, and brown boots",
   superpower: "wearing a bright long-sleeved superhero costume with a flowing cape, full-length leggings, and colourful boots",
   dreamland:  "wearing cozy full-length long-sleeved star-patterned pyjamas and soft slippers",
+  christmas:  "wearing a cozy red knitted long-sleeved jumper with a cream snowflake band, a cream wool scarf, full-length dark green trousers, and warm brown snow boots",
   bubbles:    "wearing a bright yellow raincoat over a long-sleeved teal striped shirt, blue leggings, and glossy sky-blue rain boots",
 };
 const DEFAULT_OUTFIT = THEME_OUTFITS.adventure;
@@ -190,7 +191,9 @@ function buildGenderedPrompt(prompt: string, gender: string, age: number, hairCo
       : `${age}-year-old child, ${sizeHint}${hairHint}${eyeHint}${wear}, `;
   // Prepend style anchor immediately after TOK trigger for maximum influence
   const continuity = " Preserve the reference child's exact hairstyle, hair length and hairline on every page; do not invent a ponytail or haircut. Depict the action in the full scene text literally; a frightened frozen companion must remain crouched and still, never running or chasing. The child is the only human in the picture: no other children, adults, princesses, royalty, or characters not named in the scene. Draw each animal as exactly the species named, with no look-alike substitutes. No buildings, ruins, temples, pyramids, or real-world landmarks unless the scene names them. ";
-  const companion = theme === "dragon" ? " The only dragon is the same tiny leaf-green baby dragon on every page and cover: knee-high beside the child, amber eyes, cream belly, two short rounded horns, small gold-lined wings. Never enlarge it, change its color, or have the child ride it. " : "";
+  const companion = theme === "dragon" ? " The only dragon is the same tiny leaf-green baby dragon on every page and cover: knee-high beside the child, amber eyes, cream belly, two short rounded horns, small gold-lined wings. Never enlarge it, change its color, or have the child ride it. "
+    : theme === "christmas" ? " The only reindeer is the same small young reindeer on every page and cover: knee-high beside the child, soft fawn fur, cream chest, tiny velvet antlers, red ribbon collar with one silver bell. Never enlarge it, add a glowing red nose, or have the child ride it. No Santa Claus. "
+    : "";
   return prompt.replace("a photo of TOK,", `a photo of TOK, ${STYLE_ANCHOR}${hint}`) + continuity + companion;
 }
 
@@ -256,9 +259,41 @@ const COVER_PROMPTS_BY_THEME: Record<string, string> =  {
     "a whole kingdom of shimmering floating bubbles stretching behind them, soft clouds and sparkles of light everywhere, " +
     "WIDE HEROIC CENTERED COMPOSITION, bright open sky at the very top of the frame for title text overlay, " +
     "low angle looking slightly up, dreamy cinematic poster style. " + STYLE_TOKEN + " " + SAFETY,
+
+  christmas:
+    "a photo of TOK, standing centered in a snowy village lane on Christmas Eve with arms open in wonder, " +
+    "a small young reindeer with a silver bell beside them, warm glowing windows and gentle falling snow behind, " +
+    "WIDE HEROIC CENTERED COMPOSITION, deep starry winter sky at the very top of the frame for title text overlay, " +
+    "low angle looking slightly up, cozy cinematic holiday poster style. " + STYLE_TOKEN + " " + SAFETY,
 };
 
 const SCENE_PROMPTS_BY_THEME: Record<string, string[]> = {
+  christmas: [
+    "a photo of TOK, kneeling in a moonlit snowy garden beside a small resting reindeer, the house lit warmly behind them, " +
+    "soft snow falling. " + STYLE_TOKEN + " " + SAFETY,
+
+    "a photo of TOK, walking out of the garden gate with the small reindeer at their side, fresh footprints and hoofprints in the snow. " +
+    STYLE_TOKEN + " " + SAFETY,
+
+    "a photo of TOK, looking at a wrapped gift with no tag held gently in the reindeer's mouth, puzzled, under a snowy streetlamp. " +
+    STYLE_TOKEN + " " + SAFETY,
+
+    "a photo of TOK, walking with the small reindeer down a sleeping snowy village street, every window glowing, a clock tower ahead. " +
+    STYLE_TOKEN + " " + SAFETY,
+
+    "a photo of TOK, standing at the doorstep of a big bright house already piled with gifts, the reindeer's ears drooping beside them. " +
+    STYLE_TOKEN + " " + SAFETY,
+
+    "a photo of TOK, pointing at a small star drawn in the frost of a little dim window, the reindeer looking up beside them. " +
+    STYLE_TOKEN + " " + SAFETY,
+
+    "a photo of TOK, setting the wrapped gift on a quiet doorstep as the small window above glows warm, the reindeer's bell ringing. " +
+    STYLE_TOKEN + " " + SAFETY,
+
+    "a photo of TOK, at their bedroom window holding a small silver bell, hoofprints in the snow outside leading up into the starry sky. " +
+    STYLE_TOKEN + " " + SAFETY,
+  ],
+
   bubbles: [
     "a photo of TOK, blowing through a small bubble wand as an enormous shimmering rainbow bubble grows in front of them, " +
     "eyes wide with wonder, in a sunny garden with sparkles of light. " + STYLE_TOKEN + " " + SAFETY,

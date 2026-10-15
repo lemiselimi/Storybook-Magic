@@ -191,10 +191,16 @@ function buildGenderedPrompt(prompt: string, gender: string, age: number, hairCo
       : `${age}-year-old child, ${sizeHint}${hairHint}${eyeHint}${wear}, `;
   // Prepend style anchor immediately after TOK trigger for maximum influence
   const continuity = " Preserve the reference child's exact hairstyle, hair length and hairline on every page; do not invent a ponytail or haircut. Depict the action in the full scene text literally; a frightened frozen companion must remain crouched and still, never running or chasing. The child is the only human in the picture: no other children, adults, princesses, royalty, or characters not named in the scene. Draw each animal as exactly the species named, with no look-alike substitutes. No buildings, ruins, temples, pyramids, or real-world landmarks unless the scene names them. ";
-  const design = theme && STORY_THEMES[theme as keyof typeof STORY_THEMES]?.companion;
+  const themeInfo = theme ? STORY_THEMES[theme as keyof typeof STORY_THEMES] : undefined;
+  const design = themeInfo?.companion;
+  // STYLE_TOKEN asks for golden-hour light and no blue; for night stories that
+  // turned midnight scenes into sunsets, so the night rule wins explicitly.
+  const night = themeInfo && "night" in themeInfo && themeInfo.night
+    ? " TIME OF DAY OVERRIDE: this story happens at night. Dark deep-blue night sky with moon or stars, never daytime, never sunset, never a golden or orange sky. Keep warmth in the light sources only: glowing windows, lanterns, firelight, moonlight. Indoors at night the windows show a dark sky. "
+    : "";
   const companion = (design ? ` Whenever the companion appears it is always ${design}, identical in design, colour and size on every page and cover; never enlarge it or have the child ride it. ` : "")
     + (theme === "christmas" ? "No glowing red nose. No Santa Claus. " : "");
-  return prompt.replace("a photo of TOK,", `a photo of TOK, ${STYLE_ANCHOR}${hint}`) + continuity + companion;
+  return prompt.replace("a photo of TOK,", `a photo of TOK, ${STYLE_ANCHOR}${hint}`) + continuity + companion + night;
 }
 
 const COVER_PROMPT =

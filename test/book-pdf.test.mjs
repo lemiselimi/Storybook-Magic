@@ -45,3 +45,13 @@ test("read-aloud line breaks survive layout and oversized copy fails explicitly"
   assert.deepEqual(result.layouts.map(p => p.lines), [["One boot."], ["Two boots."]]);
   assert.throws(() => storyTextLayout("impossiblylongword".repeat(100), font), /does not fit/);
 });
+
+test("a wrapped story line never ends on a single lonely word", () => {
+  const font = { widthOfTextAtSize: (text, size) => text.length * size * .52 };
+  // 23pt * .52 = ~12pt per char; the 450pt text box fits ~37 chars, so "down." would wrap alone.
+  const result = storyTextLayout("The house was so still and snow came down.", font);
+  const lines = result.layouts[0].lines;
+  assert.ok(lines.length >= 2);
+  assert.ok(lines.at(-1).includes(" "), `last line was "${lines.at(-1)}"`);
+  assert.equal(lines.join(" "), "The house was so still and snow came down.");
+});

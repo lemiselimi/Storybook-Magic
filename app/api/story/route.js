@@ -42,7 +42,8 @@ WRITING RULES
 
 ILLUSTRATION RULES
 - Each illustration describes the exact same moment as its text: child action, setting, and the one or two key visual anchors.
-- Use one concrete visual sentence of 15-30 words. Do not use art-style words, camera directions, brand names, the child's name, or metadata.
+- Use one concrete visual sentence of 15-30 words. Do not use art-style words, camera directions, brand names, the child's name, the companion's name, or metadata.
+- A keepsake the companion leaves behind must be described exactly as it looked on the companion earlier (same object, size, colour and attachment), never as a different object.
 - Keep the child as the subject, but leave enough environmental context for a distinct scene.
 - Name every animal in the scene by its exact species, matching the text, and add no other named animals. The child is the only person: no other children, adults, princesses, or characters absent from the text. No buildings, ruins, temples, pyramids, or landmarks unless the text names them.
 - Choose one consistent outfit and one concrete recurring companion design; repeat these anchors in each illustration where present. Keep hair, age, proportions, clothing colors, and companion appearance consistent. Do not change outfit except for an explicit story action.
@@ -56,6 +57,8 @@ FINAL CHECK
 - The emotional heart is earned by the resolution, not stated as a lesson.
 - Resolve the exact problem introduced. Do not confuse a lost physical object with an ability regained.
 - The companion is always ${theme.companion}. Describe it this way in every illustration where it appears, and preserve its design and size.
+- Give the companion one short, warm, easy-to-say name (one or two syllables), introduced in scene 1 or 2 and used consistently in the text. Never the child's name, and never a famous character's name (no Rudolph, Dasher, Nemo, Dumbo, Toothless or similar).
+- The child is ${theme.outfit}. If the text mentions clothing, it must match this exactly; never invent other clothing, colours or accessories. At bedtime the child may change into pyjamas.
 - For the dragon adventure, the dragon cannot make its flame because it is frightened; its flame has not flown away.
 - For the Christmas Eve adventure, Santa never appears; the sleigh team stays offstage.
 - Check every illustration against its full passage: if the dragon freezes or crouches, it must not run or chase. Do not invent hair, hair length or hairstyle; these come from the child reference photo.

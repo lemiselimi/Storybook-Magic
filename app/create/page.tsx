@@ -148,16 +148,9 @@ function GoldBurst() {
 // consistency lever (Nano Banana has no seed to lock), while varying it by theme
 // makes the hero feel native to each story world. Every outfit is fully covering
 // (long sleeves, full-length legs, shoes) to satisfy SAFETY.
-const THEME_OUTFITS: Record<string, string> = {
-  dragon:    "wearing a hooded forest-green adventurer's tunic over a long-sleeved cream shirt, brown trousers, and sturdy knee-high leather boots",
-  dino:       "wearing a khaki explorer's jacket over a long-sleeved olive shirt, cargo trousers, and rugged brown hiking boots",
-  space:      "wearing a sleek white and orange astronaut spacesuit with long sleeves and full-length legs, sealed gloves, and white moon boots",
-  ocean:      "wearing a long-sleeved blue and teal full-body diving wetsuit that fully covers the arms and legs, with matching neoprene water boots",
-  jungle:     "wearing a khaki safari shirt with long sleeves, matching full-length trousers, a wide-brimmed explorer hat, and brown boots",
-  dreamland:  "wearing cozy full-length long-sleeved star-patterned pyjamas and soft slippers",
-  christmas:  "wearing a cozy red knitted long-sleeved jumper with a cream snowflake band, a cream wool scarf, full-length dark green trousers, and warm brown snow boots",
-  bubbles:    "wearing a bright yellow raincoat over a long-sleeved teal striped shirt, blue leggings, and glossy sky-blue rain boots",
-};
+const THEME_OUTFITS: Record<string, string> = Object.fromEntries(
+  Object.entries(STORY_THEMES).map(([id, t]) => [id, t.outfit]),
+);
 // Themes that have been retired fall back to the bedtime story.
 const DEFAULT_THEME = "dreamland";
 const DEFAULT_OUTFIT = "wearing a rust-orange hooded jacket over a cream long-sleeved shirt, forest-green trousers, and worn brown lace-up boots";
@@ -182,7 +175,13 @@ function buildGenderedPrompt(prompt: string, gender: string, age: number, hairCo
   // the main lever for character consistency across the book: Nano Banana has no
   // seed to lock, so a specific wardrobe stops it re-inventing clothes per page.
   // The outfit is chosen per theme so it fits the story world.
-  const wear = (theme && THEME_OUTFITS[theme]) || DEFAULT_OUTFIT;
+  // A scene in bed swaps outdoor clothes for pyjamas: boots and a scarf under
+  // the covers is the first thing a child reading along will point at.
+  const inBed = /\b(in|into|to) bed\b|\btucked in\b|\bpyjamas\b|\bpajamas\b/i.test(prompt);
+  const themeWear = (theme && THEME_OUTFITS[theme]) || DEFAULT_OUTFIT;
+  const wear = inBed && !/pyjamas/.test(themeWear)
+    ? "wearing cozy long-sleeved full-length pyjamas and soft slippers, no boots, no scarf, no outdoor clothes"
+    : themeWear;
   const hint =
     gender === "boy"
       ? `${age}-year-old boy, ${sizeHint}${hairHint}${eyeHint}${wear}, `

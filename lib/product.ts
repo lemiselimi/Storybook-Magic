@@ -42,6 +42,14 @@ export const PRODUCT = {
   pricing: PRICING,
   shipping: SHIPPING,
 
+  // ── Seasonal ──────────────────────────────────────────────────────────────
+  // Christmas promo shows until `endsIso`. The print order-by date allows the
+  // 1–2 week production + US standard shipping window plus a holiday buffer.
+  christmas: {
+    printOrderBy: "December 5",
+    endsIso: "2026-12-25",
+  },
+
   // ── Trust & policy ────────────────────────────────────────────────────────
   photoDeletionHours: 48, // reference photo auto-deletes from the AI provider
   refundDays: 30, // 30-day happiness promise (fix-first)

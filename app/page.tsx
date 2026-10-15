@@ -2,11 +2,16 @@ import Image from "next/image";
 import Link from "next/link";
 import BookMockup3D from "./components/BookMockup3D";
 import HomeMiniReader from "./components/HomeMiniReader";
+import HomeStoryThemes from "./components/HomeStoryThemes";
 import MarketingFooter from "./components/MarketingFooter";
 import MarketingNav from "./components/MarketingNav";
+import SeasonalBanner from "./components/SeasonalBanner";
 import { PRODUCT } from "@/lib/product";
 
 const P = PRODUCT;
+
+// Re-render daily so seasonal messaging switches off on its own.
+export const revalidate = 86400;
 
 const bookPages = [
   { image: "/examples/book-1.png", chapter: "Chapter one", line: "A silver moonbeam begins a bedtime dream." },
@@ -17,6 +22,7 @@ const bookPages = [
 export default function LandingPage() {
   return (
     <div className="mtt-home">
+      <SeasonalBanner />
       <MarketingNav />
 
       <main>
@@ -88,6 +94,8 @@ export default function LandingPage() {
           </ol>
           <Link href="/create" className="mtt-text-link mtt-text-link--strong">Read the beginning of their story <span aria-hidden="true">→</span></Link>
         </section>
+
+        <HomeStoryThemes />
 
         <HomeMiniReader />
 

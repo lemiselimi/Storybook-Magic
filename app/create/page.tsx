@@ -184,12 +184,14 @@ function buildGenderedPrompt(prompt: string, gender: string, age: number, hairCo
   const wear = (theme && THEME_OUTFITS[theme]) || DEFAULT_OUTFIT;
   const hint =
     gender === "boy"
-      ? `${age}-year-old boy, ${sizeHint}short hair, masculine features, ${hairHint}${eyeHint}${wear}, `
+      ? `${age}-year-old boy, ${sizeHint}${hairHint}${eyeHint}${wear}, `
       : gender === "girl"
-      ? `${age}-year-old girl, ${sizeHint}feminine features, long hair, ${hairHint}${eyeHint}${wear}, `
+      ? `${age}-year-old girl, ${sizeHint}${hairHint}${eyeHint}${wear}, `
       : `${age}-year-old child, ${sizeHint}${hairHint}${eyeHint}${wear}, `;
   // Prepend style anchor immediately after TOK trigger for maximum influence
-  return prompt.replace("a photo of TOK,", `a photo of TOK, ${STYLE_ANCHOR}${hint}`);
+  const continuity = " Preserve the reference child's exact hairstyle, hair length and hairline on every page; do not invent a ponytail or haircut. Depict the action in the full scene text literally; a frightened frozen companion must remain crouched and still, never running or chasing. ";
+  const companion = theme === "dragon" ? " The only dragon is the same tiny leaf-green baby dragon on every page and cover: knee-high beside the child, amber eyes, cream belly, two short rounded horns, small gold-lined wings. Never enlarge it, change its color, or have the child ride it. " : "";
+  return prompt.replace("a photo of TOK,", `a photo of TOK, ${STYLE_ANCHOR}${hint}`) + continuity + companion;
 }
 
 const COVER_PROMPT =
@@ -208,8 +210,8 @@ const COVER_PROMPTS_BY_THEME: Record<string, string> =  {
     "low angle looking slightly up, cinematic poster style. " + STYLE_TOKEN + " " + SAFETY,
 
   dragon:
-    "a photo of TOK, standing centered with a magnificent friendly dragon curling protectively behind them, " +
-    "adventure outfit, dragon's glowing wings spread wide framing the full scene, misty mountain peaks and golden sky, " +
+    "a photo of TOK, standing beside one tiny leaf-green baby dragon, no taller than the child's knee, with amber eyes, cream belly, two short rounded horns and small gold-lined wings, " +
+    "adventure outfit, the tiny dragon perched beside the child, misty mountain peaks and golden sky, " +
     "WIDE HEROIC CENTERED COMPOSITION, golden sky at the very top of the frame for title text overlay, " +
     "low angle looking slightly up, cinematic poster style. " + STYLE_TOKEN + " " + SAFETY,
 
@@ -349,31 +351,15 @@ const SCENE_PROMPTS_BY_THEME: Record<string, string[]> = {
   ],
 
   dragon: [
-    "a photo of TOK, crouching low with one hand gently extended palm-up toward a tiny shy baby dragon " +
-    "peeking around a mossy boulder, the dragon's eyes glowing soft amber, " +
-    "misty magical forest clearing at dusk, golden light filtering through ancient trees. " + STYLE_TOKEN + " " + SAFETY,
-
-    "a photo of TOK, standing with arms spread wide laughing with delight as a friendly young dragon " +
-    "playfully blows a tiny puff of colourful smoke rings around them, " +
-    "both caught in a moment of pure joy together, sunny mountain meadow behind them. " + STYLE_TOKEN + " " + SAFETY,
-
-    "a photo of TOK, climbing with excitement onto the back of a large friendly dragon, " +
-    "one hand gripping a neck spike, one foot lifted mid-climb, huge grin on their face, " +
-    "the dragon turning its head with a warm expression, misty mountain peaks below. " + STYLE_TOKEN + " " + SAFETY,
-
-    "a photo of TOK, riding on the back of a soaring dragon high above the clouds, " +
-    "arms thrown wide open in pure exhilaration, hair and clothes streaming in the wind, " +
-    "enormous white clouds and a golden sunset all around them, tiny villages far below. " + STYLE_TOKEN + " " + SAFETY,
-
-    "a photo of TOK, standing side by side with a dragon facing a dark storm cloud, " +
-    "one arm raised high and pointing forward with determined courage, " +
-    "the dragon rearing up beside them with glowing wings spread wide, lightning crackling behind. " + STYLE_TOKEN + " " + SAFETY,
-
-    "a photo of TOK, dancing and laughing in a meadow as a dragon breathes spectacular rainbow fire " +
-    "in a great arc overhead, colourful sparks and glowing embers raining down like confetti, " +
-    "other friendly dragons watching and cheering from the hillside behind. " + STYLE_TOKEN + " " + SAFETY,
+    "a photo of TOK, discovering a tiny leaf-green baby dragon hiding behind a basket at a mountain festival. " + STYLE_TOKEN + " " + SAFETY,
+    "a photo of TOK, sitting quietly beside the tiny leaf-green baby dragon, waiting for it to approach. " + STYLE_TOKEN + " " + SAFETY,
+    "a photo of TOK, listening to the worried tiny leaf-green baby dragon on a quiet valley path. " + STYLE_TOKEN + " " + SAFETY,
+    "a photo of TOK, walking beside the tiny leaf-green baby dragon as mist hides the path home. " + STYLE_TOKEN + " " + SAFETY,
+    "a photo of TOK, looking back at the tiny leaf-green baby dragon crouching motionless in fear on the misty path. " + STYLE_TOKEN + " " + SAFETY,
+    "a photo of TOK, sitting calmly beside the crouching tiny leaf-green baby dragon and listening. " + STYLE_TOKEN + " " + SAFETY,
+    "a photo of TOK, waiting beside the tiny leaf-green baby dragon as its gentle puff lights a nearby lantern. " + STYLE_TOKEN + " " + SAFETY,
+    "a photo of TOK, returning to the mountain festival with the tiny leaf-green baby dragon flying beside them. " + STYLE_TOKEN + " " + SAFETY,
   ],
-
   space: [
     "a photo of TOK, sitting in a rocket cockpit pressing a glowing red launch button with both hands, " +
     "face lit with excitement and anticipation, instrument panels glowing all around, " +
@@ -938,7 +924,7 @@ export default function StorybookCreator() {
           USE_FIXED_PROMPTS.has(theme)
             ? (themePrompts[idx] ?? themePrompts[0])
             : pg.illustration
-              ? `a photo of TOK, ${pg.illustration} Scene context: ${(pg.text || "").substring(0, 120)} ${STYLE_TOKEN} ${SAFETY}`
+              ? `a photo of TOK, ${pg.illustration} Scene context: ${(pg.text || "")} ${STYLE_TOKEN} ${SAFETY}`
               : (themePrompts[idx] ?? themePrompts[0])
         );
 
@@ -1114,7 +1100,7 @@ export default function StorybookCreator() {
           USE_FIXED_PROMPTS.has(_theme)
             ? (fullThemePrompts[i] ?? fullThemePrompts[0])
             : pg.illustration
-              ? `a photo of TOK, ${pg.illustration} Scene context: ${(pg.text || "").substring(0, 120)} ${STYLE_TOKEN} ${SAFETY}`
+              ? `a photo of TOK, ${pg.illustration} Scene context: ${(pg.text || "")} ${STYLE_TOKEN} ${SAFETY}`
               : (fullThemePrompts[i] ?? fullThemePrompts[0])
         );
 
@@ -1167,7 +1153,7 @@ export default function StorybookCreator() {
         const base = USE_FIXED_PROMPTS.has(theme)
           ? (fullThemePrompts[i] ?? fullThemePrompts[0])
           : pg.illustration
-            ? `a photo of TOK, ${pg.illustration} Scene context: ${(pg.text || "").substring(0, 120)} ${STYLE_TOKEN} ${SAFETY}`
+            ? `a photo of TOK, ${pg.illustration} Scene context: ${(pg.text || "")} ${STYLE_TOKEN} ${SAFETY}`
             : (fullThemePrompts[i] ?? fullThemePrompts[0]);
         return buildGenderedPrompt(base, childGender, childAge, hairColor, eyeColor, theme);
       });

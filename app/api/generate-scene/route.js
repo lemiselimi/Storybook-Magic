@@ -62,6 +62,7 @@ export async function POST(request) {
             prompt: identityPrompt,
             image_urls: [referenceImageUrl],
             aspect_ratio: "1:1",
+            resolution: "4K",
             num_images: 1,
             output_format: "jpeg",
           },

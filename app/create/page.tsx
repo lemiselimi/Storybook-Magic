@@ -815,7 +815,19 @@ export default function StorybookCreator() {
         setPreviewStory({ title: "", dedication: "", pages: [], _limitReached: true });
         return;
       }
-      const storyData = storyRes?.pages ? storyRes : getFallbackStory(childName);
+      // The writer's quality gate occasionally rejects a draft. Retry once, and
+      // never fall back to a generic template: a paid book must be the story
+      // the parent chose.
+      let storyData = storyRes?.pages ? storyRes : null;
+      if (!storyData) {
+        setPreviewMsg("Polishing the story...");
+        const retry = await fetchWithTimeout("/api/story", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ childName, childAge: String(childAge), gender: childGender, hairColor, eyeColor, themeId: selectedTheme?.id }),
+        }, 60_000).then(r => r.json()).catch(() => null);
+        storyData = retry?.pages ? retry : null;
+      }
+      if (!storyData) throw new Error("story_unavailable");
       setPreviewStory(storyData);
 
       const referenceImageUrl: string | null = refUrl;
@@ -912,7 +924,7 @@ export default function StorybookCreator() {
     } catch (err: any) {
       const msg = err?.name === "AbortError" ? "Connection timed out. Please check your signal and try again." : "Something went wrong — please try again.";
       setGenerationError(msg);
-      setPreviewStory(getFallbackStory(childName));
+      setPreviewStory(null);
     }
 
     setPreviewStatus("done");
@@ -1191,7 +1203,7 @@ export default function StorybookCreator() {
     setOnboardingStep(newStep);
     // Pre-warm Claude story generation the moment the user hits Generate
     // so it runs in parallel with any LoRA training instead of sequentially
-    if (newStep === 5 && !pendingStoryRef.current) {
+    if (newStep === 4 && !pendingStoryRef.current) {
       pendingStoryRef.current = fetchWithTimeout("/api/story", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -1856,6 +1868,15 @@ export default function StorybookCreator() {
                   </div>
                 )}
 
+                {/* Story could not be written — offer a clean retry, never a template */}
+                {previewStatus === "done" && !previewStory && generationError && (
+                  <div role="alert" style={{ textAlign: "center", padding: isMobile ? "40px 20px" : "56px 32px", background: "rgba(255,255,255,0.68)", borderRadius: 28, border: "1px solid rgba(31,42,40,0.16)" }}>
+                    <h2 style={{ color: "#1f2a28", fontSize: isMobile ? 20 : 24, fontWeight: 700, margin: "0 0 10px" }}>We couldn’t finish their story</h2>
+                    <p style={{ color: "rgba(31,42,40,0.8)", fontSize: 15, margin: "0 0 24px" }}>{generationError} Nothing has been charged.</p>
+                    <button onClick={() => { setGenerationError(null); previewStarted.current = true; generatePreview(); }} style={{ padding: "15px 36px", borderRadius: 16, border: "none", background: "#1f2a28", color: "#f5efe2", fontSize: 16, fontWeight: 800, cursor: "pointer" }}>Try again</button>
+                  </div>
+                )}
+
                 {/* Rate limit reached */}
                 {previewStatus === "done" && previewStory?._limitReached && (
                   <div style={{ textAlign: "center", padding: isMobile ? "40px 20px" : "56px 32px", background: "rgba(255,255,255,0.68)", backdropFilter: "blur(12px)", borderRadius: 24, border: "1px solid rgba(255,100,100,0.2)" }}>
@@ -2057,7 +2078,7 @@ export default function StorybookCreator() {
       {mainStep === "book" && story && (
         <div style={{ width: "100%", maxWidth: isMobile ? "100%" : 880, animation: "fadeUp 0.5s ease both" }}>
           {falError    && <div style={{ background: "rgba(255,100,100,0.09)", border: "1px solid rgba(255,100,100,0.25)", borderRadius: 10, padding: "9px 14px", marginBottom: 12, color: "#ffaaaa", fontSize: 13, textAlign: "center" }}>{falError}</div>}
-          {generationError && <div style={{ background: "rgba(255,100,100,0.09)", border: "1px solid rgba(255,100,100,0.25)", borderRadius: 10, padding: "9px 14px", marginBottom: 12, color: "#ffaaaa", fontSize: 13, textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, flexWrap: "wrap" }}>{generationError} <button onClick={() => { setGenerationError(null); setOnboardingStep(5); setMainStep("onboarding"); previewStarted.current = false; }} style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 8, padding: "4px 12px", color: "white", fontSize: 12, cursor: "pointer" }}>Try again</button></div>}
+          {generationError && <div style={{ background: "rgba(255,100,100,0.09)", border: "1px solid rgba(255,100,100,0.25)", borderRadius: 10, padding: "9px 14px", marginBottom: 12, color: "#ffaaaa", fontSize: 13, textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, flexWrap: "wrap" }}>{generationError} <button onClick={() => { setGenerationError(null); setOnboardingStep(4); setMainStep("onboarding"); previewStarted.current = false; }} style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 8, padding: "4px 12px", color: "white", fontSize: 12, cursor: "pointer" }}>Try again</button></div>}
           {isSharedView && <div style={{ background: "rgba(232,192,122,0.07)", border: "1px solid rgba(232,192,122,0.2)", borderRadius: 10, padding: "8px 14px", marginBottom: 12, color: "rgba(232,192,122,0.8)", fontSize: 13, textAlign: "center" }}>Viewing a shared storybook</div>}
           {isDemo && <div style={{ background: "rgba(232,192,122,0.12)", border: "1px solid rgba(232,192,122,0.35)", borderRadius: 10, padding: "8px 14px", marginBottom: 12, color: "#E8C07A", fontSize: 13, textAlign: "center", fontWeight: 600 }}>⚡ Demo Mode — no credits used ) · <a href="/create" style={{ color: "#E8C07A", textDecoration: "underline", cursor: "pointer" }} onClick={e => { e.preventDefault(); resetAll(); }}>Create your own</a></div>}
 
